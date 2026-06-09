@@ -264,7 +264,7 @@ function StrikeVisual({ strike }: { strike: LightningStrike }) {
   )
 
   useFrame(() => {
-    const age = (Date.now() - strike.timestamp) / 1000
+    const age = (Date.now() - strike.receivedAt) / 1000
     const o = Math.max(0, 1 - age / 2)
     if (lineRef.current?.material) lineRef.current.material.opacity = o
     if (pointRef.current) (pointRef.current.material as THREE.PointsMaterial).opacity = o
@@ -287,23 +287,6 @@ function StrikeVisual({ strike }: { strike: LightningStrike }) {
   )
 }
 
-function DemoStrikes() {
-  const addStrike = useGameStore((s) => s.addStrike)
-  useEffect(() => {
-    const t = setInterval(() => {
-      addStrike({
-        id: crypto.randomUUID(),
-        lat: (Math.random() - 0.5) * 120,
-        lon: (Math.random() - 0.5) * 360,
-        timestamp: Date.now(),
-        quality: 'good',
-      })
-    }, 700)
-    return () => clearInterval(t)
-  }, [addStrike])
-  return null
-}
-
 function Scene() {
   const groupRef = useRef<THREE.Group>(null)
   const setCells = useGameStore((s) => s.setCells)
@@ -323,7 +306,7 @@ function Scene() {
       <Atmosphere />
       <GridCells />
       <Strikes />
-      <DemoStrikes />
+      {/* <DemoStrikes /> */}
     </group>
   )
 }

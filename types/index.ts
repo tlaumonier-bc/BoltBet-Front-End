@@ -13,6 +13,7 @@ export interface LightningStrike {
   lat: number
   lon: number
   timestamp: number // epoch ms
+  receivedAt: number
   quality: string   // good/medium/bad
 }
 

@@ -32,8 +32,10 @@ export function useLightningSocket() {
               lat: msg.lat,
               lon: msg.lon,
               timestamp: ts,
+              receivedAt: Date.now(), 
               quality: msg.quality ?? 'good',
             }
+            console.log('STRIKE RECEIVED', strike.lat, strike.lon)
             addStrike(strike)
           } else if (msg.type === 'grid_update') {
             updateCells(msg.cells ?? [])
