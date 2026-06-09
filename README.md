@@ -1,3 +1,18 @@
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+BoltBet is a real-time lightning prediction game built with Next.js, React Three Fiber, and Zustand. 
+
+## Features
+
+- **Live 3D Globe:** Built with `@react-three/fiber` and `three.js` to visualize global lightning strikes as they happen.
+- **Interactive Betting Zones:** The Earth is divided into 162 distinct zones. Click any zone to view real-time strike stats and place your predictions.
+- **Dynamic Multipliers:** Zone payouts shift dynamically based on live weather activity—calm zones pay more, while active storm zones pay less.
+- **Real-Time Sync:** Powered by WebSockets to stream live strike data, update grid multipliers, and resolve bets instantly.
+
+Transform global weather patterns into a thrilling, interactive prediction experience!
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
@@ -13,24 +28,3 @@ pnpm dev
 # or
 bun dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
