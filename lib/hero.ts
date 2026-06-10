@@ -1,0 +1,1 @@
+export const INITIAL_ROTATION_Y = 0;

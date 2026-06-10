@@ -6,10 +6,11 @@
 // scrolling. The full interactive globe still lives on /play and /live.
 // Loaded lazily by HeroGlobe (ssr:false, after the page is idle).
 
-import { Suspense, useMemo, useRef } from 'react';
+import { Suspense, useMemo, useRef, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
+import { INITIAL_ROTATION_Y } from '@/lib/hero';
 
 const RADIUS = 2;
 const TEXTURE_URL = '/earth-night.jpg'; // self-hosted in /public (Phase 5)
@@ -64,9 +65,18 @@ function Atmosphere() {
 
 function Spinner({ children }: { children: React.ReactNode }) {
   const ref = useRef<THREE.Group>(null);
+  const spinning = useRef(false);
+
+  useEffect(() => {
+    if (ref.current) ref.current.rotation.y = INITIAL_ROTATION_Y;
+    const t = setTimeout(() => { spinning.current = true; }, 500);
+    return () => clearTimeout(t);
+  }, []);
+
   useFrame(() => {
-    if (ref.current) ref.current.rotation.y += 0.0012;
+    if (spinning.current && ref.current) ref.current.rotation.y += 0.0012;
   });
+
   return <group ref={ref}>{children}</group>;
 }
 

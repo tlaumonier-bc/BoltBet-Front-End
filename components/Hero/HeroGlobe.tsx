@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
 
 const HeroGlobeCanvas = dynamic(() => import('./HeroGlobeCanvas'), { ssr: false });
 
-export default function HeroGlobe({ poster = '/globe-poster.jpg' }: { poster?: string }) {
+export default function HeroGlobe({ poster = '/globe-poster.png' }: { poster?: string }) {
   const [showGlobe, setShowGlobe] = useState(false);
   const [posterHidden, setPosterHidden] = useState(false);
 
@@ -50,18 +50,15 @@ export default function HeroGlobe({ poster = '/globe-poster.jpg' }: { poster?: s
           <HeroGlobeCanvas />
         </div>
       )}
-      {/* Poster: LCP element. Sits on top until the globe is live, then fades. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={poster}
         alt=""
-        // @ts-expect-error fetchPriority is valid in React 19 DOM
         fetchPriority="high"
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+        className={`absolute left-1/2 top-1/2 h-full w-auto max-w-none -translate-x-1/2 -translate-y-1/2 transition-opacity duration-700 ${
           posterHidden ? 'opacity-0' : 'opacity-100'
         }`}
       />
-      {/* readability wash so the headline always has contrast */}
       <div className="absolute inset-0 bg-gradient-to-b from-storm/40 via-storm/10 to-storm" />
     </div>
   );
