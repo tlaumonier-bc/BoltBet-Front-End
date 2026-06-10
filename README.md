@@ -1,7 +1,7 @@
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-BoltBet is a real-time lightning prediction game built with Next.js, React Three Fiber, and Zustand. 
+Lightning Map Bets is a real-time lightning prediction game built with Next.js, React Three Fiber, and Zustand. 
 
 ## Features
 

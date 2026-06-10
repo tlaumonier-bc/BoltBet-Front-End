@@ -1,9 +1,3 @@
-// app/[locale]/[slug]/page.tsx
-// One dynamic route generates all 25 localized SEO map pages from the content
-// config. Mirrors the repo's existing route style (sync params, static params,
-// dynamicParams=false) for drop-in compatibility — verify against the installed
-// Next version per AGENTS.md (async params differ across majors).
-
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { pages, pageBySlug } from '@/lib/content/content';
@@ -18,13 +12,15 @@ export function generateStaticParams() {
 
 type Params = { locale: string; slug: string };
 
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const page = pageBySlug(`/${params.locale}/${params.slug}`);
+export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
+  const { locale, slug } = await params;
+  const page = pageBySlug(`/${locale}/${slug}`);
   return page ? buildMetadata(page) : { title: 'Not found' };
 }
 
-export default function LocaleMapPage({ params }: { params: Params }) {
-  const page = pageBySlug(`/${params.locale}/${params.slug}`);
+export default async function LocaleMapPage({ params }: { params: Promise<Params> }) {
+  const { locale, slug } = await params;
+  const page = pageBySlug(`/${locale}/${slug}`);
   if (!page) notFound();
   return <SeoMapPage page={page} />;
 }

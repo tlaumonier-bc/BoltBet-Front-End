@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: 'Live Lightning Globe — Real-Time Strikes Worldwide',
   description:
     'Inspect real-time lightning strikes worldwide on a live 3D globe. Powered by the Blitzortung community detection network.',
-  alternates: { canonical: 'https://lightningmapgame.com/live' },
+  alternates: { canonical: 'https://lightningmapbets.com/live' },
   robots: { index: true, follow: true },
 };
 

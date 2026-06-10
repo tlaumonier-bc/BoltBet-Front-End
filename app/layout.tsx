@@ -1,4 +1,3 @@
-// app/layout.tsx — rebrand to LightningMapGame, domain via
 // the shared site config so the brand/URL live in one place.
 import type { Metadata } from 'next';
 import { Unbounded, Sora } from 'next/font/google';
