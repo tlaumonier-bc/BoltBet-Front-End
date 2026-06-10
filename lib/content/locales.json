@@ -1,0 +1,2817 @@
+{
+  "_generated_by": "generate_content_config.py (Phase 1)",
+  "site": {
+    "brand": "LightningMapGame",
+    "domain": "lightningmapgame.com",
+    "baseUrl": "https://lightningmapgame.com"
+  },
+  "funnel": {
+    "slug": "/{locale}/play",
+    "pageType": "product_funnel",
+    "note": "prediction market: will lightning strike in next 60s — conversion layer, not SEO",
+    "renamedFrom": "/{locale}/predict",
+    "seo": false
+  },
+  "hreflangClusters": {
+    "seo_map": [
+      {
+        "hreflang": "fi-FI",
+        "url": "https://lightningmapgame.com/fi/ukkostutka"
+      },
+      {
+        "hreflang": "en-GB",
+        "url": "https://lightningmapgame.com/gb/lightning-map"
+      },
+      {
+        "hreflang": "pl-PL",
+        "url": "https://lightningmapgame.com/pl/blitzortung"
+      },
+      {
+        "hreflang": "fr-FR",
+        "url": "https://lightningmapgame.com/fr/foudre-en-direct"
+      },
+      {
+        "hreflang": "et-EE",
+        "url": "https://lightningmapgame.com/ee/lightning-map"
+      },
+      {
+        "hreflang": "sv-SE",
+        "url": "https://lightningmapgame.com/se/blixtkarta"
+      },
+      {
+        "hreflang": "en-US",
+        "url": "https://lightningmapgame.com/us/lightning-map"
+      },
+      {
+        "hreflang": "nb-NO",
+        "url": "https://lightningmapgame.com/no/lynkart"
+      },
+      {
+        "hreflang": "de-DE",
+        "url": "https://lightningmapgame.com/de/blitzortung"
+      },
+      {
+        "hreflang": "nl-NL",
+        "url": "https://lightningmapgame.com/nl/onweersradar"
+      },
+      {
+        "hreflang": "cs-CZ",
+        "url": "https://lightningmapgame.com/cz/bourky-radar"
+      },
+      {
+        "hreflang": "lv-LV",
+        "url": "https://lightningmapgame.com/lv/lightning-map"
+      },
+      {
+        "hreflang": "hr-HR",
+        "url": "https://lightningmapgame.com/hr/lighting-map"
+      },
+      {
+        "hreflang": "en-CA",
+        "url": "https://lightningmapgame.com/ca/lightning-map"
+      },
+      {
+        "hreflang": "de-AT",
+        "url": "https://lightningmapgame.com/at/blitzortung"
+      },
+      {
+        "hreflang": "el-GR",
+        "url": "https://lightningmapgame.com/gr/blitzortung"
+      },
+      {
+        "hreflang": "it-IT",
+        "url": "https://lightningmapgame.com/it/mappa-fulmini"
+      },
+      {
+        "hreflang": "da-DK",
+        "url": "https://lightningmapgame.com/dk/lyn-radar"
+      },
+      {
+        "hreflang": "lt-LT",
+        "url": "https://lightningmapgame.com/lt/lighting-map"
+      },
+      {
+        "hreflang": "sk-SK",
+        "url": "https://lightningmapgame.com/sk/blesky"
+      },
+      {
+        "hreflang": "es-ES",
+        "url": "https://lightningmapgame.com/es/mapa-de-rayos"
+      },
+      {
+        "hreflang": "sr-RS",
+        "url": "https://lightningmapgame.com/rs/lighting-map"
+      },
+      {
+        "hreflang": "ro-RO",
+        "url": "https://lightningmapgame.com/ro/blitzortung"
+      },
+      {
+        "hreflang": "x-default",
+        "url": "https://lightningmapgame.com/"
+      }
+    ],
+    "seo_storm": [
+      {
+        "hreflang": "pl-PL",
+        "url": "https://lightningmapgame.com/pl/gdzie-jest-burza"
+      },
+      {
+        "hreflang": "de-DE",
+        "url": "https://lightningmapgame.com/de/gewitterwarnung"
+      },
+      {
+        "hreflang": "x-default",
+        "url": "https://lightningmapgame.com/"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "priority": 1,
+      "locale": "fi",
+      "localePath": "/fi",
+      "country": "Finland",
+      "language": "Finnish",
+      "hreflang": "fi-FI",
+      "slug": "/fi/ukkostutka",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "ukkostutka",
+      "primaryKeyword": "ukkostutka",
+      "primaryVolume": 201000,
+      "primaryKd": 50,
+      "keywords": [
+        {
+          "term": "ukkostutka",
+          "role": "primary",
+          "volume": 201000,
+          "kd": 50,
+          "tier": null,
+          "isBrand": false
+        },
+        {
+          "term": "salamatutka",
+          "role": "secondary",
+          "volume": 49500,
+          "kd": 35,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "salamakartta",
+          "role": "secondary",
+          "volume": 3600,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        },
+        {
+          "term": "lightningmaps",
+          "role": "secondary",
+          "volume": 110000,
+          "kd": 45,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "reaaliaikainen ukkostutka",
+          "role": "secondary",
+          "volume": 9900,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": {
+        "term": "salamatutka",
+        "kd": 35,
+        "volume": 49500
+      },
+      "content": {
+        "translated": true,
+        "breadcrumb": [
+          "Etusivu",
+          "Ukkostutka"
+        ],
+        "h1": "Ukkostutka – salamat kartalla reaaliajassa",
+        "title": "Ukkostutka – Salamat kartalla reaaliajassa | LightningMapGame",
+        "metaDescription": "Seuraa ukkosta reaaliaikaisella ukkostutkalla. Näe salamaniskut kartalla juuri nyt – ja arvaa, iskeekö seuraavan 60 sekunnin aikana enemmän vai vähemmän salamoita.",
+        "imageAlt": "Ukkostutka – salamaniskut Suomen kartalla reaaliajassa",
+        "sections": [
+          {
+            "h2": "Missä ukkostaa juuri nyt?",
+            "body": "Ukkostutka näyttää salamaniskut kartalla heti, kun ne havaitaan. Punaiset ja keltaiset alueet kertovat, missä ukkostaa juuri nyt ja mihin suuntaan ukkonen liikkuu. Kun haluat tietää, onko sää muuttumassa ukkoseksi lähelläsi, salli sijainti ja paina \"näytä lähelläni\" – näet lähimmät salamaniskut ja viimeisen 60 minuutin salamamäärän omalla alueellasi."
+          },
+          {
+            "h2": "Salamatutka reaaliajassa",
+            "body": "Reaaliaikainen ukkostutka eli salamakartta päivittyy automaattisesti sekuntien välein. Mitä tiheämmin salamoita osuu samalle alueelle, sitä voimakkaammasta ukkossolusta on kyse. Seuraa salamatiheyttä ja solun liikettä kartalla nähdäksesi, onko ukkonen voimistumassa vai laantumassa."
+          },
+          {
+            "h2": "Miten ukkostutka toimii?",
+            "body": "Salamadata tulee Blitzortung-yhteisön ylläpitämästä havaintoverkosta. Maanpäälliset vastaanottimet mittaavat salaman lähettämän radiopulssin saapumisajan, ja iskun sijainti lasketaan kolmiomittauksella useammasta asemasta. Mitä useampi asema havaitsee saman iskun, sitä tarkempi paikannus on. Palvelusta käytetään monia nimiä – esimerkiksi salamakartta, lightningmaps ja lighting map – mutta kyse on samasta reaaliaikaisesta ukkostutkasta."
+          },
+          {
+            "h2": "Arvaa seuraavat 60 sekuntia",
+            "body": "Iskeekö seuraavan minuutin aikana enemmän vai vähemmän salamoita? Tee arvaus ja katso reaaliajassa, miten käy. Kyseessä on maksuton peli – ei oikealla rahalla pelattava veto.",
+            "isFunnel": true,
+            "ctaText": "Pelaa: arvaa seuraavat 60 sekuntia",
+            "ctaPrompt": "Iskeekö seuraavan minuutin aikana enemmän vai vähemmän salamoita?"
+          }
+        ],
+        "faqHeading": "Usein kysytyt kysymykset",
+        "faq": [
+          {
+            "q": "Mikä on ukkostutka?",
+            "a": "Ukkostutka on reaaliaikainen kartta, joka näyttää havaitut salamaniskut sitä mukaa kun ne tapahtuvat. Sen avulla näet nopeasti, missä ukkostaa ja mihin suuntaan myrsky etenee."
+          },
+          {
+            "q": "Kuinka tarkka ukkostutka on?",
+            "a": "Paikannustarkkuus riippuu siitä, kuinka moni havaintoasema rekisteröi saman iskun. Kun iskun havaitsee useampi asema, sijainti tarkentuu tyypillisesti muutaman kilometrin tarkkuuteen."
+          },
+          {
+            "q": "Mistä salamadata tulee?",
+            "a": "Data tulee Blitzortung-yhteisön salamanhavaintoverkosta, jossa vapaaehtoisten ylläpitämät vastaanottimet paikantavat salamat kolmiomittauksella."
+          },
+          {
+            "q": "Kuinka usein kartta päivittyy?",
+            "a": "Kartta päivittyy reaaliajassa: uudet salamaniskut ilmestyvät kartalle sekuntien sisällä havainnosta."
+          },
+          {
+            "q": "Voiko ukkosen tuloa ennustaa?",
+            "a": "Tarkkaa hetkeä ei voi ennustaa, mutta salamatiheydestä ja solun liikkeestä näkee, onko ukkonen lähestymässä. Voit myös testata arviotasi pelissä: arvaa, iskeekö seuraavan 60 sekunnin aikana enemmän vai vähemmän salamoita."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 2,
+      "locale": "gb",
+      "localePath": "/gb",
+      "country": "United Kingdom",
+      "language": "English",
+      "hreflang": "en-GB",
+      "slug": "/gb/lightning-map",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "lightning map",
+      "primaryKeyword": "lightning map",
+      "primaryVolume": 135000,
+      "primaryKd": 46,
+      "keywords": [
+        {
+          "term": "lightning map",
+          "role": "primary",
+          "volume": 135000,
+          "kd": 46,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lightning tracker",
+          "role": "secondary",
+          "volume": 22200,
+          "kd": 47,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lightning radar",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        },
+        {
+          "term": "thunderstorm",
+          "role": "secondary",
+          "volume": 49500,
+          "kd": 59,
+          "tier": "storm",
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": {
+        "term": "thunderstorm",
+        "kd": 59,
+        "volume": 49500
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Lightning Map"
+        ],
+        "h1": "Lightning Map — live lightning map in real time",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the United Kingdom lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Lightning Map — lightning strikes on the United Kingdom map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Lightning Map in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is lightning map?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 3,
+      "locale": "pl",
+      "localePath": "/pl",
+      "country": "Poland",
+      "language": "Polish",
+      "hreflang": "pl-PL",
+      "slug": "/pl/blitzortung",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "blitzortung",
+      "primaryKeyword": "blitzortung",
+      "primaryVolume": 135000,
+      "primaryKd": 54,
+      "keywords": [
+        {
+          "term": "blitzortung",
+          "role": "primary",
+          "volume": 135000,
+          "kd": 54,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lighting maps",
+          "role": "secondary",
+          "volume": 90500,
+          "kd": null,
+          "tier": null,
+          "isBrand": true
+        },
+        {
+          "term": "lighting map",
+          "role": "secondary",
+          "volume": 74000,
+          "kd": null,
+          "tier": null,
+          "isBrand": true
+        },
+        {
+          "term": "mapa burzowa",
+          "role": "secondary",
+          "volume": 165000,
+          "kd": 46,
+          "tier": "storm",
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": {
+        "term": "mapa burzowa",
+        "kd": 46,
+        "volume": 165000
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Blitzortung"
+        ],
+        "h1": "Blitzortung — live lightning map in real time",
+        "title": "Blitzortung — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Poland lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Blitzortung — lightning strikes on the Poland map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Blitzortung in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is blitzortung?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 4,
+      "locale": "pl",
+      "localePath": "/pl",
+      "country": "Poland",
+      "language": "Polish",
+      "hreflang": "pl-PL",
+      "slug": "/pl/gdzie-jest-burza",
+      "pageType": "seo_storm",
+      "intentTier": "storm",
+      "primaryKeywordOriginal": "gdzie jest burza",
+      "primaryKeyword": "gdzie jest burza",
+      "primaryVolume": 550000,
+      "primaryKd": 48,
+      "keywords": [
+        {
+          "term": "gdzie jest burza",
+          "role": "primary",
+          "volume": 550000,
+          "kd": 48,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "radar burz",
+          "role": "secondary",
+          "volume": 1220000,
+          "kd": 44,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "burze dzis",
+          "role": "secondary",
+          "volume": 110000,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        },
+        {
+          "term": "antistorm",
+          "role": "secondary",
+          "volume": 110000,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": {
+        "term": "radar burz",
+        "kd": 44,
+        "volume": 1220000
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Gdzie Jest Burza"
+        ],
+        "h1": "Gdzie Jest Burza — live lightning map in real time",
+        "title": "Gdzie Jest Burza — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Poland lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Gdzie Jest Burza — lightning strikes on the Poland map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Gdzie Jest Burza in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is gdzie jest burza?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_storm"
+    },
+    {
+      "priority": 5,
+      "locale": "fr",
+      "localePath": "/fr",
+      "country": "France",
+      "language": "French",
+      "hreflang": "fr-FR",
+      "slug": "/fr/foudre-en-direct",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "orage en direct",
+      "primaryKeyword": "orage en direct",
+      "primaryVolume": 60500,
+      "primaryKd": 55,
+      "keywords": [
+        {
+          "term": "orage en direct",
+          "role": "primary",
+          "volume": 60500,
+          "kd": 55,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "impact foudre",
+          "role": "secondary",
+          "volume": 40500,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        },
+        {
+          "term": "foudre en direct",
+          "role": "secondary",
+          "volume": 14800,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        },
+        {
+          "term": "carte orage",
+          "role": "secondary",
+          "volume": 6600,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        },
+        {
+          "term": "radar orage",
+          "role": "secondary",
+          "volume": 12100,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": null,
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Orage En Direct"
+        ],
+        "h1": "Orage En Direct — live lightning map in real time",
+        "title": "Orage En Direct — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the France lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Orage En Direct — lightning strikes on the France map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Orage En Direct in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is orage en direct?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 6,
+      "locale": "ee",
+      "localePath": "/ee",
+      "country": "Estonia",
+      "language": "Estonian",
+      "hreflang": "et-EE",
+      "slug": "/ee/lightning-map",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "lighting map",
+      "primaryKeyword": "lighting map",
+      "primaryVolume": 60500,
+      "primaryKd": 48,
+      "keywords": [
+        {
+          "term": "lighting map",
+          "role": "primary",
+          "volume": 60500,
+          "kd": 48,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lightning map",
+          "role": "secondary",
+          "volume": 40500,
+          "kd": 44,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lightningmaps",
+          "role": "secondary",
+          "volume": 14800,
+          "kd": 40,
+          "tier": "lightning",
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": {
+        "term": "lightningmaps",
+        "kd": 40,
+        "volume": 14800
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Lighting Map"
+        ],
+        "h1": "Lighting Map — live lightning map in real time",
+        "title": "Lighting Map — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Estonia lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Lighting Map — lightning strikes on the Estonia map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Lighting Map in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is lighting map?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 7,
+      "locale": "se",
+      "localePath": "/se",
+      "country": "Sweden",
+      "language": "Swedish",
+      "hreflang": "sv-SE",
+      "slug": "/se/blixtkarta",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "blixtradar",
+      "primaryKeyword": "blixtradar",
+      "primaryVolume": 49500,
+      "primaryKd": 32,
+      "keywords": [
+        {
+          "term": "blixtradar",
+          "role": "primary",
+          "volume": 49500,
+          "kd": 32,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "åskradar",
+          "role": "secondary",
+          "volume": 40500,
+          "kd": 38,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "lightningmaps",
+          "role": "secondary",
+          "volume": 33100,
+          "kd": 46,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lightning map",
+          "role": "secondary",
+          "volume": 33100,
+          "kd": 56,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "radar blixt smhi",
+          "role": "secondary",
+          "volume": 27100,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": {
+        "term": "åskradar",
+        "kd": 38,
+        "volume": 40500
+      },
+      "content": {
+        "translated": true,
+        "breadcrumb": [
+          "Hem",
+          "Blixtradar"
+        ],
+        "h1": "Blixtradar – se blixtar på kartan i realtid",
+        "title": "Blixtradar – Blixtar på kartan i realtid | LightningMapGame",
+        "metaDescription": "Följ åskan med en blixtradar i realtid. Se blixtnedslag på kartan just nu – och gissa om det slår ner fler eller färre blixtar nästa minut.",
+        "imageAlt": "Blixtradar – blixtnedslag på kartan över Sverige i realtid",
+        "sections": [
+          {
+            "h2": "Var åskar det just nu?",
+            "body": "Blixtradarn visar blixtnedslag på kartan i samma stund som de registreras. Röda och gula områden visar var det åskar nu och åt vilket håll ovädret rör sig. Tillåt position och tryck på «visa nära mig», så ser du de närmaste nedslagen och antalet blixtar de senaste 60 minuterna där du befinner dig."
+          },
+          {
+            "h2": "Åskradar i realtid",
+            "body": "En blixtkarta uppdateras automatiskt varje sekund. Ju tätare blixtarna slår ner i samma område, desto kraftigare är bycellen. Följ blixttätheten och hur cellen rör sig för att se om ovädret växer eller mojnar."
+          },
+          {
+            "h2": "Hur fungerar blixtradarn?",
+            "body": "Blixtdatan kommer från Blitzortung – ett nätverk av mottagarstationer som drivs av frivilliga. Stationerna mäter när radiopulsen från blixten anländer, och nedslaget positioneras genom triangulering från flera stationer. Ju fler stationer som fångar samma blixt, desto noggrannare blir positionen. Tjänsten kallas även blixtkarta, åskradar eller lightningmaps, och liknar radar blixt SMHI – men det är samma blixtradar i realtid."
+          },
+          {
+            "h2": "Gissa de närmaste 60 sekunderna",
+            "body": "Slår det ner fler eller färre blixtar nästa minut? Gissa och se vad som händer i realtid. Det är ett gratis spel – inga riktiga pengar.",
+            "isFunnel": true,
+            "ctaText": "Spela: gissa de närmaste 60 sekunderna",
+            "ctaPrompt": "Slår det ner fler eller färre blixtar nästa minut?"
+          }
+        ],
+        "faqHeading": "Vanliga frågor",
+        "faq": [
+          {
+            "q": "Vad är en blixtradar?",
+            "a": "En blixtradar är en realtidskarta som visar registrerade blixtnedslag i takt med att de sker. Så ser du snabbt var det åskar och åt vilket håll ovädret drar."
+          },
+          {
+            "q": "Hur noggrann är blixtradarn?",
+            "a": "Noggrannheten beror på hur många stationer som registrerar samma nedslag. När flera stationer fångar det blir positionen oftast noggrann på några kilometer."
+          },
+          {
+            "q": "Var kommer blixtdatan ifrån?",
+            "a": "Datan kommer från Blitzortung-nätverket, där frivilliga mottagarstationer positionerar blixtar genom triangulering."
+          },
+          {
+            "q": "Hur ofta uppdateras kartan?",
+            "a": "Kartan uppdateras i realtid: nya blixtnedslag dyker upp inom sekunder."
+          },
+          {
+            "q": "Går det att förutsäga åskan?",
+            "a": "Den exakta tidpunkten går inte att förutsäga, men blixttätheten och cellens rörelse visar om ovädret närmar sig. Du kan också testa din gissning i spelet: gissa om det slår ner fler eller färre blixtar de närmaste 60 sekunderna."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 8,
+      "locale": "us",
+      "localePath": "/us",
+      "country": "United States",
+      "language": "English",
+      "hreflang": "en-US",
+      "slug": "/us/lightning-map",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "lightning map",
+      "primaryKeyword": "lightning map",
+      "primaryVolume": 40500,
+      "primaryKd": 51,
+      "keywords": [
+        {
+          "term": "lightning map",
+          "role": "primary",
+          "volume": 40500,
+          "kd": 51,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lightning strike map",
+          "role": "secondary",
+          "volume": 27100,
+          "kd": 46,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lightning tracker",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": null,
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": {
+        "term": "lightning strike map",
+        "kd": 46,
+        "volume": 27100
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Lightning Map"
+        ],
+        "h1": "Lightning Map — live lightning map in real time",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the United States lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Lightning Map — lightning strikes on the United States map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Lightning Map in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is lightning map?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 9,
+      "locale": "no",
+      "localePath": "/no",
+      "country": "Norway",
+      "language": "Norwegian",
+      "hreflang": "nb-NO",
+      "slug": "/no/lynkart",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "lyn met",
+      "primaryKeyword": "lyn met",
+      "primaryVolume": 49500,
+      "primaryKd": 25,
+      "keywords": [
+        {
+          "term": "lyn met",
+          "role": "primary",
+          "volume": 49500,
+          "kd": 25,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "lynradar",
+          "role": "secondary",
+          "volume": 40500,
+          "kd": 30,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "lynkart",
+          "role": "secondary",
+          "volume": 40500,
+          "kd": 31,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "lightningmaps",
+          "role": "secondary",
+          "volume": 40500,
+          "kd": 62,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lightning map",
+          "role": "secondary",
+          "volume": 18100,
+          "kd": null,
+          "tier": null,
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": {
+        "term": "lynradar",
+        "kd": 30,
+        "volume": 40500
+      },
+      "content": {
+        "translated": true,
+        "breadcrumb": [
+          "Hjem",
+          "Lynradar"
+        ],
+        "h1": "Lynradar – se lyn på kartet i sanntid",
+        "title": "Lynradar – Lyn på kartet i sanntid | LightningMapGame",
+        "metaDescription": "Følg uvær med en sanntids lynradar. Se lynnedslag på kartet akkurat nå – og gjett om det slår ned flere eller færre lyn det neste minuttet.",
+        "imageAlt": "Lynradar – lynnedslag på kartet over Norge i sanntid",
+        "sections": [
+          {
+            "h2": "Hvor slår lynet ned akkurat nå?",
+            "body": "Lynradaren viser lynnedslag på kartet i det øyeblikket de registreres. Røde og gule områder forteller hvor det tordner nå og hvilken vei uværet beveger seg. Tillat posisjon og trykk «vis i nærheten», så ser du de nærmeste nedslagene og antall lyn siste 60 minutter der du er."
+          },
+          {
+            "h2": "Lynradar i sanntid",
+            "body": "Et lynkart oppdateres automatisk hvert sekund. Jo tettere lynene slår ned i samme område, desto kraftigere er bygecellen. Mange søker etter «lyn met» eller «lynradar» når uværet nærmer seg – her finner du begge deler i ett lynkart. Følg lyntettheten og hvordan cellen flytter seg for å se om uværet bygger seg opp eller løyer."
+          },
+          {
+            "h2": "Hvordan fungerer lynradaren?",
+            "body": "Lyndataene kommer fra Blitzortung – et fellesskap av mottakerstasjoner drevet av frivillige. Stasjonene måler når radiopulsen fra lynet ankommer, og nedslaget posisjoneres ved triangulering fra flere stasjoner. Jo flere stasjoner som fanger opp samme lyn, desto mer nøyaktig blir posisjonen. Tjenesten kalles også lynkart, lynradar eller lightningmaps – men det er den samme sanntids lynradaren du kjenner fra lynvarsel og met-tjenester."
+          },
+          {
+            "h2": "Gjett de neste 60 sekundene",
+            "body": "Slår det ned flere eller færre lyn det neste minuttet? Gjett og se hva som skjer i sanntid. Det er et gratis spill – ingen pengespill.",
+            "isFunnel": true,
+            "ctaText": "Spill: gjett de neste 60 sekundene",
+            "ctaPrompt": "Slår det ned flere eller færre lyn det neste minuttet?"
+          }
+        ],
+        "faqHeading": "Ofte stilte spørsmål",
+        "faq": [
+          {
+            "q": "Hva er en lynradar?",
+            "a": "En lynradar er et sanntidskart som viser registrerte lynnedslag etter hvert som de skjer. Slik ser du raskt hvor det tordner og hvilken vei uværet trekker."
+          },
+          {
+            "q": "Hvor nøyaktig er lynradaren?",
+            "a": "Nøyaktigheten avhenger av hvor mange stasjoner som registrerer samme nedslag. Når flere stasjoner fanger det opp, blir posisjonen typisk nøyaktig på noen kilometer."
+          },
+          {
+            "q": "Hvor kommer lyndataene fra?",
+            "a": "Dataene kommer fra Blitzortung-nettverket, der frivillige mottakerstasjoner posisjonerer lyn ved triangulering."
+          },
+          {
+            "q": "Hvor ofte oppdateres kartet?",
+            "a": "Kartet oppdateres i sanntid: nye lynnedslag dukker opp i løpet av sekunder."
+          },
+          {
+            "q": "Kan man forutsi når lynet slår ned?",
+            "a": "Det nøyaktige tidspunktet kan ikke forutsies, men lyntetthet og cellens bevegelse viser om uværet nærmer seg. Du kan også teste anslaget ditt i spillet: gjett om det slår ned flere eller færre lyn de neste 60 sekundene."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 10,
+      "locale": "de",
+      "localePath": "/de",
+      "country": "Germany",
+      "language": "German",
+      "hreflang": "de-DE",
+      "slug": "/de/blitzortung",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "lightningmaps",
+      "primaryKeyword": "lightningmaps",
+      "primaryVolume": 33100,
+      "primaryKd": 35,
+      "keywords": [
+        {
+          "term": "lightningmaps",
+          "role": "primary",
+          "volume": 33100,
+          "kd": 35,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "blitzradar",
+          "role": "secondary",
+          "volume": 27100,
+          "kd": 39,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "gewitterradar",
+          "role": "secondary",
+          "volume": 27100,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        },
+        {
+          "term": "blitzortung",
+          "role": "secondary",
+          "volume": 12100,
+          "kd": null,
+          "tier": null,
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": {
+        "term": "blitzradar",
+        "kd": 39,
+        "volume": 27100
+      },
+      "content": {
+        "translated": true,
+        "breadcrumb": [
+          "Startseite",
+          "Blitzradar"
+        ],
+        "h1": "Blitzradar & Lightningmaps – Blitze live auf der Karte",
+        "title": "Blitzradar & Lightningmaps – Blitze in Echtzeit | LightningMapGame",
+        "metaDescription": "Verfolge Gewitter mit einem Blitzradar in Echtzeit. Sieh Blitzeinschläge jetzt auf der Karte – und rate, ob in der nächsten Minute mehr oder weniger Blitze einschlagen.",
+        "imageAlt": "Blitzradar – Blitzeinschläge auf der Karte von Deutschland in Echtzeit",
+        "sections": [
+          {
+            "h2": "Wo gewittert es gerade?",
+            "body": "Das Blitzradar zeigt Blitzeinschläge auf der Karte, sobald sie erfasst werden. Rote und gelbe Bereiche zeigen, wo es gerade gewittert und in welche Richtung das Gewitter zieht. Erlaube den Standort und tippe auf «in meiner Nähe anzeigen», dann siehst du die nächsten Einschläge und die Zahl der Blitze der letzten 60 Minuten in deiner Umgebung."
+          },
+          {
+            "h2": "Blitzradar in Echtzeit",
+            "body": "Eine Blitzkarte – auch Gewitterradar genannt – aktualisiert sich automatisch im Sekundentakt. Je dichter die Blitze im selben Gebiet einschlagen, desto kräftiger ist die Gewitterzelle. Verfolge die Blitzdichte und die Bewegung der Zelle, um zu sehen, ob das Gewitter zunimmt oder abklingt."
+          },
+          {
+            "h2": "Wie funktioniert das Blitzradar?",
+            "body": "Die Blitzdaten stammen von Blitzortung – einem Netzwerk aus Empfangsstationen, das von Freiwilligen betrieben wird. Die Stationen messen, wann der Funkimpuls des Blitzes eintrifft, und der Einschlag wird per Triangulation aus mehreren Stationen verortet. Je mehr Stationen denselben Blitz erfassen, desto genauer ist die Position. Der Dienst wird auch Blitzkarte, Gewitterradar oder lightningmaps genannt – aber es ist dasselbe Blitzradar in Echtzeit."
+          },
+          {
+            "h2": "Rate die nächsten 60 Sekunden",
+            "body": "Schlagen in der nächsten Minute mehr oder weniger Blitze ein? Gib einen Tipp ab und sieh in Echtzeit, was passiert. Es ist ein kostenloses Spiel – kein Echtgeld.",
+            "isFunnel": true,
+            "ctaText": "Spielen: errate die nächsten 60 Sekunden",
+            "ctaPrompt": "Schlagen in der nächsten Minute mehr oder weniger Blitze ein?"
+          }
+        ],
+        "faqHeading": "Häufige Fragen",
+        "faq": [
+          {
+            "q": "Was ist ein Blitzradar?",
+            "a": "Ein Blitzradar ist eine Echtzeitkarte, die erfasste Blitzeinschläge zeigt, sobald sie passieren. So erkennst du schnell, wo es gewittert und wohin das Gewitter zieht."
+          },
+          {
+            "q": "Wie genau ist das Blitzradar?",
+            "a": "Die Genauigkeit hängt davon ab, wie viele Stationen denselben Einschlag erfassen. Wenn mehrere Stationen ihn registrieren, ist die Position meist auf wenige Kilometer genau."
+          },
+          {
+            "q": "Woher stammen die Blitzdaten?",
+            "a": "Die Daten kommen vom Blitzortung-Netzwerk, in dem freiwillige Empfangsstationen Blitze per Triangulation orten."
+          },
+          {
+            "q": "Wie oft wird die Karte aktualisiert?",
+            "a": "Die Karte wird in Echtzeit aktualisiert: neue Blitzeinschläge erscheinen innerhalb von Sekunden."
+          },
+          {
+            "q": "Kann man Gewitter vorhersagen?",
+            "a": "Der genaue Zeitpunkt lässt sich nicht vorhersagen, aber Blitzdichte und Zellbewegung zeigen, ob ein Gewitter näher kommt. Du kannst deine Einschätzung auch im Spiel testen: rate, ob in den nächsten 60 Sekunden mehr oder weniger Blitze einschlagen."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 11,
+      "locale": "de",
+      "localePath": "/de",
+      "country": "Germany",
+      "language": "German",
+      "hreflang": "de-DE",
+      "slug": "/de/gewitterwarnung",
+      "pageType": "seo_storm",
+      "intentTier": "storm",
+      "primaryKeywordOriginal": "warnung vor starkem gewitter",
+      "primaryKeyword": "warnung vor starkem gewitter",
+      "primaryVolume": 368000,
+      "primaryKd": 59,
+      "keywords": [
+        {
+          "term": "warnung vor starkem gewitter",
+          "role": "primary",
+          "volume": 368000,
+          "kd": 59,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "gewitter",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        },
+        {
+          "term": "unwetterwarnung",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": null,
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Warnung Vor Starkem Gewitter"
+        ],
+        "h1": "Warnung Vor Starkem Gewitter — live lightning map in real time",
+        "title": "Warnung Vor Starkem Gewitter — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Germany lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Warnung Vor Starkem Gewitter — lightning strikes on the Germany map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Warnung Vor Starkem Gewitter in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is warnung vor starkem gewitter?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_storm"
+    },
+    {
+      "priority": 12,
+      "locale": "nl",
+      "localePath": "/nl",
+      "country": "Netherlands",
+      "language": "Dutch",
+      "hreflang": "nl-NL",
+      "slug": "/nl/onweersradar",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "onweer",
+      "primaryKeyword": "onweerradar",
+      "primaryVolume": 27100,
+      "primaryKd": 33,
+      "keywords": [
+        {
+          "term": "onweerradar",
+          "role": "primary",
+          "volume": 27100,
+          "kd": 33,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "onweersradar",
+          "role": "secondary",
+          "volume": 27100,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        },
+        {
+          "term": "bliksem",
+          "role": "secondary",
+          "volume": 5400,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        },
+        {
+          "term": "blikseminslag",
+          "role": "secondary",
+          "volume": 3600,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        },
+        {
+          "term": "noodweer",
+          "role": "secondary",
+          "volume": 60500,
+          "kd": 42,
+          "tier": "storm",
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": {
+        "term": "noodweer",
+        "kd": 42,
+        "volume": 60500
+      },
+      "content": {
+        "translated": true,
+        "breadcrumb": [
+          "Home",
+          "Onweersradar"
+        ],
+        "h1": "Onweersradar – bliksem op de kaart in realtime",
+        "title": "Onweersradar – Bliksem op de kaart in realtime | LightningMapGame",
+        "metaDescription": "Volg onweer met een onweersradar in realtime. Zie blikseminslagen nu op de kaart – en raad of er de komende minuut meer of minder bliksems inslaan.",
+        "imageAlt": "Onweersradar – blikseminslagen op de kaart van Nederland in realtime",
+        "sections": [
+          {
+            "h2": "Waar onweert het nu?",
+            "body": "De onweersradar toont blikseminslagen op de kaart zodra ze worden gedetecteerd. Rode en gele gebieden laten zien waar het nu onweert en welke kant het onweer op trekt. Sta locatie toe en druk op «toon dichtbij», dan zie je de dichtstbijzijnde inslagen en het aantal bliksems van de afgelopen 60 minuten bij jou in de buurt."
+          },
+          {
+            "h2": "Onweerradar in realtime",
+            "body": "Een bliksemkaart wordt automatisch elke seconde bijgewerkt. Hoe dichter de bliksems in hetzelfde gebied inslaan, hoe krachtiger de bui. Volg de bliksemdichtheid en hoe de bui beweegt om te zien of het onweer aanwakkert of afneemt."
+          },
+          {
+            "h2": "Hoe werkt de onweersradar?",
+            "body": "De bliksemdata komt van Blitzortung – een netwerk van ontvangststations dat door vrijwilligers wordt beheerd. De stations meten wanneer de radiopuls van de bliksem aankomt, en de inslag wordt bepaald via triangulatie vanaf meerdere stations. Hoe meer stations dezelfde blikseminslag oppikken, hoe nauwkeuriger de positie. De dienst heet ook wel bliksemkaart, onweerradar of lightningmaps – en is vooral handig bij noodweer – maar het is dezelfde onweersradar in realtime."
+          },
+          {
+            "h2": "Raad de komende 60 seconden",
+            "body": "Slaan er de komende minuut meer of minder bliksems in? Doe een gok en zie in realtime wat er gebeurt. Het is een gratis spel – geen echt geld.",
+            "isFunnel": true,
+            "ctaText": "Speel: voorspel de komende 60 seconden",
+            "ctaPrompt": "Slaan er de komende minuut meer of minder bliksems in?"
+          }
+        ],
+        "faqHeading": "Veelgestelde vragen",
+        "faq": [
+          {
+            "q": "Wat is een onweersradar?",
+            "a": "Een onweersradar is een realtimekaart die gedetecteerde blikseminslagen toont zodra ze plaatsvinden. Zo zie je snel waar het onweert en welke kant het op trekt."
+          },
+          {
+            "q": "Hoe nauwkeurig is de onweersradar?",
+            "a": "De nauwkeurigheid hangt af van hoeveel stations dezelfde inslag registreren. Als meerdere stations het oppikken, is de positie meestal nauwkeurig tot op enkele kilometers."
+          },
+          {
+            "q": "Waar komt de bliksemdata vandaan?",
+            "a": "De data komt van het Blitzortung-netwerk, waar vrijwillige ontvangststations bliksem via triangulatie lokaliseren."
+          },
+          {
+            "q": "Hoe vaak wordt de kaart bijgewerkt?",
+            "a": "De kaart wordt in realtime bijgewerkt: nieuwe blikseminslagen verschijnen binnen seconden."
+          },
+          {
+            "q": "Kun je onweer voorspellen?",
+            "a": "Het exacte moment is niet te voorspellen, maar de bliksemdichtheid en de beweging van de bui laten zien of het onweer dichterbij komt. Je kunt je inschatting ook testen in het spel: raad of er de komende 60 seconden meer of minder bliksems inslaan."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 13,
+      "locale": "cz",
+      "localePath": "/cz",
+      "country": "Czechia",
+      "language": "Czech",
+      "hreflang": "cs-CZ",
+      "slug": "/cz/bourky-radar",
+      "pageType": "seo_map",
+      "intentTier": "storm",
+      "primaryKeywordOriginal": "bouřka",
+      "primaryKeyword": "bouřka",
+      "primaryVolume": 110000,
+      "primaryKd": 41,
+      "keywords": [
+        {
+          "term": "bouřka",
+          "role": "primary",
+          "volume": 110000,
+          "kd": 41,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "radar bouřky",
+          "role": "secondary",
+          "volume": 90500,
+          "kd": 70,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "bourky radar",
+          "role": "secondary",
+          "volume": 49500,
+          "kd": 59,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "blesky online",
+          "role": "secondary",
+          "volume": 1900,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        },
+        {
+          "term": "blitzortung",
+          "role": "secondary",
+          "volume": 1900,
+          "kd": null,
+          "tier": null,
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": {
+        "term": "bourky radar",
+        "kd": 59,
+        "volume": 49500
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Bouřka"
+        ],
+        "h1": "Bouřka — live lightning map in real time",
+        "title": "Bouřka — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Czechia lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Bouřka — lightning strikes on the Czechia map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Bouřka in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is bouřka?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 14,
+      "locale": "lv",
+      "localePath": "/lv",
+      "country": "Latvia",
+      "language": "Latvian",
+      "hreflang": "lv-LV",
+      "slug": "/lv/lightning-map",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "lightning map",
+      "primaryKeyword": "lightning map",
+      "primaryVolume": 18100,
+      "primaryKd": 43,
+      "keywords": [
+        {
+          "term": "lightning map",
+          "role": "primary",
+          "volume": 18100,
+          "kd": 43,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lighting map",
+          "role": "secondary",
+          "volume": 18100,
+          "kd": 46,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "zibens karte",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": {
+        "term": "lighting map",
+        "kd": 46,
+        "volume": 18100
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Lightning Map"
+        ],
+        "h1": "Lightning Map — live lightning map in real time",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Latvia lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Lightning Map — lightning strikes on the Latvia map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Lightning Map in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is lightning map?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 15,
+      "locale": "hr",
+      "localePath": "/hr",
+      "country": "Croatia",
+      "language": "Croatian",
+      "hreflang": "hr-HR",
+      "slug": "/hr/lighting-map",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "lightning map",
+      "primaryKeyword": "lightning map",
+      "primaryVolume": 18100,
+      "primaryKd": 40,
+      "keywords": [
+        {
+          "term": "lightning map",
+          "role": "primary",
+          "volume": 18100,
+          "kd": 40,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lighting maps",
+          "role": "secondary",
+          "volume": 14800,
+          "kd": 43,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "karta munja",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        },
+        {
+          "term": "blitzortung",
+          "role": "secondary",
+          "volume": 2900,
+          "kd": 47,
+          "tier": "lightning",
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": {
+        "term": "lighting maps",
+        "kd": 43,
+        "volume": 14800
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Lightning Map"
+        ],
+        "h1": "Lightning Map — live lightning map in real time",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Croatia lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Lightning Map — lightning strikes on the Croatia map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Lightning Map in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is lightning map?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 16,
+      "locale": "ca",
+      "localePath": "/ca",
+      "country": "Canada",
+      "language": "English",
+      "hreflang": "en-CA",
+      "slug": "/ca/lightning-map",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "lightning map",
+      "primaryKeyword": "lightning map",
+      "primaryVolume": 9900,
+      "primaryKd": 48,
+      "keywords": [
+        {
+          "term": "lightning map",
+          "role": "primary",
+          "volume": 9900,
+          "kd": 48,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lightning maps",
+          "role": "secondary",
+          "volume": 4400,
+          "kd": 47,
+          "tier": "lightning",
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": {
+        "term": "lightning maps",
+        "kd": 47,
+        "volume": 4400
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Lightning Map"
+        ],
+        "h1": "Lightning Map — live lightning map in real time",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Canada lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Lightning Map — lightning strikes on the Canada map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Lightning Map in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is lightning map?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 17,
+      "locale": "at",
+      "localePath": "/at",
+      "country": "Austria",
+      "language": "German",
+      "hreflang": "de-AT",
+      "slug": "/at/blitzortung",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "lightningmaps",
+      "primaryKeyword": "blitzortung",
+      "primaryVolume": 5400,
+      "primaryKd": 43,
+      "keywords": [
+        {
+          "term": "blitzortung",
+          "role": "primary",
+          "volume": 5400,
+          "kd": 43,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lighting map",
+          "role": "secondary",
+          "volume": 8100,
+          "kd": 71,
+          "tier": "lightning",
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": {
+        "term": "blitzortung",
+        "kd": 43,
+        "volume": 5400
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Blitzortung"
+        ],
+        "h1": "Blitzortung — live lightning map in real time",
+        "title": "Blitzortung — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Austria lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Blitzortung — lightning strikes on the Austria map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Blitzortung in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is blitzortung?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 18,
+      "locale": "gr",
+      "localePath": "/gr",
+      "country": "Greece",
+      "language": "Greek",
+      "hreflang": "el-GR",
+      "slug": "/gr/blitzortung",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "blitzortung",
+      "primaryKeyword": "κεραυνοι live",
+      "primaryVolume": 6600,
+      "primaryKd": 22,
+      "keywords": [
+        {
+          "term": "κεραυνοι live",
+          "role": "primary",
+          "volume": 6600,
+          "kd": 22,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "κεραυνοί live",
+          "role": "secondary",
+          "volume": 6600,
+          "kd": 23,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "χάρτης κεραυνών",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": {
+        "term": "κεραυνοί live",
+        "kd": 23,
+        "volume": 6600
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Κεραυνοι Live"
+        ],
+        "h1": "Κεραυνοι Live — live lightning map in real time",
+        "title": "Κεραυνοι Live — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Greece lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Κεραυνοι Live — lightning strikes on the Greece map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Κεραυνοι Live in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is κεραυνοι live?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 19,
+      "locale": "it",
+      "localePath": "/it",
+      "country": "Italy",
+      "language": "Italian",
+      "hreflang": "it-IT",
+      "slug": "/it/mappa-fulmini",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "blitzortung",
+      "primaryKeyword": "fulmine",
+      "primaryVolume": 12100,
+      "primaryKd": 26,
+      "keywords": [
+        {
+          "term": "fulmine",
+          "role": "primary",
+          "volume": 12100,
+          "kd": 26,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "mappa fulmini",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        },
+        {
+          "term": "fulmini in tempo reale",
+          "role": "secondary",
+          "volume": 8100,
+          "kd": 32,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "meteo radar",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": {
+        "term": "fulmini in tempo reale",
+        "kd": 32,
+        "volume": 8100
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Fulmine"
+        ],
+        "h1": "Fulmine — live lightning map in real time",
+        "title": "Fulmine — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Italy lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Fulmine — lightning strikes on the Italy map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Fulmine in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is fulmine?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 20,
+      "locale": "dk",
+      "localePath": "/dk",
+      "country": "Denmark",
+      "language": "Danish",
+      "hreflang": "da-DK",
+      "slug": "/dk/lyn-radar",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "lightning map",
+      "primaryKeyword": "lightning map",
+      "primaryVolume": 6600,
+      "primaryKd": 44,
+      "keywords": [
+        {
+          "term": "lightning map",
+          "role": "primary",
+          "volume": 6600,
+          "kd": 44,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lighting map",
+          "role": "secondary",
+          "volume": 6600,
+          "kd": 49,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lyn radar",
+          "role": "secondary",
+          "volume": 1900,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": {
+        "term": "lighting map",
+        "kd": 49,
+        "volume": 6600
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Lightning Map"
+        ],
+        "h1": "Lightning Map — live lightning map in real time",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Denmark lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Lightning Map — lightning strikes on the Denmark map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Lightning Map in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is lightning map?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 21,
+      "locale": "lt",
+      "localePath": "/lt",
+      "country": "Lithuania",
+      "language": "Lithuanian",
+      "hreflang": "lt-LT",
+      "slug": "/lt/lighting-map",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "lightning map",
+      "primaryKeyword": "lightning map",
+      "primaryVolume": 6600,
+      "primaryKd": 41,
+      "keywords": [
+        {
+          "term": "lightning map",
+          "role": "primary",
+          "volume": 6600,
+          "kd": 41,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lighting map",
+          "role": "secondary",
+          "volume": 6600,
+          "kd": 44,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "žaibų žemėlapis",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": {
+        "term": "lighting map",
+        "kd": 44,
+        "volume": 6600
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Lightning Map"
+        ],
+        "h1": "Lightning Map — live lightning map in real time",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Lithuania lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Lightning Map — lightning strikes on the Lithuania map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Lightning Map in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is lightning map?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 22,
+      "locale": "sk",
+      "localePath": "/sk",
+      "country": "Slovakia",
+      "language": "Slovak",
+      "hreflang": "sk-SK",
+      "slug": "/sk/blesky",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "lighting map",
+      "primaryKeyword": "lighting map",
+      "primaryVolume": 6600,
+      "primaryKd": 41,
+      "keywords": [
+        {
+          "term": "lighting map",
+          "role": "primary",
+          "volume": 6600,
+          "kd": 41,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lighting maps",
+          "role": "secondary",
+          "volume": 6600,
+          "kd": 47,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lightningmaps",
+          "role": "secondary",
+          "volume": 6600,
+          "kd": 45,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "blesky",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": {
+        "term": "lightningmaps",
+        "kd": 45,
+        "volume": 6600
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Lighting Map"
+        ],
+        "h1": "Lighting Map — live lightning map in real time",
+        "title": "Lighting Map — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Slovakia lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Lighting Map — lightning strikes on the Slovakia map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Lighting Map in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is lighting map?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 23,
+      "locale": "es",
+      "localePath": "/es",
+      "country": "Spain",
+      "language": "Spanish",
+      "hreflang": "es-ES",
+      "slug": "/es/mapa-de-rayos",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "lightning map",
+      "primaryKeyword": "lightning map",
+      "primaryVolume": 1900,
+      "primaryKd": 48,
+      "keywords": [
+        {
+          "term": "lightning map",
+          "role": "primary",
+          "volume": 1900,
+          "kd": 48,
+          "tier": null,
+          "isBrand": true
+        },
+        {
+          "term": "rayos",
+          "role": "secondary",
+          "volume": 4400,
+          "kd": 64,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "tormenta",
+          "role": "secondary",
+          "volume": 74000,
+          "kd": 42,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "alerta tormenta eléctrica",
+          "role": "secondary",
+          "volume": 22200,
+          "kd": null,
+          "tier": null,
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": {
+        "term": "tormenta",
+        "kd": 42,
+        "volume": 74000
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Lightning Map"
+        ],
+        "h1": "Lightning Map — live lightning map in real time",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Spain lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Lightning Map — lightning strikes on the Spain map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Lightning Map in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is lightning map?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 24,
+      "locale": "rs",
+      "localePath": "/rs",
+      "country": "Serbia",
+      "language": "Serbian",
+      "hreflang": "sr-RS",
+      "slug": "/rs/lighting-map",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "lighting map",
+      "primaryKeyword": "lighting map",
+      "primaryVolume": 9900,
+      "primaryKd": 43,
+      "keywords": [
+        {
+          "term": "lighting map",
+          "role": "primary",
+          "volume": 9900,
+          "kd": 43,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lightning map",
+          "role": "secondary",
+          "volume": 6600,
+          "kd": 53,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "blitzortung",
+          "role": "secondary",
+          "volume": 1600,
+          "kd": null,
+          "tier": null,
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": {
+        "term": "lightning map",
+        "kd": 53,
+        "volume": 6600
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Lighting Map"
+        ],
+        "h1": "Lighting Map — live lightning map in real time",
+        "title": "Lighting Map — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Serbia lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Lighting Map — lightning strikes on the Serbia map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Lighting Map in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is lighting map?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 25,
+      "locale": "ro",
+      "localePath": "/ro",
+      "country": "Romania",
+      "language": "Romanian",
+      "hreflang": "ro-RO",
+      "slug": "/ro/blitzortung",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "blitzortung",
+      "primaryKeyword": "blitzortung",
+      "primaryVolume": 2900,
+      "primaryKd": 40,
+      "keywords": [
+        {
+          "term": "blitzortung",
+          "role": "primary",
+          "volume": 2900,
+          "kd": 40,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lightingmap",
+          "role": "secondary",
+          "volume": 2900,
+          "kd": 50,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "lighting map",
+          "role": "secondary",
+          "volume": 2400,
+          "kd": 51,
+          "tier": "lightning",
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": {
+        "term": "lightingmap",
+        "kd": 50,
+        "volume": 2900
+      },
+      "content": {
+        "translated": false,
+        "breadcrumb": [
+          "Home",
+          "Blitzortung"
+        ],
+        "h1": "Blitzortung — live lightning map in real time",
+        "title": "Blitzortung — Live Lightning Map | LightningMapGame",
+        "metaDescription": "Track lightning in real time on the Romania lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
+        "imageAlt": "Blitzortung — lightning strikes on the Romania map in real time",
+        "sections": [
+          {
+            "h2": "Where is it striking right now?",
+            "body": "PLACEHOLDER — translate per the brief. Map reading + geolocate."
+          },
+          {
+            "h2": "Blitzortung in real time",
+            "body": "PLACEHOLDER — translate. Strike density and storm movement."
+          },
+          {
+            "h2": "How does it work?",
+            "body": "PLACEHOLDER — translate. Blitzortung triangulation + attribution (E-E-A-T)."
+          },
+          {
+            "h2": "Guess the next 60 seconds",
+            "body": "PLACEHOLDER — translate. Free game, not real-money betting.",
+            "isFunnel": true,
+            "ctaText": "Play: guess the next 60 seconds",
+            "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
+          }
+        ],
+        "faqHeading": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "What is blitzortung?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "How accurate is it?",
+            "a": "PLACEHOLDER — translate."
+          },
+          {
+            "q": "Where does the lightning data come from?",
+            "a": "PLACEHOLDER — Blitzortung."
+          },
+          {
+            "q": "How often does the map update?",
+            "a": "PLACEHOLDER — real time."
+          },
+          {
+            "q": "Can incoming storms be predicted?",
+            "a": "PLACEHOLDER — bridges to the game."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    }
+  ]
+}

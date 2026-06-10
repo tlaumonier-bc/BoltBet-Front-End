@@ -10,7 +10,7 @@ import type { GridCell, LightningStrike } from '@/types'
 
 const RADIUS = 2
 const DEG2RAD = Math.PI / 180
-const TEXTURE_URL = 'https://unpkg.com/three-globe/example/img/earth-night.jpg'
+const TEXTURE_URL = '/earth-night.jpg'
 const GRID_GRAY = '#94a3b8'
 
 function latLonToVector3(lat: number, lon: number, radius: number) {

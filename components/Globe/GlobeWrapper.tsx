@@ -1,10 +1,18 @@
-'use client'
-import dynamic from 'next/dynamic'
+'use client';
 
-const LightningGlobe = dynamic(() => import('./LightningGlobe'), {
-  ssr: false,
-  loading: () => <GlobePlaceholder />,
-})
+import dynamic from 'next/dynamic';
+
+interface LightningGlobeProps {
+  viewOnly?: boolean;
+}
+
+const LightningGlobe = dynamic<LightningGlobeProps>(
+  () => import('./LightningGlobe'),
+  {
+    ssr: false,
+    loading: () => <GlobePlaceholder />,
+  }
+);
 
 function GlobePlaceholder() {
   return (
@@ -14,9 +22,9 @@ function GlobePlaceholder() {
         LOADING GLOBE…
       </span>
     </div>
-  )
+  );
 }
 
-export default function GlobeWrapper() {
-  return <LightningGlobe />
+export default function GlobeWrapper({ viewOnly = false }: { viewOnly?: boolean }) {
+  return <LightningGlobe viewOnly={viewOnly} />;
 }
