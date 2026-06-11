@@ -6,7 +6,13 @@ export default function Nav() {
   const pathname = usePathname() ?? '';
   // Immersive map routes (/play, /{locale}/play, /live) own their own terminal
   // chrome — hide the site nav there.
-  if (pathname === '/live' || pathname === '/play' || pathname.endsWith('/play')) return null;
+  if (
+    pathname === '/' ||
+    pathname === '/live' ||
+    pathname === '/play' ||
+    pathname.endsWith('/play')
+  )
+    return null;
 
   return (
     <nav className="fixed left-1/2 top-4 z-50 w-[min(960px,92vw)] -translate-x-1/2">
