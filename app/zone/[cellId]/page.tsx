@@ -22,7 +22,7 @@ export async function generateMetadata({
   return {
     title: `Lightning Prediction: ${region} Zone`,
     description: `Live lightning strike statistics and predictions for the ${region} zone (around ${lat}°, ${lon}°). Track real-time bolts and place predictions on Lightning Map Bets.`,
-    alternates: { canonical: `https://lightningmapbets.com/zone/${params.cellId}` },
+    alternates: { canonical: `https://lightningmapgames.com/zone/${params.cellId}` },
     robots: { index: false, follow: true },
   }
 }

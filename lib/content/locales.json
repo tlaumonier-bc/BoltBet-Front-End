@@ -1,9 +1,9 @@
 {
   "_generated_by": "generate_content_config.py (Phase 1)",
   "site": {
-    "brand": "LightningMapBets",
-    "domain": "lightningmapbets.com",
-    "baseUrl": "https://lightningmapbets.com"
+    "brand": "LightningMapGames",
+    "domain": "lightningmapgames.com",
+    "baseUrl": "https://lightningmapgames.com"
   },
   "funnel": {
     "slug": "/{locale}/play",
@@ -16,113 +16,113 @@
     "seo_map": [
       {
         "hreflang": "fi-FI",
-        "url": "https://lightningmapbets.com/fi/ukkostutka"
+        "url": "https://lightningmapgames.com/fi/ukkostutka"
       },
       {
         "hreflang": "en-GB",
-        "url": "https://lightningmapbets.com/gb/lightning-map"
+        "url": "https://lightningmapgames.com/gb/lightning-map"
       },
       {
         "hreflang": "pl-PL",
-        "url": "https://lightningmapbets.com/pl/blitzortung"
+        "url": "https://lightningmapgames.com/pl/blitzortung"
       },
       {
         "hreflang": "fr-FR",
-        "url": "https://lightningmapbets.com/fr/foudre-en-direct"
+        "url": "https://lightningmapgames.com/fr/foudre-en-direct"
       },
       {
         "hreflang": "et-EE",
-        "url": "https://lightningmapbets.com/ee/lightning-map"
+        "url": "https://lightningmapgames.com/ee/lightning-map"
       },
       {
         "hreflang": "sv-SE",
-        "url": "https://lightningmapbets.com/se/blixtkarta"
+        "url": "https://lightningmapgames.com/se/blixtkarta"
       },
       {
         "hreflang": "en-US",
-        "url": "https://lightningmapbets.com/us/lightning-map"
+        "url": "https://lightningmapgames.com/us/lightning-map"
       },
       {
         "hreflang": "nb-NO",
-        "url": "https://lightningmapbets.com/no/lynkart"
+        "url": "https://lightningmapgames.com/no/lynkart"
       },
       {
         "hreflang": "de-DE",
-        "url": "https://lightningmapbets.com/de/blitzortung"
+        "url": "https://lightningmapgames.com/de/blitzortung"
       },
       {
         "hreflang": "nl-NL",
-        "url": "https://lightningmapbets.com/nl/onweersradar"
+        "url": "https://lightningmapgames.com/nl/onweersradar"
       },
       {
         "hreflang": "cs-CZ",
-        "url": "https://lightningmapbets.com/cz/bourky-radar"
+        "url": "https://lightningmapgames.com/cz/bourky-radar"
       },
       {
         "hreflang": "lv-LV",
-        "url": "https://lightningmapbets.com/lv/lightning-map"
+        "url": "https://lightningmapgames.com/lv/lightning-map"
       },
       {
         "hreflang": "hr-HR",
-        "url": "https://lightningmapbets.com/hr/lighting-map"
+        "url": "https://lightningmapgames.com/hr/lighting-map"
       },
       {
         "hreflang": "en-CA",
-        "url": "https://lightningmapbets.com/ca/lightning-map"
+        "url": "https://lightningmapgames.com/ca/lightning-map"
       },
       {
         "hreflang": "de-AT",
-        "url": "https://lightningmapbets.com/at/blitzortung"
+        "url": "https://lightningmapgames.com/at/blitzortung"
       },
       {
         "hreflang": "el-GR",
-        "url": "https://lightningmapbets.com/gr/blitzortung"
+        "url": "https://lightningmapgames.com/gr/blitzortung"
       },
       {
         "hreflang": "it-IT",
-        "url": "https://lightningmapbets.com/it/mappa-fulmini"
+        "url": "https://lightningmapgames.com/it/mappa-fulmini"
       },
       {
         "hreflang": "da-DK",
-        "url": "https://lightningmapbets.com/dk/lyn-radar"
+        "url": "https://lightningmapgames.com/dk/lyn-radar"
       },
       {
         "hreflang": "lt-LT",
-        "url": "https://lightningmapbets.com/lt/lighting-map"
+        "url": "https://lightningmapgames.com/lt/lighting-map"
       },
       {
         "hreflang": "sk-SK",
-        "url": "https://lightningmapbets.com/sk/blesky"
+        "url": "https://lightningmapgames.com/sk/blesky"
       },
       {
         "hreflang": "es-ES",
-        "url": "https://lightningmapbets.com/es/mapa-de-rayos"
+        "url": "https://lightningmapgames.com/es/mapa-de-rayos"
       },
       {
         "hreflang": "sr-RS",
-        "url": "https://lightningmapbets.com/rs/lighting-map"
+        "url": "https://lightningmapgames.com/rs/lighting-map"
       },
       {
         "hreflang": "ro-RO",
-        "url": "https://lightningmapbets.com/ro/blitzortung"
+        "url": "https://lightningmapgames.com/ro/blitzortung"
       },
       {
         "hreflang": "x-default",
-        "url": "https://lightningmapbets.com/"
+        "url": "https://lightningmapgames.com/"
       }
     ],
     "seo_storm": [
       {
         "hreflang": "pl-PL",
-        "url": "https://lightningmapbets.com/pl/gdzie-jest-burza"
+        "url": "https://lightningmapgames.com/pl/gdzie-jest-burza"
       },
       {
         "hreflang": "de-DE",
-        "url": "https://lightningmapbets.com/de/gewitterwarnung"
+        "url": "https://lightningmapgames.com/de/gewitterwarnung"
       },
       {
         "hreflang": "x-default",
-        "url": "https://lightningmapbets.com/"
+        "url": "https://lightningmapgames.com/"
       }
     ]
   },
@@ -195,7 +195,7 @@
           "Ukkostutka"
         ],
         "h1": "Ukkostutka – salamat kartalla reaaliajassa",
-        "title": "Ukkostutka – Salamat kartalla reaaliajassa | LightningMapBets",
+        "title": "Ukkostutka – Salamat kartalla reaaliajassa | LightningMapGames",
         "metaDescription": "Seuraa ukkosta reaaliaikaisella ukkostutkalla. Näe salamaniskut kartalla juuri nyt – ja arvaa, iskeekö seuraavan 60 sekunnin aikana enemmän vai vähemmän salamoita.",
         "imageAlt": "Ukkostutka – salamaniskut Suomen kartalla reaaliajassa",
         "sections": [
@@ -305,7 +305,7 @@
           "Lightning Map"
         ],
         "h1": "Lightning Map — live lightning map in real time",
-        "title": "Lightning Map — Live Lightning Map | LightningMapBets",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the United Kingdom lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Lightning Map — lightning strikes on the United Kingdom map in real time",
         "sections": [
@@ -415,7 +415,7 @@
           "Blitzortung"
         ],
         "h1": "Blitzortung — live lightning map in real time",
-        "title": "Blitzortung — Live Lightning Map | LightningMapBets",
+        "title": "Blitzortung — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Poland lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Blitzortung — lightning strikes on the Poland map in real time",
         "sections": [
@@ -525,7 +525,7 @@
           "Gdzie Jest Burza"
         ],
         "h1": "Gdzie Jest Burza — live lightning map in real time",
-        "title": "Gdzie Jest Burza — Live Lightning Map | LightningMapBets",
+        "title": "Gdzie Jest Burza — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Poland lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Gdzie Jest Burza — lightning strikes on the Poland map in real time",
         "sections": [
@@ -639,7 +639,7 @@
           "Orage En Direct"
         ],
         "h1": "Orage En Direct — live lightning map in real time",
-        "title": "Orage En Direct — Live Lightning Map | LightningMapBets",
+        "title": "Orage En Direct — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the France lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Orage En Direct — lightning strikes on the France map in real time",
         "sections": [
@@ -741,7 +741,7 @@
           "Lighting Map"
         ],
         "h1": "Lighting Map — live lightning map in real time",
-        "title": "Lighting Map — Live Lightning Map | LightningMapBets",
+        "title": "Lighting Map — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Estonia lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Lighting Map — lightning strikes on the Estonia map in real time",
         "sections": [
@@ -859,7 +859,7 @@
           "Blixtradar"
         ],
         "h1": "Blixtradar – se blixtar på kartan i realtid",
-        "title": "Blixtradar – Blixtar på kartan i realtid | LightningMapBets",
+        "title": "Blixtradar – Blixtar på kartan i realtid | LightningMapGames",
         "metaDescription": "Följ åskan med en blixtradar i realtid. Se blixtnedslag på kartan just nu – och gissa om det slår ner fler eller färre blixtar nästa minut.",
         "imageAlt": "Blixtradar – blixtnedslag på kartan över Sverige i realtid",
         "sections": [
@@ -961,7 +961,7 @@
           "Lightning Map"
         ],
         "h1": "Lightning Map — live lightning map in real time",
-        "title": "Lightning Map — Live Lightning Map | LightningMapBets",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the United States lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Lightning Map — lightning strikes on the United States map in real time",
         "sections": [
@@ -1079,7 +1079,7 @@
           "Lynradar"
         ],
         "h1": "Lynradar – se lyn på kartet i sanntid",
-        "title": "Lynradar – Lyn på kartet i sanntid | LightningMapBets",
+        "title": "Lynradar – Lyn på kartet i sanntid | LightningMapGames",
         "metaDescription": "Følg uvær med en sanntids lynradar. Se lynnedslag på kartet akkurat nå – og gjett om det slår ned flere eller færre lyn det neste minuttet.",
         "imageAlt": "Lynradar – lynnedslag på kartet over Norge i sanntid",
         "sections": [
@@ -1189,7 +1189,7 @@
           "Blitzradar"
         ],
         "h1": "Blitzradar & Lightningmaps – Blitze live auf der Karte",
-        "title": "Blitzradar & Lightningmaps – Blitze in Echtzeit | LightningMapBets",
+        "title": "Blitzradar & Lightningmaps – Blitze in Echtzeit | LightningMapGames",
         "metaDescription": "Verfolge Gewitter mit einem Blitzradar in Echtzeit. Sieh Blitzeinschläge jetzt auf der Karte – und rate, ob in der nächsten Minute mehr oder weniger Blitze einschlagen.",
         "imageAlt": "Blitzradar – Blitzeinschläge auf der Karte von Deutschland in Echtzeit",
         "sections": [
@@ -1287,7 +1287,7 @@
           "Warnung Vor Starkem Gewitter"
         ],
         "h1": "Warnung Vor Starkem Gewitter — live lightning map in real time",
-        "title": "Warnung Vor Starkem Gewitter — Live Lightning Map | LightningMapBets",
+        "title": "Warnung Vor Starkem Gewitter — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Germany lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Warnung Vor Starkem Gewitter — lightning strikes on the Germany map in real time",
         "sections": [
@@ -1405,7 +1405,7 @@
           "Onweersradar"
         ],
         "h1": "Onweersradar – bliksem op de kaart in realtime",
-        "title": "Onweersradar – Bliksem op de kaart in realtime | LightningMapBets",
+        "title": "Onweersradar – Bliksem op de kaart in realtime | LightningMapGames",
         "metaDescription": "Volg onweer met een onweersradar in realtime. Zie blikseminslagen nu op de kaart – en raad of er de komende minuut meer of minder bliksems inslaan.",
         "imageAlt": "Onweersradar – blikseminslagen op de kaart van Nederland in realtime",
         "sections": [
@@ -1523,7 +1523,7 @@
           "Bouřka"
         ],
         "h1": "Bouřka — live lightning map in real time",
-        "title": "Bouřka — Live Lightning Map | LightningMapBets",
+        "title": "Bouřka — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Czechia lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Bouřka — lightning strikes on the Czechia map in real time",
         "sections": [
@@ -1625,7 +1625,7 @@
           "Lightning Map"
         ],
         "h1": "Lightning Map — live lightning map in real time",
-        "title": "Lightning Map — Live Lightning Map | LightningMapBets",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Latvia lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Lightning Map — lightning strikes on the Latvia map in real time",
         "sections": [
@@ -1735,7 +1735,7 @@
           "Lightning Map"
         ],
         "h1": "Lightning Map — live lightning map in real time",
-        "title": "Lightning Map — Live Lightning Map | LightningMapBets",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Croatia lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Lightning Map — lightning strikes on the Croatia map in real time",
         "sections": [
@@ -1829,7 +1829,7 @@
           "Lightning Map"
         ],
         "h1": "Lightning Map — live lightning map in real time",
-        "title": "Lightning Map — Live Lightning Map | LightningMapBets",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Canada lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Lightning Map — lightning strikes on the Canada map in real time",
         "sections": [
@@ -1923,7 +1923,7 @@
           "Blitzortung"
         ],
         "h1": "Blitzortung — live lightning map in real time",
-        "title": "Blitzortung — Live Lightning Map | LightningMapBets",
+        "title": "Blitzortung — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Austria lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Blitzortung — lightning strikes on the Austria map in real time",
         "sections": [
@@ -2025,7 +2025,7 @@
           "Κεραυνοι Live"
         ],
         "h1": "Κεραυνοι Live — live lightning map in real time",
-        "title": "Κεραυνοι Live — Live Lightning Map | LightningMapBets",
+        "title": "Κεραυνοι Live — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Greece lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Κεραυνοι Live — lightning strikes on the Greece map in real time",
         "sections": [
@@ -2135,7 +2135,7 @@
           "Fulmine"
         ],
         "h1": "Fulmine — live lightning map in real time",
-        "title": "Fulmine — Live Lightning Map | LightningMapBets",
+        "title": "Fulmine — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Italy lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Fulmine — lightning strikes on the Italy map in real time",
         "sections": [
@@ -2237,7 +2237,7 @@
           "Lightning Map"
         ],
         "h1": "Lightning Map — live lightning map in real time",
-        "title": "Lightning Map — Live Lightning Map | LightningMapBets",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Denmark lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Lightning Map — lightning strikes on the Denmark map in real time",
         "sections": [
@@ -2339,7 +2339,7 @@
           "Lightning Map"
         ],
         "h1": "Lightning Map — live lightning map in real time",
-        "title": "Lightning Map — Live Lightning Map | LightningMapBets",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Lithuania lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Lightning Map — lightning strikes on the Lithuania map in real time",
         "sections": [
@@ -2449,7 +2449,7 @@
           "Lighting Map"
         ],
         "h1": "Lighting Map — live lightning map in real time",
-        "title": "Lighting Map — Live Lightning Map | LightningMapBets",
+        "title": "Lighting Map — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Slovakia lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Lighting Map — lightning strikes on the Slovakia map in real time",
         "sections": [
@@ -2559,7 +2559,7 @@
           "Lightning Map"
         ],
         "h1": "Lightning Map — live lightning map in real time",
-        "title": "Lightning Map — Live Lightning Map | LightningMapBets",
+        "title": "Lightning Map — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Spain lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Lightning Map — lightning strikes on the Spain map in real time",
         "sections": [
@@ -2661,7 +2661,7 @@
           "Lighting Map"
         ],
         "h1": "Lighting Map — live lightning map in real time",
-        "title": "Lighting Map — Live Lightning Map | LightningMapBets",
+        "title": "Lighting Map — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Serbia lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Lighting Map — lightning strikes on the Serbia map in real time",
         "sections": [
@@ -2763,7 +2763,7 @@
           "Blitzortung"
         ],
         "h1": "Blitzortung — live lightning map in real time",
-        "title": "Blitzortung — Live Lightning Map | LightningMapBets",
+        "title": "Blitzortung — Live Lightning Map | LightningMapGames",
         "metaDescription": "Track lightning in real time on the Romania lightning map. See strikes as they happen — then guess whether more or fewer hit in the next 60 seconds.",
         "imageAlt": "Blitzortung — lightning strikes on the Romania map in real time",
         "sections": [
