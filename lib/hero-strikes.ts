@@ -18,7 +18,7 @@ import { latLonToVector3 } from './hero'
 // crust without z-fighting, and back-hemisphere strikes are occluded by it.
 export const HERO_STRIKE_RADIUS = 2.02
 export const STRIKES_PER_SECOND = 50
-export const SEQUENCE_SECONDS = 6
+export const SEQUENCE_SECONDS = 10
 const COUNT = STRIKES_PER_SECOND * SEQUENCE_SECONDS // 300 baked strikes
 
 // [lat, lon, weight, spreadDeg] — weight biases how often a region fires,

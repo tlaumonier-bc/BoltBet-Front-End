@@ -39,7 +39,7 @@ export default function HeroStrikes() {
           void main() {
             vAlpha = aAlpha;
             vec4 mv = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = uSize * (300.0 / -mv.z) * (0.45 + aAlpha * 0.8);
+            gl_PointSize = uSize * (5.0 / -mv.z) * (0.45 + aAlpha * 0.8);
             gl_Position = projectionMatrix * mv;
           }`,
         fragmentShader: `
