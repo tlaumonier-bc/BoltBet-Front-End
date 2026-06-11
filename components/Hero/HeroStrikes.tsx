@@ -1,113 +1,169 @@
 'use client'
-// components/Hero/HeroStrikes.tsx
-// Replays the pre-recorded ~50 strikes/second sequence on the hero globe as a
-// single GPU points pool — ONE draw call, zero per-frame allocation. Each
-// strike grabs a slot in a small ring buffer, flashes bright, then fades over
-// ~1.1s. (The full bolt geometry from LightningGlobe's StrikeVisual stays on
-// /play and /live; at 50/s a React-component-per-strike would not be viable,
-// so the hero uses this pooled flash field instead.)
-
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { heroStrikeSequence } from '@/lib/hero-strikes'
 
-const POOL = 96 // > peak concurrent flashes (≈50/s × 1.1s fade)
-const FADE = 1.1 // seconds a flash stays visible
+const POOL = 96 // Max concurrent bolts on screen
 
 export default function HeroStrikes() {
-  const { times, positions, count, duration } = heroStrikeSequence
+  const { times, positions, count, duration } = heroStrikeSequence;
 
-  // Stable render values: the buffers backing the geometry + the material.
-  const posArr = useMemo(() => new Float32Array(POOL * 3), [])
-  const alphaArr = useMemo(() => new Float32Array(POOL), [])
-  const material = useMemo(
-    () =>
-      new THREE.ShaderMaterial({
-        uniforms: {
-          uSize: { value: 22 },
-          uHalo: { value: new THREE.Color('#7cc4ff') },
-          uCore: { value: new THREE.Color('#eaf4ff') },
-        },
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        vertexShader: `
-          attribute float aAlpha;
-          varying float vAlpha;
-          uniform float uSize;
-          void main() {
-            vAlpha = aAlpha;
-            vec4 mv = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = uSize * (5.0 / -mv.z) * (0.45 + aAlpha * 0.8);
-            gl_Position = projectionMatrix * mv;
-          }`,
-        fragmentShader: `
-          precision mediump float;
-          varying float vAlpha;
-          uniform vec3 uHalo;
-          uniform vec3 uCore;
-          void main() {
-            if (vAlpha <= 0.001) discard;
-            float d = length(gl_PointCoord - vec2(0.5));
-            if (d > 0.5) discard;
-            float glow = smoothstep(0.5, 0.0, d);
-            float core = smoothstep(0.18, 0.0, d);
-            vec3 col = mix(uHalo, uCore, core);
-            float a = (glow * 0.55 + core) * vAlpha;
-            gl_FragColor = vec4(col, a);
-          }`,
-      }),
-    []
-  )
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+  const pointsRef = useRef<THREE.Points>(null);
+  const play = useRef({ cursor: 0, slot: 0, lastLoopT: 0, birth: new Float32Array(POOL).fill(-1000) });
+  
+  // FIX: Broaden the type to accept Three's internal uniforms dictionary
+  const shaderUniformsRef = useRef<Record<string, THREE.IUniform> | null>(null);
+  
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  
+  const baseGeom = useMemo(() => {
+    const geom = new THREE.ConeGeometry(0.015, 0.4, 4, 5);
+    geom.translate(0, 0.2, 0); 
+    return geom;
+  }, []);
 
-  // Mutable playback state lives behind a ref — only ever touched inside the
-  // frame loop, never during render (keeps the React Compiler happy).
-  const points = useRef<THREE.Points>(null)
-  const play = useRef({ cursor: 0, slot: 0, lastLoopT: 0, birth: new Float32Array(POOL).fill(-1000) })
+  const pointGeom = useMemo(() => {
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(POOL * 3), 3));
+    geom.setAttribute('aAlpha', new THREE.Float32BufferAttribute(new Float32Array(POOL), 1));
+    return geom;
+  }, []);
+
+  const boltMaterial = useMemo(() => {
+    const mat = new THREE.MeshBasicMaterial({ 
+      color: '#bfe3ff', 
+      transparent: true, 
+      blending: THREE.AdditiveBlending,
+      depthWrite: false 
+    });
+    
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.uTime = { value: 0 };
+      shaderUniformsRef.current = shader.uniforms; 
+
+      shader.vertexShader = `
+        uniform float uTime;
+        attribute float birthTime;
+        varying float vAlpha;
+        ${shader.vertexShader}
+      `.replace(
+        `#include <begin_vertex>`,
+        `
+        #include <begin_vertex>
+        float age = uTime - birthTime;
+        vAlpha = (birthTime > -100.0 && age >= 0.0 && age < 1.5) ? (1.0 - (age / 1.5)) : 0.0;
+        
+        if (position.y > 0.05 && vAlpha > 0.0) {
+          float noiseX = sin(float(gl_InstanceID) * 12.3 + position.y * 20.0) * 0.05;
+          float noiseZ = cos(float(gl_InstanceID) * 45.6 + position.y * 20.0) * 0.05;
+          transformed.x += noiseX;
+          transformed.z += noiseZ;
+        }
+        `
+      );
+      shader.fragmentShader = `
+        varying float vAlpha;
+        ${shader.fragmentShader}
+      `.replace(
+        `vec4 diffuseColor = vec4( diffuse, opacity );`,
+        `
+        if (vAlpha <= 0.0) discard;
+        vec4 diffuseColor = vec4( diffuse, opacity * (vAlpha * vAlpha) );
+        `
+      );
+    };
+    return mat;
+  }, []);
+
+  const pointMaterial = useMemo(() => new THREE.ShaderMaterial({
+    uniforms: { uColor: { value: new THREE.Color('#eaf4ff') } },
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexShader: `
+      attribute float aAlpha;
+      varying float vAlpha;
+      void main() {
+        vAlpha = aAlpha;
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = 15.0 * (1.0 / -mvPosition.z) * (0.5 + aAlpha);
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor;
+      varying float vAlpha;
+      void main() {
+        if(vAlpha <= 0.01) discard;
+        float d = length(gl_PointCoord - vec2(0.5));
+        if(d > 0.5) discard;
+        gl_FragColor = vec4(uColor, smoothstep(0.5, 0.0, d) * vAlpha);
+      }
+    `
+  }), []);
+
+  useEffect(() => {
+    if (meshRef.current) {
+      meshRef.current.geometry.setAttribute('birthTime', new THREE.InstancedBufferAttribute(play.current.birth, 1));
+    }
+  }, []);
 
   useFrame((state) => {
-    const pts = points.current
-    if (!pts) return
-    const pos = pts.geometry.attributes.position.array as Float32Array
-    const alpha = pts.geometry.attributes.aAlpha.array as Float32Array
-    const p = play.current
-    const elapsed = state.clock.getElapsedTime()
-    const loopT = elapsed % duration
+    if (!meshRef.current || !pointsRef.current) return;
+    
+    const p = play.current;
+    const elapsed = state.clock.getElapsedTime();
+    const loopT = elapsed % duration;
+    
+    // FIX: Safely update uTime without TS complaining
+    if (shaderUniformsRef.current && shaderUniformsRef.current.uTime) {
+      shaderUniformsRef.current.uTime.value = elapsed;
+    }
 
-    // Sequence wrapped back to the start of the loop.
-    if (loopT < p.lastLoopT) p.cursor = 0
-    p.lastLoopT = loopT
+    if (loopT < p.lastLoopT) p.cursor = 0;
+    p.lastLoopT = loopT;
 
-    // Spawn every strike whose fire-time has passed since the last frame.
+    const posArray = pointsRef.current.geometry.attributes.position.array as Float32Array;
+    const alphaArray = pointsRef.current.geometry.attributes.aAlpha.array as Float32Array;
+
     while (p.cursor < count && times[p.cursor] <= loopT) {
-      const s = p.slot % POOL
-      p.slot++
-      const src = p.cursor * 3
-      pos[s * 3] = positions[src]
-      pos[s * 3 + 1] = positions[src + 1]
-      pos[s * 3 + 2] = positions[src + 2]
-      p.birth[s] = elapsed
-      p.cursor++
+      const s = p.slot % POOL;
+      p.slot++;
+      
+      const src = p.cursor * 3;
+      const pos = new THREE.Vector3(positions[src], positions[src + 1], positions[src + 2]);
+      
+      dummy.position.copy(pos);
+      dummy.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), pos.clone().normalize());
+      dummy.updateMatrix();
+      
+      meshRef.current.setMatrixAt(s, dummy.matrix);
+      p.birth[s] = elapsed;
+
+      posArray[s * 3] = pos.x;
+      posArray[s * 3 + 1] = pos.y;
+      posArray[s * 3 + 2] = pos.z;
+      
+      p.cursor++;
     }
 
-    // Fade every live slot. Squared falloff = a sharp flash, gentle tail.
     for (let i = 0; i < POOL; i++) {
-      const age = elapsed - p.birth[i]
-      const t = age >= 0 && age < FADE ? 1 - age / FADE : 0
-      alpha[i] = t * t
+      const age = elapsed - p.birth[i];
+      alphaArray[i] = (age >= 0 && age < 1.5) ? 1.0 - (age / 1.5) : 0;
     }
 
-    pts.geometry.attributes.position.needsUpdate = true
-    pts.geometry.attributes.aAlpha.needsUpdate = true
-  })
+    meshRef.current.instanceMatrix.needsUpdate = true;
+    meshRef.current.geometry.attributes.birthTime.needsUpdate = true;
+    pointsRef.current.geometry.attributes.position.needsUpdate = true;
+    pointsRef.current.geometry.attributes.aAlpha.needsUpdate = true;
+  });
 
   return (
-    <points ref={points} material={material} frustumCulled={false}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[posArr, 3]} />
-        <bufferAttribute attach="attributes-aAlpha" args={[alphaArr, 1]} />
-      </bufferGeometry>
-    </points>
-  )
+    <group>
+      <instancedMesh ref={meshRef} args={[baseGeom, boltMaterial, POOL]} frustumCulled={false} />
+      <points ref={pointsRef} args={[pointGeom, pointMaterial]} frustumCulled={false} />
+    </group>
+  );
 }

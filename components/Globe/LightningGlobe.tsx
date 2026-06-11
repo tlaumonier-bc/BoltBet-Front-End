@@ -6,7 +6,7 @@ import * as THREE from 'three'
 import { useGameStore } from '@/store/gameStore'
 import { buildInitialCells, cellCenter, regionName } from '@/lib/grid'
 import { useLightningSocket } from '@/lib/socket'
-import type { GridCell, LightningStrike } from '@/types'
+import type { GridCell } from '@/types'
 
 const RADIUS = 2
 const DEG2RAD = Math.PI / 180
@@ -112,7 +112,7 @@ function buildCellBorder(lonMin: number, latMin: number, radius: number, seg = 6
   return pts
 }
 
-function Cell({ cell }: { cell: GridCell }) {
+function Cell({ cell, viewOnly }: { cell: GridCell; viewOnly?: boolean }) {
   const [hovered, setHovered] = useState(false)
   const selectCell = useGameStore((s) => s.selectCell)
 
@@ -137,7 +137,7 @@ function Cell({ cell }: { cell: GridCell }) {
         onPointerOver={(e) => {
           e.stopPropagation()
           setHovered(true)
-          document.body.style.cursor = 'pointer'
+          if (!viewOnly) document.body.style.cursor = 'pointer'
         }}
         onPointerOut={() => {
           setHovered(false)
@@ -145,7 +145,7 @@ function Cell({ cell }: { cell: GridCell }) {
         }}
         onClick={(e) => {
           e.stopPropagation()
-          selectCell(cell.id)
+          if (!viewOnly) selectCell(cell.id)
         }}
       >
         <meshBasicMaterial
@@ -198,96 +198,175 @@ function Cell({ cell }: { cell: GridCell }) {
   )
 }
 
-function GridCells() {
+function GridCells({ viewOnly }: { viewOnly?: boolean }) {
   const cells = useGameStore((s) => s.cells)
   return (
     <>
       {Object.values(cells).map((c) => (
-        <Cell key={c.id} cell={c} />
+        <Cell key={c.id} cell={c} viewOnly={viewOnly} />
       ))}
     </>
   )
 }
 
-// 1. Parent Manager Component (This maps and solves the 'strike is missing' TS error)
-function Strikes() {
-  const strikes = useGameStore((s) => s.strikes) || []
+function InstancedStrikes() {
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+  const pointsRef = useRef<THREE.Points>(null);
+  const shaderUniformsRef = useRef<Record<string, THREE.IUniform> | null>(null);
+
+  const maxInstances = 200; 
+  const dummy = useMemo(() => new THREE.Object3D(), []);
   
-  // Force TypeScript to recognize this as an array of LightningStrike objects
-  const strikeArray = (
-    Array.isArray(strikes) ? strikes : Object.values(strikes)
-  ) as LightningStrike[]
+  const baseGeom = useMemo(() => {
+    const geom = new THREE.ConeGeometry(0.015, 0.4, 4, 5);
+    geom.translate(0, 0.2, 0); 
+    return geom;
+  }, []);
 
-  return (
-    <>
-      {strikeArray.map((strike) => (
-        <StrikeVisual key={strike.id} strike={strike} />
-      ))}
-    </>
-  )
-}
+  const pointGeom = useMemo(() => {
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(maxInstances * 3), 3));
+    geom.setAttribute('aAlpha', new THREE.Float32BufferAttribute(new Float32Array(maxInstances), 1));
+    return geom;
+  }, []);
 
-// 2. Individual Presentation Component (Solves the Math.random Purity error)
-function StrikeVisual({ strike }: { strike: LightningStrike }) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const lineRef = useRef<any>(null)
-  const pointRef = useRef<THREE.Points>(null)
+  const boltMaterial = useMemo(() => {
+    const mat = new THREE.MeshBasicMaterial({ 
+      color: '#bfe3ff', 
+      transparent: true, 
+      blending: THREE.AdditiveBlending,
+      depthWrite: false 
+    });
+    
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.uTime = { value: 0 };
+      shaderUniformsRef.current = shader.uniforms;
+      
+      shader.vertexShader = `
+        uniform float uTime;
+        attribute float birthTime;
+        varying float vAlpha;
+        ${shader.vertexShader}
+      `.replace(
+        `#include <begin_vertex>`,
+        `
+        #include <begin_vertex>
+        float age = (uTime - birthTime) / 1000.0;
+        vAlpha = (birthTime > 0.0 && age >= 0.0 && age < 2.0) ? (1.0 - (age / 2.0)) : 0.0;
+        
+        if (position.y > 0.05 && vAlpha > 0.0) {
+          float noiseX = sin(float(gl_InstanceID) * 12.3 + position.y * 20.0) * 0.05;
+          float noiseZ = cos(float(gl_InstanceID) * 45.6 + position.y * 20.0) * 0.05;
+          transformed.x += noiseX;
+          transformed.z += noiseZ;
+        }
+        `
+      );
+      shader.fragmentShader = `
+        varying float vAlpha;
+        ${shader.fragmentShader}
+      `.replace(
+        `vec4 diffuseColor = vec4( diffuse, opacity );`,
+        `
+        if (vAlpha <= 0.0) discard;
+        vec4 diffuseColor = vec4( diffuse, opacity * (vAlpha * vAlpha) );
+        `
+      );
+    };
+    return mat;
+  }, []);
 
-  const surface = useMemo(() => latLonToVector3(strike.lat, strike.lon, RADIUS), [strike])
-
-  const [boltPoints] = useState<[number, number, number][]>(() => {
-    const top = latLonToVector3(strike.lat, strike.lon, RADIUS + 0.35)
-    const normal = surface.clone().normalize()
-    const tangent = new THREE.Vector3()
-      .crossVectors(normal, new THREE.Vector3(0, 1, 0))
-      .normalize()
-    const bitangent = new THREE.Vector3().crossVectors(normal, tangent).normalize()
-    const dir = top.clone().sub(surface)
-    const segs = 6
-    const out: [number, number, number][] = []
-    for (let i = 0; i <= segs; i++) {
-      const t = i / segs
-      const p = surface.clone().add(dir.clone().multiplyScalar(t))
-      if (i !== 0 && i !== segs) {
-        const j = 0.05 * (1 - t)
-        p.add(tangent.clone().multiplyScalar((Math.random() - 0.5) * j))
-        p.add(bitangent.clone().multiplyScalar((Math.random() - 0.5) * j))
+  const pointMaterial = useMemo(() => new THREE.ShaderMaterial({
+    uniforms: { uColor: { value: new THREE.Color('#eaf4ff') } },
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexShader: `
+      attribute float aAlpha;
+      varying float vAlpha;
+      void main() {
+        vAlpha = aAlpha;
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = 15.0 * (1.0 / -mvPosition.z) * (0.5 + aAlpha);
+        gl_Position = projectionMatrix * mvPosition;
       }
-      out.push([p.x, p.y, p.z])
-    }
-    return out
-  })
+    `,
+    fragmentShader: `
+      uniform vec3 uColor;
+      varying float vAlpha;
+      void main() {
+        if(vAlpha <= 0.01) discard;
+        float d = length(gl_PointCoord - vec2(0.5));
+        if(d > 0.5) discard;
+        gl_FragColor = vec4(uColor, smoothstep(0.5, 0.0, d) * vAlpha);
+      }
+    `
+  }), []);
 
-  const pointGeom = useMemo(
-    () => new THREE.BufferGeometry().setFromPoints([surface]),
-    [surface]
-  )
+  useEffect(() => {
+    if (meshRef.current && !meshRef.current.geometry.hasAttribute('birthTime')) {
+      meshRef.current.geometry.setAttribute(
+        'birthTime', 
+        new THREE.InstancedBufferAttribute(new Float32Array(maxInstances), 1)
+      );
+    }
+  }, []);
 
   useFrame(() => {
-    const age = (Date.now() - strike.receivedAt) / 1000
-    const o = Math.max(0, 1 - age / 2)
-    if (lineRef.current?.material) lineRef.current.material.opacity = o
-    if (pointRef.current) (pointRef.current.material as THREE.PointsMaterial).opacity = o
-  })
+    if (!meshRef.current || !pointsRef.current) return;
+    if (!meshRef.current.geometry.hasAttribute('birthTime')) return; 
+    
+    const strikes = useGameStore.getState().strikes;
+    const now = Date.now();
+    
+    if (shaderUniformsRef.current && shaderUniformsRef.current.uTime) {
+      shaderUniformsRef.current.uTime.value = now;
+    }
+
+    const posArray = pointsRef.current.geometry.attributes.position.array as Float32Array;
+    const alphaArray = pointsRef.current.geometry.attributes.aAlpha.array as Float32Array;
+    const birthTimes = meshRef.current.geometry.attributes.birthTime.array as Float32Array;
+
+    for (let i = 0; i < maxInstances; i++) {
+      const strike = strikes[i];
+      if (strike) {
+        const pos = latLonToVector3(strike.lat, strike.lon, RADIUS);
+        dummy.position.copy(pos);
+        dummy.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), pos.clone().normalize());
+        dummy.updateMatrix();
+        
+        meshRef.current.setMatrixAt(i, dummy.matrix);
+        birthTimes[i] = strike.receivedAt; 
+
+        posArray[i * 3] = pos.x;
+        posArray[i * 3 + 1] = pos.y;
+        posArray[i * 3 + 2] = pos.z;
+        
+        const age = (now - strike.receivedAt) / 1000;
+        alphaArray[i] = age < 2.0 ? 1.0 - (age / 2.0) : 0;
+      } else {
+        birthTimes[i] = 0;
+        alphaArray[i] = 0;
+        dummy.matrix.identity().scale(new THREE.Vector3(0,0,0));
+        meshRef.current.setMatrixAt(i, dummy.matrix);
+      }
+    }
+    
+    meshRef.current.instanceMatrix.needsUpdate = true;
+    meshRef.current.geometry.attributes.birthTime.needsUpdate = true;
+    pointsRef.current.geometry.attributes.position.needsUpdate = true;
+    pointsRef.current.geometry.attributes.aAlpha.needsUpdate = true;
+  });
 
   return (
     <group>
-      <Line ref={lineRef} points={boltPoints} color="#bfe3ff" lineWidth={2} transparent />
-      <points ref={pointRef} geometry={pointGeom}>
-        <pointsMaterial
-          color="#eaf4ff"
-          size={0.16}
-          transparent
-          sizeAttenuation
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </points>
+      <instancedMesh ref={meshRef} args={[baseGeom, boltMaterial, maxInstances]} frustumCulled={false} />
+      <points ref={pointsRef} args={[pointGeom, pointMaterial]} frustumCulled={false} />
     </group>
-  )
+  );
 }
 
-function Scene() {
+function Scene({ viewOnly }: { viewOnly?: boolean }) {
   const groupRef = useRef<THREE.Group>(null)
   const setCells = useGameStore((s) => s.setCells)
   const cellCount = useGameStore((s) => Object.keys(s.cells).length)
@@ -304,14 +383,13 @@ function Scene() {
     <group ref={groupRef}>
       <Earth />
       <Atmosphere />
-      <GridCells />
-      <Strikes />
-      {/* <DemoStrikes /> */}
+      <GridCells viewOnly={viewOnly} />
+      <InstancedStrikes />
     </group>
   )
 }
 
-export default function LightningGlobe() {
+export default function LightningGlobe({ viewOnly = false }: { viewOnly?: boolean }) {
   useLightningSocket()
   return (
     <div className="fixed inset-0 bg-black">
@@ -319,7 +397,7 @@ export default function LightningGlobe() {
         <ambientLight intensity={0.6} />
         <directionalLight position={[5, 3, 5]} intensity={1.2} />
         <Suspense fallback={null}>
-          <Scene />
+          <Scene viewOnly={viewOnly} />
         </Suspense>
         <OrbitControls
           enableDamping
