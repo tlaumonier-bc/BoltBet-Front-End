@@ -3,10 +3,24 @@
 // real-time multipliers, instant payouts.
 
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
 import { Syncopate, IBM_Plex_Mono } from 'next/font/google';
 import HeroLiveGlobe from '@/components/Hero/HeroLiveGlobe';
 import StrikesToday from '@/components/Hero/StrikesToday';
 import { pages, launchablePages } from '@/lib/content/content';
+
+// Massive lightning strikes down the left side. Big, bright, forked, flashing
+// at staggered times.
+const STRIKE_PATHS = [
+  { m: 'M150 -30 L108 230 L176 276 L70 500 L132 536 L34 880', f: 'M70 500 L168 596 L120 648' },
+  { m: 'M70 -30 L112 210 L52 252 L152 520 L96 560 L168 880', f: 'M52 252 L-4 322 L44 372' },
+];
+const STRIKES = [
+  { left: '-2%', delay: 0, dur: 5.2, v: 0 },
+  { left: '9%', delay: 1.7, dur: 6.4, v: 1 },
+  { left: '19%', delay: 3.1, dur: 5.8, v: 0 },
+  { left: '30%', delay: 4.4, dur: 6.9, v: 1 },
+];
 
 const display = Syncopate({ weight: ['400', '700'], subsets: ['latin'], variable: '--lp-display' });
 const mono = IBM_Plex_Mono({
@@ -50,7 +64,7 @@ export default function HomePage() {
         .lp{--amber:#ffb000;--cyan:#22d3ff;--plasma:#b98cff;--green:#19f0a0;
           --ink:#e3ecf5;--ink-dim:#7d93a8;--edge:rgba(34,211,255,.22);--panel:rgba(10,16,24,.66);
           --d:var(--lp-display),sans-serif;--m:var(--lp-mono),monospace;
-          background:#000;color:var(--ink);
+          background:#000;color:var(--ink);position:relative;z-index:0;
           font-family:var(--m);min-height:100vh}
         .lp a{text-decoration:none}
         .lp .wrap{max-width:1160px;margin:0 auto;padding:0 28px}
@@ -75,6 +89,22 @@ export default function HomePage() {
         .lp .grid-fade{position:absolute;inset:0;z-index:1;pointer-events:none;
           background-image:linear-gradient(rgba(34,211,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(34,211,255,.05) 1px,transparent 1px);
           background-size:52px 52px;mask-image:radial-gradient(ellipse at 25% 45%,#000,transparent 65%);-webkit-mask-image:radial-gradient(ellipse at 25% 45%,#000,transparent 65%)}
+        /* massive left-side lightning strikes */
+        .lp .hero-strikes{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;
+          mask-image:linear-gradient(90deg,#000 50%,transparent 76%);-webkit-mask-image:linear-gradient(90deg,#000 50%,transparent 76%)}
+        .lp .strike{position:absolute;top:-6%;height:112%}
+        .lp .strike svg{height:100%;width:auto;overflow:visible;color:#eaf4ff;
+          filter:drop-shadow(0 0 6px #bfe3ff) drop-shadow(0 0 22px #7dd3fc) drop-shadow(0 0 52px rgba(255,176,0,.5))}
+        .lp .strike path{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;opacity:0;
+          animation:strike var(--dur,5.5s) ease-out var(--delay,0s) infinite}
+        .lp .strike .m{stroke-width:7}
+        .lp .strike .f{stroke-width:4}
+        @keyframes strike{0%,6%{opacity:0}7%{opacity:1}9%{opacity:.18}11%{opacity:1}14%{opacity:.65}18%{opacity:1}30%{opacity:.1}44%,100%{opacity:0}}
+        .lp .hero-flash{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;
+          background:radial-gradient(56% 80% at 14% 42%,rgba(125,211,252,.22),rgba(255,176,0,.06) 40%,transparent 64%);
+          animation:flash 5.2s ease-out infinite}
+        @keyframes flash{0%,6%{opacity:0}7%{opacity:1}13%{opacity:.25}16%{opacity:.9}24%{opacity:0}100%{opacity:0}}
+        @media(prefers-reduced-motion:reduce){.lp .strike path,.lp .hero-flash{animation:none;opacity:0}}
         .lp .hero-inner{position:relative;z-index:2;display:flex;align-items:center;min-height:min(92vh,820px);pointer-events:none}
         .lp .hero-left{max-width:560px;padding:40px 0}
         .lp .hero-left .kick,.lp .hero-left .btn{pointer-events:auto}
@@ -160,6 +190,21 @@ export default function HomePage() {
           <HeroLiveGlobe />
         </div>
         <div className="hero-fade" />
+        <div className="hero-flash" />
+        <div className="hero-strikes" aria-hidden="true">
+          {STRIKES.map((s, i) => (
+            <span
+              key={i}
+              className="strike"
+              style={{ left: s.left, '--delay': `${s.delay}s`, '--dur': `${s.dur}s` } as CSSProperties}
+            >
+              <svg viewBox="0 0 220 860" fill="none" preserveAspectRatio="xMidYMin meet">
+                <path className="m" d={STRIKE_PATHS[s.v].m} />
+                <path className="f" d={STRIKE_PATHS[s.v].f} />
+              </svg>
+            </span>
+          ))}
+        </div>
         <div className="grid-fade" />
         <div className="wrap hero-inner">
           <div className="hero-left">
