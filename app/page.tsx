@@ -1,3 +1,4 @@
+// app/page.tsx (REPLACES existing) — globe-hero landing.
 // The 3D globe is back as the hero, but as a deferred visual behind fully
 // server-rendered text (see components/Hero/HeroGlobe.tsx). All SEO-critical
 // content — H1, intro, country links, stats — is plain HTML, crawlable with
@@ -5,12 +6,17 @@
 
 import Link from 'next/link';
 import HeroGlobe from '@/components/Hero/HeroGlobe';
+import CountryGrid from '@/components/Hero/CountryGrid';
 import { pages, launchablePages } from '@/lib/content/content';
 
-// Link the country grid to indexable (translated) pages first; fall back to
-// build order if none are live yet.
+// All indexable (translated) country pages; the grid itself shows 8 + a "more"
+// toggle. Pass slim objects so the client component stays light.
 const live = launchablePages();
-const POPULAR = (live.length ? live : pages).slice(0, 8);
+const COUNTRIES = (live.length ? live : pages).map((p) => ({
+  slug: p.slug,
+  country: p.country,
+  primaryKeyword: p.primaryKeyword,
+}));
 
 export default function HomePage() {
   return (
@@ -66,18 +72,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-5xl px-6 pb-24 pt-4">
           <section>
             <h2 className="font-display text-xl font-bold">Lightning maps by country</h2>
-            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {POPULAR.map((p) => (
-                <Link
-                  key={p.slug}
-                  href={p.slug}
-                  className="glass rounded-xl px-4 py-3 text-sm transition hover:bg-white/[0.06]"
-                >
-                  <span className="font-medium">{p.country}</span>
-                  <span className="ml-2 text-white/45">{p.primaryKeyword}</span>
-                </Link>
-              ))}
-            </div>
+            <CountryGrid countries={COUNTRIES} />
           </section>
 
           <section className="mt-12">
