@@ -5,7 +5,7 @@
 // clicking a zone does not open the betting/guess modal here.
 
 import type { Metadata } from 'next';
-import GlobeWrapper from '@/components/Globe/GlobeWrapper';
+import MapWrapper from '@/components/map/MapWrapper';
 
 export const metadata: Metadata = {
   title: 'Live Lightning Globe — Real-Time Strikes Worldwide',
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export default function LivePage() {
   return (
     <main>
-      <GlobeWrapper viewOnly />
+      <MapWrapper viewOnly />
       <div className="pointer-events-none fixed inset-x-0 bottom-6 z-30 flex justify-center">
         <p className="glass rounded-full px-4 py-2 text-xs text-white/70">
           Live strikes · Blitzortung network · view-only

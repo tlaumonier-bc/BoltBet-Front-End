@@ -1,6 +1,13 @@
+'use client';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Nav() {
+  const pathname = usePathname() ?? '';
+  // Immersive map routes (/play, /{locale}/play, /live) own their own terminal
+  // chrome — hide the site nav there.
+  if (pathname === '/live' || pathname === '/play' || pathname.endsWith('/play')) return null;
+
   return (
     <nav className="fixed left-1/2 top-4 z-50 w-[min(960px,92vw)] -translate-x-1/2">
       <div className="glass flex items-center justify-between rounded-2xl px-5 py-3">

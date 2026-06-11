@@ -4,8 +4,7 @@
 // noindex: per the strategy the game is a conversion layer, never an SEO target.
 
 import type { Metadata } from 'next';
-import GlobeWrapper from '@/components/Globe/GlobeWrapper';
-import GameHUD from '@/components/HUD/GameHUD';
+import MapWrapper from '@/components/map/MapWrapper';
 import { pages } from '@/lib/content/content';
 
 export const dynamicParams = false;
@@ -24,8 +23,7 @@ export const metadata: Metadata = {
 export default function LocalePlayPage() {
   return (
     <main>
-      <GlobeWrapper />
-      <GameHUD />
+      <MapWrapper />
     </main>
   );
 }

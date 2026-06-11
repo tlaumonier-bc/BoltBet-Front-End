@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
-import GlobeWrapper from '@/components/Globe/GlobeWrapper'
-import GameHUD from '@/components/HUD/GameHUD'
+import MapWrapper from '@/components/map/MapWrapper'
 
 export const metadata: Metadata = {
   title: 'Play — Live Lightning Globe',
@@ -12,8 +11,7 @@ export const metadata: Metadata = {
 export default function PlayPage() {
   return (
     <main>
-      <GlobeWrapper />
-      <GameHUD />
+      <MapWrapper />
     </main>
   )
 }

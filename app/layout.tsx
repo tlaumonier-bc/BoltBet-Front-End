@@ -1,6 +1,7 @@
 // the shared site config so the brand/URL live in one place.
 import type { Metadata } from 'next';
 import { Unbounded, Sora } from 'next/font/google';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import './globals.css';
 import Nav from '@/components/Nav/Nav';
 import Toaster from '@/components/Toaster/Toaster';
