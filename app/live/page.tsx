@@ -1,11 +1,12 @@
 // app/live/page.tsx
-// View-only live globe — inspect real-time strikes with no game attached.
-// Also a credibility/SEO asset (a genuine live weather tool).
-// Requires the small `viewOnly` thread in LightningGlobe (see PATCHES.md) so
-// clicking a zone does not open the betting/guess modal here.
+// View-only live globe + the LiveHUD console (Free / Beginner / Pro modes).
+// viewOnly removes the multiplier grid on the globe and enables the
+// "Orbit to" camera flights. The Blitzortung caption now lives inside
+// LiveHUD and only shows in Free mode.
 
 import type { Metadata } from 'next';
 import GlobeWrapper from '@/components/Globe/GlobeWrapper';
+import LiveHUD from '@/components/live/LiveHUD';
 
 export const metadata: Metadata = {
   title: 'Live Lightning Globe — Real-Time Strikes Worldwide',
@@ -19,11 +20,7 @@ export default function LivePage() {
   return (
     <main>
       <GlobeWrapper viewOnly />
-      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-30 flex justify-center">
-        <p className="glass rounded-full px-4 py-2 text-xs text-white/70">
-          Live strikes · Blitzortung network · view-only
-        </p>
-      </div>
+      <LiveHUD />
     </main>
   );
 }

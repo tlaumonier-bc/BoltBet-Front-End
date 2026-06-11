@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useRef, useEffect } from 'react'
+import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { heroStrikeSequence } from '@/lib/hero-strikes'
@@ -11,9 +11,9 @@ export default function HeroStrikes() {
 
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const pointsRef = useRef<THREE.Points>(null);
-  const play = useRef({ cursor: 0, slot: 0, lastLoopT: 0, birth: new Float32Array(POOL).fill(-1000) });
   
-  // FIX: Broaden the type to accept Three's internal uniforms dictionary
+  const play = useRef({ cursor: 0, slot: 0, lastLoopT: 0 });
+  
   const shaderUniformsRef = useRef<Record<string, THREE.IUniform> | null>(null);
   
   const dummy = useMemo(() => new THREE.Object3D(), []);
@@ -21,6 +21,11 @@ export default function HeroStrikes() {
   const baseGeom = useMemo(() => {
     const geom = new THREE.ConeGeometry(0.015, 0.4, 4, 5);
     geom.translate(0, 0.2, 0); 
+    
+    // Create the array directly here instead of reading from the ref
+    const initialBirth = new Float32Array(POOL).fill(-1000);
+    geom.setAttribute('birthTime', new THREE.InstancedBufferAttribute(initialBirth, 1));
+    
     return geom;
   }, []);
 
@@ -104,12 +109,6 @@ export default function HeroStrikes() {
     `
   }), []);
 
-  useEffect(() => {
-    if (meshRef.current) {
-      meshRef.current.geometry.setAttribute('birthTime', new THREE.InstancedBufferAttribute(play.current.birth, 1));
-    }
-  }, []);
-
   useFrame((state) => {
     if (!meshRef.current || !pointsRef.current) return;
     
@@ -117,7 +116,6 @@ export default function HeroStrikes() {
     const elapsed = state.clock.getElapsedTime();
     const loopT = elapsed % duration;
     
-    // FIX: Safely update uTime without TS complaining
     if (shaderUniformsRef.current && shaderUniformsRef.current.uTime) {
       shaderUniformsRef.current.uTime.value = elapsed;
     }
@@ -127,6 +125,8 @@ export default function HeroStrikes() {
 
     const posArray = pointsRef.current.geometry.attributes.position.array as Float32Array;
     const alphaArray = pointsRef.current.geometry.attributes.aAlpha.array as Float32Array;
+    // Read directly from the geometry instead of the ref
+    const birthArray = meshRef.current.geometry.attributes.birthTime.array as Float32Array;
 
     while (p.cursor < count && times[p.cursor] <= loopT) {
       const s = p.slot % POOL;
@@ -140,7 +140,9 @@ export default function HeroStrikes() {
       dummy.updateMatrix();
       
       meshRef.current.setMatrixAt(s, dummy.matrix);
-      p.birth[s] = elapsed;
+      
+      // Update geometry directly
+      birthArray[s] = elapsed;
 
       posArray[s * 3] = pos.x;
       posArray[s * 3 + 1] = pos.y;
@@ -150,7 +152,8 @@ export default function HeroStrikes() {
     }
 
     for (let i = 0; i < POOL; i++) {
-      const age = elapsed - p.birth[i];
+      // Calculate age directly from the geometry array
+      const age = elapsed - birthArray[i];
       alphaArray[i] = (age >= 0 && age < 1.5) ? 1.0 - (age / 1.5) : 0;
     }
 

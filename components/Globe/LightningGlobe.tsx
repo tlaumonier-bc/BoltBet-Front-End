@@ -1,9 +1,11 @@
 'use client'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, useTexture, Html, Text, Billboard, Line } from '@react-three/drei'
 import * as THREE from 'three'
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { useGameStore } from '@/store/gameStore'
+import { useLiveStore } from '@/store/liveStore'
 import { buildInitialCells, cellCenter, regionName } from '@/lib/grid'
 import { useLightningSocket } from '@/lib/socket'
 import type { GridCell } from '@/types'
@@ -12,6 +14,11 @@ const RADIUS = 2
 const DEG2RAD = Math.PI / 180
 const TEXTURE_URL = '/earth-night.jpg'
 const GRID_GRAY = '#94a3b8'
+
+// /live "orbit to" flight tuning
+const ORBIT_CAMERA_DISTANCE = 3.4 // between minDistance (3) and the default 5
+const ORBIT_FLIGHT_MS = 1600
+const Y_AXIS = new THREE.Vector3(0, 1, 0)
 
 function latLonToVector3(lat: number, lon: number, radius: number) {
   const phi = (90 - lat) * DEG2RAD
@@ -112,7 +119,7 @@ function buildCellBorder(lonMin: number, latMin: number, radius: number, seg = 6
   return pts
 }
 
-function Cell({ cell, viewOnly }: { cell: GridCell; viewOnly?: boolean }) {
+function Cell({ cell }: { cell: GridCell }) {
   const [hovered, setHovered] = useState(false)
   const selectCell = useGameStore((s) => s.selectCell)
 
@@ -137,7 +144,7 @@ function Cell({ cell, viewOnly }: { cell: GridCell; viewOnly?: boolean }) {
         onPointerOver={(e) => {
           e.stopPropagation()
           setHovered(true)
-          if (!viewOnly) document.body.style.cursor = 'pointer'
+          document.body.style.cursor = 'pointer'
         }}
         onPointerOut={() => {
           setHovered(false)
@@ -145,7 +152,7 @@ function Cell({ cell, viewOnly }: { cell: GridCell; viewOnly?: boolean }) {
         }}
         onClick={(e) => {
           e.stopPropagation()
-          if (!viewOnly) selectCell(cell.id)
+          selectCell(cell.id)
         }}
       >
         <meshBasicMaterial
@@ -198,12 +205,12 @@ function Cell({ cell, viewOnly }: { cell: GridCell; viewOnly?: boolean }) {
   )
 }
 
-function GridCells({ viewOnly }: { viewOnly?: boolean }) {
+function GridCells() {
   const cells = useGameStore((s) => s.cells)
   return (
     <>
       {Object.values(cells).map((c) => (
-        <Cell key={c.id} cell={c} viewOnly={viewOnly} />
+        <Cell key={c.id} cell={c} />
       ))}
     </>
   )
@@ -220,6 +227,8 @@ function InstancedStrikes() {
   const baseGeom = useMemo(() => {
     const geom = new THREE.ConeGeometry(0.015, 0.4, 4, 5);
     geom.translate(0, 0.2, 0); 
+    const initialBirth = new Float32Array(maxInstances).fill(0);
+    geom.setAttribute('birthTime', new THREE.InstancedBufferAttribute(initialBirth, 1));
     return geom;
   }, []);
 
@@ -303,18 +312,8 @@ function InstancedStrikes() {
     `
   }), []);
 
-  useEffect(() => {
-    if (meshRef.current && !meshRef.current.geometry.hasAttribute('birthTime')) {
-      meshRef.current.geometry.setAttribute(
-        'birthTime', 
-        new THREE.InstancedBufferAttribute(new Float32Array(maxInstances), 1)
-      );
-    }
-  }, []);
-
   useFrame(() => {
     if (!meshRef.current || !pointsRef.current) return;
-    if (!meshRef.current.geometry.hasAttribute('birthTime')) return; 
     
     const strikes = useGameStore.getState().strikes;
     const now = Date.now();
@@ -366,14 +365,84 @@ function InstancedStrikes() {
   );
 }
 
-function Scene({ viewOnly }: { viewOnly?: boolean }) {
-  const groupRef = useRef<THREE.Group>(null)
+function OrbitFlight({
+  groupRef,
+  controlsRef,
+}: {
+  groupRef: React.RefObject<THREE.Group | null>
+  controlsRef: React.RefObject<OrbitControlsImpl | null>
+}) {
+  const orbitTarget = useLiveStore((s) => s.orbitTarget)
+  const { camera } = useThree()
+  const flight = useRef<{
+    lat: number
+    lon: number
+    start: number
+    from: THREE.Vector3
+  } | null>(null)
+  const dest = useRef(new THREE.Vector3())
+
+  useEffect(() => {
+    if (!orbitTarget) return
+    if (Date.now() - orbitTarget.requestedAt > 5000) return
+
+    flight.current = {
+      lat: orbitTarget.lat,
+      lon: orbitTarget.lon,
+      start: performance.now(),
+      from: camera.position.clone(),
+    }
+    const controls = controlsRef.current
+    if (controls) {
+      controls.enabled = false
+      controls.enableDamping = false 
+    }
+  }, [orbitTarget, camera, controlsRef])
+
+  useFrame(() => {
+    const f = flight.current
+    if (!f) return
+
+    const t = Math.min(1, (performance.now() - f.start) / ORBIT_FLIGHT_MS)
+    const ease = 1 - Math.pow(1 - t, 3) 
+
+    const rotY = groupRef.current?.rotation.y ?? 0
+    dest.current
+      .copy(latLonToVector3(f.lat, f.lon, 1))
+      .applyAxisAngle(Y_AXIS, rotY)
+      .normalize()
+      .multiplyScalar(ORBIT_CAMERA_DISTANCE)
+
+    camera.position.lerpVectors(f.from, dest.current, ease)
+    camera.lookAt(0, 0, 0)
+
+    if (t >= 1) {
+      flight.current = null
+      const controls = controlsRef.current
+      if (controls) {
+        controls.enabled = true
+        controls.enableDamping = true
+        controls.update() 
+      }
+    }
+  })
+
+  return null
+}
+
+function Scene({
+  viewOnly,
+  groupRef,
+}: {
+  viewOnly: boolean
+  groupRef: React.RefObject<THREE.Group | null>
+}) {
   const setCells = useGameStore((s) => s.setCells)
   const cellCount = useGameStore((s) => Object.keys(s.cells).length)
 
   useEffect(() => {
-    if (cellCount === 0) setCells(buildInitialCells())
-  }, [cellCount, setCells])
+    if (!viewOnly && cellCount === 0) setCells(buildInitialCells())
+  }, [viewOnly, cellCount, setCells])
 
   useFrame(() => {
     if (groupRef.current) groupRef.current.rotation.y += 0.001
@@ -383,7 +452,7 @@ function Scene({ viewOnly }: { viewOnly?: boolean }) {
     <group ref={groupRef}>
       <Earth />
       <Atmosphere />
-      <GridCells viewOnly={viewOnly} />
+      {!viewOnly && <GridCells />}
       <InstancedStrikes />
     </group>
   )
@@ -391,15 +460,20 @@ function Scene({ viewOnly }: { viewOnly?: boolean }) {
 
 export default function LightningGlobe({ viewOnly = false }: { viewOnly?: boolean }) {
   useLightningSocket()
+  const groupRef = useRef<THREE.Group>(null)
+  const controlsRef = useRef<OrbitControlsImpl>(null)
+
   return (
     <div className="fixed inset-0 bg-black">
       <Canvas camera={{ position: [0, 0, 5], fov: 50 }} dpr={[1, 2]}>
         <ambientLight intensity={0.6} />
         <directionalLight position={[5, 3, 5]} intensity={1.2} />
         <Suspense fallback={null}>
-          <Scene viewOnly={viewOnly} />
+          <Scene viewOnly={viewOnly} groupRef={groupRef} />
         </Suspense>
+        {viewOnly && <OrbitFlight groupRef={groupRef} controlsRef={controlsRef} />}
         <OrbitControls
+          ref={controlsRef}
           enableDamping
           dampingFactor={0.05}
           minDistance={3}

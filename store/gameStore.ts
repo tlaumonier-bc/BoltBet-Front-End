@@ -16,6 +16,8 @@ interface GameStore {
   userBalance: number
   selectedCellId: string | null
   notifications: Notification[]
+  /** Strikes received since page load — NOT capped at MAX_STRIKES (used by /live). */
+  totalStrikes: number
 
   setCells: (cells: GridCell[]) => void    // replace all (initial seed)
   updateCells: (cells: GridCell[]) => void  // merge multiplier updates
@@ -34,6 +36,7 @@ export const useGameStore = create<GameStore>((set) => ({
   userBalance: 1000,
   selectedCellId: null,
   notifications: [],
+  totalStrikes: 0,
 
   setCells: (cells) =>
     set(() => ({
@@ -51,7 +54,7 @@ export const useGameStore = create<GameStore>((set) => ({
     set((state) => {
       const strikes = [strike, ...state.strikes]
       if (strikes.length > MAX_STRIKES) strikes.length = MAX_STRIKES // ring buffer
-      return { strikes }
+      return { strikes, totalStrikes: state.totalStrikes + 1 }
     }),
 
   placeBet: (bet) =>
