@@ -28,7 +28,7 @@ export default function LiveHUD() {
   return (
     <>
       {/* Left column: mode switch (always visible) + console (beginner / pro) */}
-      <div className="pointer-events-none fixed bottom-4 left-4 right-4 top-20 z-40 flex flex-col gap-3 md:right-auto md:w-[300px]">
+      <div className="pointer-events-none fixed bottom-4 left-4 right-4 top-20 z-40 flex flex-col gap-3 md:right-auto md:w-75">
         <div className="glass pointer-events-auto flex shrink-0 self-start rounded-full p-1 text-xs font-semibold">
           {MODES.map((m) => (
             <button
@@ -50,15 +50,6 @@ export default function LiveHUD() {
 
       {/* Right column: pro mode, large screens only */}
       {mode === 'pro' && <RightPanel />}
-
-      {/* Free mode keeps the original minimal caption */}
-      {mode === 'free' && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-6 z-30 flex justify-center">
-          <p className="glass rounded-full px-4 py-2 text-xs text-white/70">
-            Live strikes · Blitzortung network · view-only
-          </p>
-        </div>
-      )}
     </>
   )
 }
@@ -111,7 +102,7 @@ function LeftPanel({ pro }: { pro: boolean }) {
                 className={`rounded-lg border px-2.5 py-2 text-left transition ${
                   active
                     ? 'border-bolt/50 bg-bolt/10'
-                    : 'border-white/10 bg-white/[0.04] hover:border-white/25 hover:bg-white/[0.08]'
+                    : 'border-white/10 bg-white/4 hover:border-white/25 hover:bg-white/8'
                 }`}
               >
                 <span
@@ -360,7 +351,7 @@ function Stat({ name, value }: { name: string; value: React.ReactNode }) {
 
 function BigStat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="rounded-lg bg-white/[0.04] px-3 py-2">
+    <div className="rounded-lg bg-white/4 px-3 py-2">
       <div className="font-display text-2xl font-bold text-bolt">{value}</div>
       <div className="text-[10px] uppercase tracking-wider text-white/40">{label}</div>
     </div>
@@ -384,7 +375,7 @@ function FeedBadge({ live }: { live: boolean }) {
 
 function SampleTag({ label = 'sample' }: { label?: string }) {
   return (
-    <span className="rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-white/35">
+    <span className="rounded-md border border-white/10 bg-white/4 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-white/35">
       {label}
     </span>
   )
@@ -475,7 +466,7 @@ function AlertRow({ alert }: { alert: AlertSample }) {
 
 function StormCellRow({ cell }: { cell: StormCellSample }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded-lg bg-white/[0.04] px-2.5 py-1.5 text-[11px]">
+    <div className="flex items-center justify-between gap-2 rounded-lg bg-white/4 px-2.5 py-1.5 text-[11px]">
       <span className="font-mono text-white/70">{cell.id}</span>
       <span className="text-white/50">
         {cell.bearing} · {cell.speedKph} km/h

@@ -1,16 +1,18 @@
-// app/page.tsx (REPLACES existing) — globe-hero landing.
-// The 3D globe is back as the hero, but as a deferred visual behind fully
-// server-rendered text (see components/Hero/HeroGlobe.tsx). All SEO-critical
-// content — H1, intro, country links, stats — is plain HTML, crawlable with
-// no JS. The fast 2D map still powers every localized SEO page and /live.
+// app/page.tsx — landing page.
+// The first viewport is the full /live experience: the view-only globe + the
+// LiveHUD console. Wheel zoom is off so scrolling moves down the page; users
+// zoom with the on-globe +/− buttons or by double-clicking.
+//
+// The `transform` on the hero <section> turns it into the containing block for
+// LiveHUD's `fixed` panels, so the HUD stays inside this 100vh hero (and scrolls
+// away with it) instead of sticking to the window.
 
 import Link from 'next/link';
-import HeroGlobe from '@/components/Hero/HeroGlobe';
+import GlobeWrapper from '@/components/Globe/GlobeWrapper';
+import LiveHUD from '@/components/live/LiveHUD';
 import CountryGrid from '@/components/Hero/CountryGrid';
 import { pages, launchablePages } from '@/lib/content/content';
 
-// All indexable (translated) country pages; the grid itself shows 8 + a "more"
-// toggle. Pass slim objects so the client component stays light.
 const live = launchablePages();
 const COUNTRIES = (live.length ? live : pages).map((p) => ({
   slug: p.slug,
@@ -20,57 +22,49 @@ const COUNTRIES = (live.length ? live : pages).map((p) => ({
 
 export default function HomePage() {
   return (
-    <main className="relative min-h-screen">
-      {/* HERO — impressive globe behind, SEO text in front */}
-      <section className="relative isolate flex min-h-[90vh] items-center overflow-hidden">
-        <HeroGlobe />
-        <div className="mx-auto w-full max-w-5xl px-6 py-24">
-          <span className="glass inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium text-white/80">
-            <span className="live-dot inline-block h-2 w-2 rounded-full bg-bolt shadow-[0_0_10px_#fde047]" />
-            Live · real-time strikes worldwide
+    <main className="relative">
+      {/* ===== HERO: the /live experience, contained to the first viewport ===== */}
+      <section className="relative h-svh min-h-140 w-full overflow-hidden bg-storm transform-[translateZ(0)]">
+        <GlobeWrapper viewOnly fill enableZoom={false} showZoomButtons />
+        <LiveHUD />
+
+        {/* scroll affordance */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-6 z-30 flex justify-center">
+          <span className="flex flex-col items-center gap-1 text-[11px] uppercase tracking-[0.3em] text-white/45">
+            Scroll to explore
+            <span className="animate-bounce text-base">↓</span>
           </span>
-
-          <h1 className="font-display mt-6 max-w-3xl text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl">
-            See lightning strike the Earth, <span className="text-gradient">live</span>.
-          </h1>
-
-          <p className="mt-5 max-w-xl text-base text-white/70 sm:text-lg">
-            A real-time map of lightning worldwide, built on the Blitzortung detection
-            network. Watch the storms move — then guess whether more or fewer bolts hit
-            in the next 60 seconds. Free to play, no real money.
-          </p>
-
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link href="/live" className="btn-glow rounded-full px-8 py-3.5 text-sm font-bold">
-              Open the live map →
-            </Link>
-            <Link
-              href="/play"
-              className="glass rounded-full px-8 py-3.5 text-sm font-semibold text-white/90 transition hover:bg-white/10"
-            >
-              Play the 60-second game
-            </Link>
-          </div>
-
-          <div className="mt-10 flex flex-wrap items-center gap-x-10 gap-y-4">
-            {[
-              ['162', 'live zones'],
-              ['Real-time', 'lightning data'],
-              ['Free', 'to play'],
-            ].map(([big, small]) => (
-              <div key={small}>
-                <div className="font-display text-2xl font-bold text-white">{big}</div>
-                <div className="text-xs uppercase tracking-widest text-white/40">{small}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
-      {/* CONTENT — on solid background below the hero */}
+      {/* ===== CONTENT below the fold ===== */}
       <div className="relative bg-storm">
-        <div className="mx-auto max-w-5xl px-6 pb-24 pt-4">
+        <div className="mx-auto max-w-5xl px-6 pb-24 pt-16">
           <section>
+            <h1 className="font-display text-3xl font-extrabold leading-tight sm:text-4xl">
+              See lightning strike the Earth, <span className="text-gradient">live</span>.
+            </h1>
+            <p className="mt-4 max-w-2xl text-white/70">
+              Lightning Map Bets turns the live global lightning feed into something
+              you can watch and play. Every bolt above is a real detection from the
+              Blitzortung community network, plotted the moment it lands. Spin the
+              globe, zoom into a storm, and predict where the sky lights up next —
+              free to play, no real money.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <Link href="/play" className="btn-glow rounded-full px-7 py-3 text-sm font-bold">
+                Play the 60-second game
+              </Link>
+              <Link
+                href="/live"
+                className="glass rounded-full px-7 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10"
+              >
+                Open the full live map
+              </Link>
+            </div>
+          </section>
+
+          <section className="mt-12">
             <h2 className="font-display text-xl font-bold">Lightning maps by country</h2>
             <CountryGrid countries={COUNTRIES} />
           </section>

@@ -458,13 +458,123 @@ function Scene({
   )
 }
 
-export default function LightningGlobe({ viewOnly = false }: { viewOnly?: boolean }) {
+// ----------------------------- zoom controls -------------------------------
+
+const ZOOM_IN_FACTOR = 0.78
+const ZOOM_OUT_FACTOR = 1 / ZOOM_IN_FACTOR
+
+// Lerps the camera distance toward a target distance. It never touches React
+// state/props: it reads the target through getTarget() and signals completion
+// through onArrived() — the owning ref lives in LightningGlobe.
+function ZoomAnimator({
+  controlsRef,
+  getTarget,
+  onArrived,
+}: {
+  controlsRef: React.RefObject<OrbitControlsImpl | null>
+  getTarget: () => number | null
+  onArrived: () => void
+}) {
+  useFrame(() => {
+    const controls = controlsRef.current
+    const target = getTarget()
+    if (!controls || target == null) return
+
+    const cam = controls.object
+    const offset = cam.position.clone().sub(controls.target)
+    const dist = offset.length()
+    const next = THREE.MathUtils.lerp(dist, target, 0.18)
+
+    if (Math.abs(next - target) < 0.002) {
+      offset.setLength(target)
+      onArrived() // arrived
+    } else {
+      offset.setLength(next)
+    }
+    cam.position.copy(controls.target).add(offset)
+    controls.update()
+  })
+  return null
+}
+
+function ZoomButtons({
+  onZoomIn,
+  onZoomOut,
+}: {
+  onZoomIn: () => void
+  onZoomOut: () => void
+}) {
+  return (
+    <div
+      className="absolute bottom-6 right-6 z-20 flex flex-col gap-2"
+      onDoubleClick={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        onClick={onZoomIn}
+        aria-label="Zoom in"
+        className="glass flex h-11 w-11 items-center justify-center rounded-xl text-2xl leading-none text-white/90 transition hover:bg-white/15 active:scale-95"
+      >
+        +
+      </button>
+      <button
+        type="button"
+        onClick={onZoomOut}
+        aria-label="Zoom out"
+        className="glass flex h-11 w-11 items-center justify-center rounded-xl text-2xl leading-none text-white/90 transition hover:bg-white/15 active:scale-95"
+      >
+        −
+      </button>
+    </div>
+  )
+}
+
+interface LightningGlobeProps {
+  viewOnly?: boolean
+  /** Fill the (positioned) parent instead of covering the whole viewport. */
+  fill?: boolean
+  /** Allow wheel / pinch zoom. Off on the landing hero so the page scrolls. */
+  enableZoom?: boolean
+  /** Render the on-globe + / − zoom controls + double-click-to-zoom. */
+  showZoomButtons?: boolean
+}
+
+export default function LightningGlobe({
+  viewOnly = false,
+  fill = false,
+  enableZoom = true,
+  showZoomButtons = false,
+}: LightningGlobeProps) {
   useLightningSocket()
   const groupRef = useRef<THREE.Group>(null)
   const controlsRef = useRef<OrbitControlsImpl>(null)
+  const zoomCtl = useRef<{ target: number | null }>({ target: null })
+
+  const applyZoom = (factor: number) => {
+    const controls = controlsRef.current
+    if (!controls) return
+    const cam = controls.object
+    const current =
+      zoomCtl.current.target ?? cam.position.distanceTo(controls.target)
+    zoomCtl.current.target = THREE.MathUtils.clamp(
+      current * factor,
+      controls.minDistance,
+      controls.maxDistance
+    )
+  }
+  const zoomIn = () => applyZoom(ZOOM_IN_FACTOR)
+  const zoomOut = () => applyZoom(ZOOM_OUT_FACTOR)
+
+  const getZoomTarget = () => zoomCtl.current.target
+  const clearZoomTarget = () => {
+    zoomCtl.current.target = null
+  }
 
   return (
-    <div className="fixed inset-0 bg-black">
+    <div
+      className={fill ? 'absolute inset-0' : 'fixed inset-0 bg-black'}
+      onDoubleClick={showZoomButtons ? zoomIn : undefined}
+    >
       <Canvas camera={{ position: [0, 0, 5], fov: 50 }} dpr={[1, 2]}>
         <ambientLight intensity={0.6} />
         <directionalLight position={[5, 3, 5]} intensity={1.2} />
@@ -472,6 +582,11 @@ export default function LightningGlobe({ viewOnly = false }: { viewOnly?: boolea
           <Scene viewOnly={viewOnly} groupRef={groupRef} />
         </Suspense>
         {viewOnly && <OrbitFlight groupRef={groupRef} controlsRef={controlsRef} />}
+        <ZoomAnimator
+          controlsRef={controlsRef}
+          getTarget={getZoomTarget}
+          onArrived={clearZoomTarget}
+        />
         <OrbitControls
           ref={controlsRef}
           enableDamping
@@ -479,8 +594,10 @@ export default function LightningGlobe({ viewOnly = false }: { viewOnly?: boolea
           minDistance={3}
           maxDistance={10}
           enablePan={false}
+          enableZoom={enableZoom}
         />
       </Canvas>
+      {showZoomButtons && <ZoomButtons onZoomIn={zoomIn} onZoomOut={zoomOut} />}
     </div>
   )
 }
