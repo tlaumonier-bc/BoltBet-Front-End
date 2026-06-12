@@ -8,6 +8,7 @@ import { useGameStore } from '@/store/gameStore'
 import { useLiveStore } from '@/store/liveStore'
 import { buildInitialCells, cellCenter, regionName } from '@/lib/grid'
 import { useLightningSocket } from '@/lib/socket'
+import { HANDOFF, type Focus } from '@/lib/globeHandoff'
 import type { GridCell } from '@/types'
 
 const RADIUS = 2
@@ -28,6 +29,17 @@ function latLonToVector3(lat: number, lon: number, radius: number) {
     radius * Math.cos(phi),
     radius * Math.sin(phi) * Math.sin(theta)
   )
+}
+
+// Inverse of latLonToVector3 — used to recover the geographic point the camera
+// is looking at, so the MapLibre map can open on the same region.
+function vector3ToLatLon(v: THREE.Vector3) {
+  const n = v.clone().normalize()
+  const lat = 90 - Math.acos(THREE.MathUtils.clamp(n.y, -1, 1)) / DEG2RAD
+  let lon = Math.atan2(n.z, -n.x) / DEG2RAD - 180
+  while (lon < -180) lon += 360
+  while (lon > 180) lon -= 360
+  return { lat, lon }
 }
 
 function Earth() {
@@ -430,6 +442,58 @@ function OrbitFlight({
   return null
 }
 
+// Watches zoom; fires once when the user zooms in past HANDOFF.toMapDistance,
+// reporting the lat/lon currently facing the camera so the map opens there.
+function HandoffWatcher({
+  groupRef,
+  controlsRef,
+  onZoomBeyond,
+}: {
+  groupRef: React.RefObject<THREE.Group | null>
+  controlsRef: React.RefObject<OrbitControlsImpl | null>
+  onZoomBeyond: (f: Focus) => void
+}) {
+  const { camera } = useThree()
+  const fired = useRef(false)
+  useFrame(() => {
+    const controls = controlsRef.current
+    if (!controls || fired.current) return
+    if (camera.position.distanceTo(controls.target) <= HANDOFF.toMapDistance) {
+      fired.current = true
+      const dir = camera.position
+        .clone()
+        .normalize()
+        .applyAxisAngle(Y_AXIS, -(groupRef.current?.rotation.y ?? 0))
+      onZoomBeyond(vector3ToLatLon(dir))
+    }
+  })
+  return null
+}
+
+// Places the camera so `focus` faces it at the return distance (used when we
+// come BACK from the map). Resets spin so the region doesn't immediately drift.
+function FocusInit({
+  groupRef,
+  controlsRef,
+  focus,
+}: {
+  groupRef: React.RefObject<THREE.Group | null>
+  controlsRef: React.RefObject<OrbitControlsImpl | null>
+  focus?: Focus
+}) {
+  const { camera } = useThree()
+  useEffect(() => {
+    if (!focus) return
+    if (groupRef.current) groupRef.current.rotation.y = 0
+    camera.position.copy(
+      latLonToVector3(focus.lat, focus.lon, 1).multiplyScalar(HANDOFF.globeReturnDistance)
+    )
+    camera.lookAt(0, 0, 0)
+    controlsRef.current?.update()
+  }, [focus, camera, groupRef, controlsRef])
+  return null
+}
+
 function Scene({
   viewOnly,
   groupRef,
@@ -537,6 +601,12 @@ interface LightningGlobeProps {
   enableZoom?: boolean
   /** Render the on-globe + / − zoom controls + double-click-to-zoom. */
   showZoomButtons?: boolean
+  /** Switch to the MapLibre map when the user zooms in past the threshold. */
+  enableMapHandoff?: boolean
+  /** Frame the globe on this point (used when returning from the map). */
+  initialFocus?: Focus
+  /** Called once when the user zooms in past HANDOFF.toMapDistance. */
+  onZoomBeyond?: (f: Focus) => void
 }
 
 export default function LightningGlobe({
@@ -544,6 +614,9 @@ export default function LightningGlobe({
   fill = false,
   enableZoom = true,
   showZoomButtons = false,
+  enableMapHandoff = false,
+  initialFocus,
+  onZoomBeyond,
 }: LightningGlobeProps) {
   useLightningSocket()
   const groupRef = useRef<THREE.Group>(null)
@@ -581,6 +654,16 @@ export default function LightningGlobe({
         <Suspense fallback={null}>
           <Scene viewOnly={viewOnly} groupRef={groupRef} />
         </Suspense>
+        {initialFocus && (
+          <FocusInit groupRef={groupRef} controlsRef={controlsRef} focus={initialFocus} />
+        )}
+        {enableMapHandoff && onZoomBeyond && (
+          <HandoffWatcher
+            groupRef={groupRef}
+            controlsRef={controlsRef}
+            onZoomBeyond={onZoomBeyond}
+          />
+        )}
         {viewOnly && <OrbitFlight groupRef={groupRef} controlsRef={controlsRef} />}
         <ZoomAnimator
           controlsRef={controlsRef}

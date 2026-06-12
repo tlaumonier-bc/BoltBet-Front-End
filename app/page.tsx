@@ -8,7 +8,7 @@
 // away with it) instead of sticking to the window.
 
 import Link from 'next/link';
-import GlobeWrapper from '@/components/Globe/GlobeWrapper';
+import LiveView from '@/components/live/LiveView';
 import LiveHUD from '@/components/live/LiveHUD';
 import CountryGrid from '@/components/Hero/CountryGrid';
 import { pages, launchablePages } from '@/lib/content/content';
@@ -25,7 +25,7 @@ export default function HomePage() {
     <main className="relative">
       {/* ===== HERO: the /live experience, contained to the first viewport ===== */}
       <section className="relative h-svh min-h-140 w-full overflow-hidden bg-storm transform-[translateZ(0)]">
-        <GlobeWrapper viewOnly fill enableZoom={false} showZoomButtons />
+        <LiveView viewOnly fill enableZoom={false} showZoomButtons />
         <LiveHUD />
 
         {/* scroll affordance */}

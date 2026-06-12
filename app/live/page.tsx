@@ -1,11 +1,12 @@
 // app/live/page.tsx
-// View-only live globe + the LiveHUD console (Free / Beginner / Pro modes).
+// View-only live globe that hands off to a dark MapLibre map when zoomed in,
+// plus the LiveHUD console (Free / Beginner / Pro modes).
 // viewOnly removes the multiplier grid on the globe and enables the
 // "Orbit to" camera flights. The Blitzortung caption now lives inside
 // LiveHUD and only shows in Free mode.
 
 import type { Metadata } from 'next';
-import GlobeWrapper from '@/components/Globe/GlobeWrapper';
+import LiveView from '@/components/live/LiveView';
 import LiveHUD from '@/components/live/LiveHUD';
 
 export const metadata: Metadata = {
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
 export default function LivePage() {
   return (
     <main>
-      <GlobeWrapper viewOnly />
+      <LiveView viewOnly />
       <LiveHUD />
     </main>
   );
