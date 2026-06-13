@@ -1,6 +1,6 @@
 // components/seo/SeoMapPage.tsx
 // The reusable template for every localized map page (the brief's worked example
-// is Finland). Server-rendered for SEO; the map is the only client island.
+// is Finland). Server-rendered for SEO; the globe is the only client island.
 // Architecture per content_brief: map above the fold -> localized sections ->
 // game funnel -> FAQ (+ FAQPage / BreadcrumbList schema).
 
@@ -9,7 +9,7 @@ import type { LocalePage } from '@/lib/content/content-types';
 import { playHrefFor } from '@/lib/content/content';
 import { boundsForLocale } from '@/lib/map/countryBounds';
 import { pageJsonLd } from '@/lib/seo/schema';
-import LightningMap2D from '@/components/map/LightningMap2D';
+import GlobeWrapper from '@/components/Globe/GlobeWrapper';
 
 export default function SeoMapPage({ page }: { page: LocalePage }) {
   const bounds = boundsForLocale(page.locale);
@@ -47,8 +47,10 @@ export default function SeoMapPage({ page }: { page: LocalePage }) {
           {c.h1}
         </h1>
 
-        {/* THE PRODUCT: live map, above the fold, before any prose */}
-        <LightningMap2D bounds={bounds} className="mt-6 h-[58vh] min-h-[360px]" />
+        {/* THE PRODUCT: live 3D globe, framed on this country, above the fold */}
+        <div className="relative mt-6 h-[58vh] min-h-[360px] overflow-hidden rounded-2xl border border-white/10">
+          <GlobeWrapper viewOnly fill enableZoom={false} showZoomButtons initialBounds={bounds} />
+        </div>
         <p className="mt-2 text-xs text-white/40">
           Live strike data from the Blitzortung community detection network.
         </p>

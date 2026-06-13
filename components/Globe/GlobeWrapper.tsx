@@ -7,6 +7,8 @@ interface LightningGlobeProps {
   fill?: boolean;
   enableZoom?: boolean;
   showZoomButtons?: boolean;
+  autoRotate?: boolean;
+  initialBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number };
 }
 
 const LightningGlobe = dynamic<LightningGlobeProps>(

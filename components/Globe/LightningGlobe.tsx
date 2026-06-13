@@ -30,6 +30,8 @@ interface LightningGlobeProps {
   showZoomButtons?: boolean;
   /** Gentle auto-spin until the user interacts. Defaults to on for view-only pages. */
   autoRotate?: boolean;
+  /** If set, the camera frames this lon/lat box on load (used by country pages). */
+  initialBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number };
 }
 
 export default function LightningGlobe({
@@ -38,6 +40,7 @@ export default function LightningGlobe({
   enableZoom = true,
   showZoomButtons = false,
   autoRotate,
+  initialBounds,
 }: LightningGlobeProps) {
   useLightningSocket();
 
@@ -47,11 +50,21 @@ export default function LightningGlobe({
   const zoomOutRef = useRef<() => void>(() => {});
   const [tilesLoading, setTilesLoading] = useState(false);
 
-  const spin = autoRotate ?? viewOnly;
+  const spin = autoRotate ?? (viewOnly && !initialBounds);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+
+    // When globe zoom is disabled (landing page + embedded country maps), let
+    // wheel events scroll the page. Cesium otherwise swallows the wheel on its
+    // canvas, so we intercept it on the container in the CAPTURE phase before it
+    // reaches Cesium — and we do NOT preventDefault, so the browser scrolls.
+    let onWheelCapture: ((e: Event) => void) | null = null;
+    if (!enableZoom) {
+      onWheelCapture = (e) => e.stopPropagation();
+      el.addEventListener('wheel', onWheelCapture, { capture: true, passive: true });
+    }
 
     const viewer = new Cesium.Viewer(el, {
       baseLayer: false, // we add our own imagery — no Ion token required
@@ -120,7 +133,18 @@ export default function LightningGlobe({
     scene.globe.baseColor = STORM_BG;
     scene.fog.enabled = true;
 
-    camera.setView({ destination: Cesium.Cartesian3.fromDegrees(0, 20, 20_000_000) });
+    if (initialBounds) {
+      camera.setView({
+        destination: Cesium.Rectangle.fromDegrees(
+          initialBounds.minLon,
+          initialBounds.minLat,
+          initialBounds.maxLon,
+          initialBounds.maxLat,
+        ),
+      });
+    } else {
+      camera.setView({ destination: Cesium.Cartesian3.fromDegrees(0, 20, 20_000_000) });
+    }
     camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z; // keeps the globe level + clean spin
 
     // ---- camera controls / zoom range ----
@@ -291,6 +315,7 @@ export default function LightningGlobe({
       if (showTimer) clearTimeout(showTimer);
       if (hideTimer) clearTimeout(hideTimer);
       scene.globe.tileLoadProgressEvent.removeEventListener(onTileProgress);
+      if (onWheelCapture) el.removeEventListener('wheel', onWheelCapture, { capture: true });
       if (onDblClick) el.removeEventListener('dblclick', onDblClick);
       interactionEvents.forEach((ev) => el.removeEventListener(ev, stopSpin));
       pickHandler?.destroy();
@@ -299,7 +324,16 @@ export default function LightningGlobe({
       disposeStrikes();
       if (!viewer.isDestroyed()) viewer.destroy();
     };
-  }, [viewOnly, enableZoom, showZoomButtons, spin]);
+  }, [
+    viewOnly,
+    enableZoom,
+    showZoomButtons,
+    spin,
+    initialBounds?.minLon,
+    initialBounds?.minLat,
+    initialBounds?.maxLon,
+    initialBounds?.maxLat,
+  ]);
 
   return (
     <div className={fill ? 'absolute inset-0' : 'fixed inset-0 bg-black'}>
