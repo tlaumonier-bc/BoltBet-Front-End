@@ -59,7 +59,7 @@ export default function HeroGlobe({ poster = '/globe-poster.png' }: { poster?: s
           posterHidden ? 'opacity-0' : 'opacity-100'
         }`}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-storm/40 via-storm/10 to-storm" />
+      <div className="absolute inset-0 bg-linear-to-b from-storm/40 via-storm/10 to-storm" />
     </div>
   );
 }

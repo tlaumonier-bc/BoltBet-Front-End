@@ -48,7 +48,7 @@ export default function SeoMapPage({ page }: { page: LocalePage }) {
         </h1>
 
         {/* THE PRODUCT: live 3D globe, framed on this country, above the fold */}
-        <div className="relative mt-6 h-[58vh] min-h-[360px] overflow-hidden rounded-2xl border border-white/10">
+        <div className="relative mt-6 h-[58vh] min-h-90 overflow-hidden rounded-2xl border border-white/10">
           <GlobeWrapper viewOnly fill enableZoom={false} showZoomButtons initialBounds={bounds} />
         </div>
         <p className="mt-2 text-xs text-white/40">
