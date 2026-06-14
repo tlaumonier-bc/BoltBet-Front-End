@@ -11,7 +11,6 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { INITIAL_ROTATION_Y } from '@/lib/hero';
-import HeroStrikes from './HeroStrikes';
 
 const RADIUS = 2;
 const TEXTURE_URL = '/earth-night.jpg'; // self-hosted in /public (Phase 5)
@@ -95,7 +94,6 @@ export default function HeroGlobeCanvas() {
         <Spinner>
           <Earth />
           <Atmosphere />
-          <HeroStrikes />
         </Spinner>
       </Suspense>
     </Canvas>

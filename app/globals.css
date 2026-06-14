@@ -133,3 +133,36 @@ body {
 .panel-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
+
+
+.cesium-globe,
+.cesium-globe .cesium-viewer,
+.cesium-globe .cesium-widget,
+.cesium-globe .cesium-widget canvas {
+  width: 100%;
+  height: 100%;
+  background: #04060d;
+}
+.cesium-globe .cesium-viewer-bottom {
+  bottom: 4px;
+  right: 4px;
+  left: auto; /* keep attribution clear of the bottom-left HUD */
+}
+.cesium-globe .cesium-widget-credits {
+  font-size: 10px;
+  opacity: 0.45;
+}
+
+
+/* Cesium tile-loading spinner */
+.globe-loading-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  border: 2px solid rgba(56, 189, 248, 0.25);
+  border-top-color: #38bdf8;
+  animation: globe-spin 0.7s linear infinite;
+}
+@keyframes globe-spin {
+  to { transform: rotate(360deg); }
+}

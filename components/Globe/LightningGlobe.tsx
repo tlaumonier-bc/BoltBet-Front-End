@@ -1,542 +1,39 @@
-'use client'
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { OrbitControls, useTexture, Html, Text, Billboard, Line } from '@react-three/drei'
-import * as THREE from 'three'
-import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
-import { useGameStore } from '@/store/gameStore'
-import { useLiveStore } from '@/store/liveStore'
-import { buildInitialCells, cellCenter, regionName } from '@/lib/grid'
-import { useLightningSocket } from '@/lib/socket'
-import type { GridCell } from '@/types'
+'use client';
 
-const RADIUS = 2
-const DEG2RAD = Math.PI / 180
-const TEXTURE_URL = '/earth-night.jpg'
-const GRID_GRAY = '#94a3b8'
+import { useEffect, useRef, useState } from 'react';
+import * as Cesium from 'cesium';
+import 'cesium/Build/Cesium/Widgets/widgets.css';
+import { useGameStore } from '@/store/gameStore';
+import { useLiveStore } from '@/store/liveStore';
+import { buildInitialCells, cellCenter, cellColor, regionName } from '@/lib/grid';
+import { attachLightningStrikes } from '@/lib/globe/lightningStrikes';
+import { useLightningSocket } from '@/lib/socket';
+import type { GridCell } from '@/types';
 
-// /live "orbit to" flight tuning
-const ORBIT_CAMERA_DISTANCE = 3.4 // between minDistance (3) and the default 5
-const ORBIT_FLIGHT_MS = 1600
-const Y_AXIS = new THREE.Vector3(0, 1, 0)
-
-function latLonToVector3(lat: number, lon: number, radius: number) {
-  const phi = (90 - lat) * DEG2RAD
-  const theta = (lon + 180) * DEG2RAD
-  return new THREE.Vector3(
-    -radius * Math.sin(phi) * Math.cos(theta),
-    radius * Math.cos(phi),
-    radius * Math.sin(phi) * Math.sin(theta)
-  )
+// Tell Cesium where its static assets live (copied to /public/cesium).
+if (typeof window !== 'undefined') {
+  (window as unknown as { CESIUM_BASE_URL?: string }).CESIUM_BASE_URL = '/cesium';
 }
+// Optional: set this env var to use Cesium Ion satellite imagery instead of CARTO.
+const ION_TOKEN = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN;
+if (ION_TOKEN) Cesium.Ion.defaultAccessToken = ION_TOKEN;
 
-function Earth() {
-  const texture = useTexture(TEXTURE_URL)
-  return (
-    <mesh>
-      <sphereGeometry args={[RADIUS, 64, 64]} />
-      <meshStandardMaterial
-        map={texture}
-        emissiveMap={texture}
-        emissive={'#ffffff'}
-        emissiveIntensity={0.45}
-        roughness={1}
-        metalness={0}
-      />
-    </mesh>
-  )
-}
+const FLY_HEIGHT_M = 2_500_000;
 
-function Atmosphere() {
-  const material = useMemo(
-    () =>
-      new THREE.ShaderMaterial({
-        uniforms: { glowColor: { value: new THREE.Color('#3b82f6') } },
-        vertexShader: `
-          varying vec3 vNormal;
-          void main() {
-            vNormal = normalize(normalMatrix * normal);
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }`,
-        fragmentShader: `
-          varying vec3 vNormal;
-          uniform vec3 glowColor;
-          void main() {
-            float intensity = pow(0.65 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.5);
-            gl_FragColor = vec4(glowColor, 1.0) * intensity;
-          }`,
-        side: THREE.BackSide,
-        blending: THREE.AdditiveBlending,
-        transparent: true,
-      }),
-    []
-  )
-  return (
-    <mesh material={material}>
-      <sphereGeometry args={[RADIUS * 1.08, 64, 64]} />
-    </mesh>
-  )
-}
-
-function buildCellGeometry(lonMin: number, latMin: number, radius: number, seg = 6) {
-  const geom = new THREE.BufferGeometry()
-  const positions: number[] = []
-  const indices: number[] = []
-  for (let i = 0; i <= seg; i++) {
-    for (let j = 0; j <= seg; j++) {
-      const lon = lonMin + (i / seg) * 20
-      const lat = latMin + (j / seg) * 20
-      const v = latLonToVector3(lat, lon, radius)
-      positions.push(v.x, v.y, v.z)
-    }
-  }
-  const w = seg + 1
-  for (let i = 0; i < seg; i++) {
-    for (let j = 0; j < seg; j++) {
-      const a = i * w + j
-      const b = a + 1
-      const c = a + w
-      const d = c + 1
-      indices.push(a, c, b, b, c, d)
-    }
-  }
-  geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-  geom.setIndex(indices)
-  geom.computeVertexNormals()
-  return geom
-}
-
-function buildCellBorder(lonMin: number, latMin: number, radius: number, seg = 6) {
-  const pts: [number, number, number][] = []
-  const push = (lat: number, lon: number) => {
-    const v = latLonToVector3(lat, lon, radius)
-    pts.push([v.x, v.y, v.z])
-  }
-  for (let i = 0; i <= seg; i++) push(latMin, lonMin + (i / seg) * 20)
-  for (let i = 1; i <= seg; i++) push(latMin + (i / seg) * 20, lonMin + 20)
-  for (let i = 1; i <= seg; i++) push(latMin + 20, lonMin + 20 - (i / seg) * 20)
-  for (let i = 1; i <= seg; i++) push(latMin + 20 - (i / seg) * 20, lonMin)
-  return pts
-}
-
-function Cell({ cell }: { cell: GridCell }) {
-  const [hovered, setHovered] = useState(false)
-  const selectCell = useGameStore((s) => s.selectCell)
-
-  const fillGeometry = useMemo(
-    () => buildCellGeometry(cell.lonMin, cell.latMin, RADIUS + 0.01),
-    [cell.lonMin, cell.latMin]
-  )
-  const borderPoints = useMemo(
-    () => buildCellBorder(cell.lonMin, cell.latMin, RADIUS + 0.012),
-    [cell.lonMin, cell.latMin]
-  )
-  const center = cellCenter(cell.lonMin, cell.latMin)
-  const labelPos = useMemo(
-    () => latLonToVector3(center.lat, center.lon, RADIUS + 0.02),
-    [center.lat, center.lon]
-  )
-
-  return (
-    <group>
-      <mesh
-        geometry={fillGeometry}
-        onPointerOver={(e) => {
-          e.stopPropagation()
-          setHovered(true)
-          document.body.style.cursor = 'pointer'
-        }}
-        onPointerOut={() => {
-          setHovered(false)
-          document.body.style.cursor = 'auto'
-        }}
-        onClick={(e) => {
-          e.stopPropagation()
-          selectCell(cell.id)
-        }}
-      >
-        <meshBasicMaterial
-          color={GRID_GRAY}
-          transparent
-          opacity={hovered ? 0.12 : 0}
-          side={THREE.DoubleSide}
-          depthWrite={false}
-        />
-      </mesh>
-
-      <Line
-        points={borderPoints}
-        color={GRID_GRAY}
-        lineWidth={1}
-        transparent
-        opacity={hovered ? 0.6 : 0.22}
-      />
-
-      <Billboard position={labelPos}>
-        <Text
-          fontSize={0.07}
-          color={GRID_GRAY}
-          anchorX="center"
-          anchorY="middle"
-          fillOpacity={hovered ? 0.9 : 0.5}
-          outlineWidth={0}
-        >
-          {cell.multiplier.toFixed(1)}x
-        </Text>
-      </Billboard>
-
-      {hovered && (
-        <Html
-          position={latLonToVector3(center.lat, center.lon, RADIUS + 0.2)}
-          center
-          distanceFactor={6}
-          style={{ pointerEvents: 'none' }}
-        >
-          <div className="whitespace-nowrap rounded-md border border-white/15 bg-black/80 px-3 py-2 text-xs text-white shadow-lg backdrop-blur">
-            <div className="font-semibold">{regionName(center.lat, center.lon)}</div>
-            <div className="text-white/70">{cell.multiplier.toFixed(1)}x multiplier</div>
-            <div className="text-white/50">
-              {cell.strikeCount24h} strikes / 24h · {cell.activeBets} bets
-            </div>
-          </div>
-        </Html>
-      )}
-    </group>
-  )
-}
-
-function GridCells() {
-  const cells = useGameStore((s) => s.cells)
-  return (
-    <>
-      {Object.values(cells).map((c) => (
-        <Cell key={c.id} cell={c} />
-      ))}
-    </>
-  )
-}
-
-function InstancedStrikes() {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  const pointsRef = useRef<THREE.Points>(null);
-  const shaderUniformsRef = useRef<Record<string, THREE.IUniform> | null>(null);
-
-  const maxInstances = 200; 
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-  
-  const baseGeom = useMemo(() => {
-    const geom = new THREE.ConeGeometry(0.015, 0.4, 4, 5);
-    geom.translate(0, 0.2, 0); 
-    const initialBirth = new Float32Array(maxInstances).fill(0);
-    geom.setAttribute('birthTime', new THREE.InstancedBufferAttribute(initialBirth, 1));
-    return geom;
-  }, []);
-
-  const pointGeom = useMemo(() => {
-    const geom = new THREE.BufferGeometry();
-    geom.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(maxInstances * 3), 3));
-    geom.setAttribute('aAlpha', new THREE.Float32BufferAttribute(new Float32Array(maxInstances), 1));
-    return geom;
-  }, []);
-
-  const boltMaterial = useMemo(() => {
-    const mat = new THREE.MeshBasicMaterial({ 
-      color: '#bfe3ff', 
-      transparent: true, 
-      blending: THREE.AdditiveBlending,
-      depthWrite: false 
-    });
-    
-    mat.onBeforeCompile = (shader) => {
-      shader.uniforms.uTime = { value: 0 };
-      shaderUniformsRef.current = shader.uniforms;
-      
-      shader.vertexShader = `
-        uniform float uTime;
-        attribute float birthTime;
-        varying float vAlpha;
-        ${shader.vertexShader}
-      `.replace(
-        `#include <begin_vertex>`,
-        `
-        #include <begin_vertex>
-        float age = (uTime - birthTime) / 1000.0;
-        vAlpha = (birthTime > 0.0 && age >= 0.0 && age < 2.0) ? (1.0 - (age / 2.0)) : 0.0;
-        
-        if (position.y > 0.05 && vAlpha > 0.0) {
-          float noiseX = sin(float(gl_InstanceID) * 12.3 + position.y * 20.0) * 0.05;
-          float noiseZ = cos(float(gl_InstanceID) * 45.6 + position.y * 20.0) * 0.05;
-          transformed.x += noiseX;
-          transformed.z += noiseZ;
-        }
-        `
-      );
-      shader.fragmentShader = `
-        varying float vAlpha;
-        ${shader.fragmentShader}
-      `.replace(
-        `vec4 diffuseColor = vec4( diffuse, opacity );`,
-        `
-        if (vAlpha <= 0.0) discard;
-        vec4 diffuseColor = vec4( diffuse, opacity * (vAlpha * vAlpha) );
-        `
-      );
-    };
-    return mat;
-  }, []);
-
-  const pointMaterial = useMemo(() => new THREE.ShaderMaterial({
-    uniforms: { uColor: { value: new THREE.Color('#eaf4ff') } },
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    vertexShader: `
-      attribute float aAlpha;
-      varying float vAlpha;
-      void main() {
-        vAlpha = aAlpha;
-        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-        gl_PointSize = 15.0 * (1.0 / -mvPosition.z) * (0.5 + aAlpha);
-        gl_Position = projectionMatrix * mvPosition;
-      }
-    `,
-    fragmentShader: `
-      uniform vec3 uColor;
-      varying float vAlpha;
-      void main() {
-        if(vAlpha <= 0.01) discard;
-        float d = length(gl_PointCoord - vec2(0.5));
-        if(d > 0.5) discard;
-        gl_FragColor = vec4(uColor, smoothstep(0.5, 0.0, d) * vAlpha);
-      }
-    `
-  }), []);
-
-  useFrame(() => {
-    if (!meshRef.current || !pointsRef.current) return;
-    
-    const strikes = useGameStore.getState().strikes;
-    const now = Date.now();
-    
-    if (shaderUniformsRef.current && shaderUniformsRef.current.uTime) {
-      shaderUniformsRef.current.uTime.value = now;
-    }
-
-    const posArray = pointsRef.current.geometry.attributes.position.array as Float32Array;
-    const alphaArray = pointsRef.current.geometry.attributes.aAlpha.array as Float32Array;
-    const birthTimes = meshRef.current.geometry.attributes.birthTime.array as Float32Array;
-
-    for (let i = 0; i < maxInstances; i++) {
-      const strike = strikes[i];
-      if (strike) {
-        const pos = latLonToVector3(strike.lat, strike.lon, RADIUS);
-        dummy.position.copy(pos);
-        dummy.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), pos.clone().normalize());
-        dummy.updateMatrix();
-        
-        meshRef.current.setMatrixAt(i, dummy.matrix);
-        birthTimes[i] = strike.receivedAt; 
-
-        posArray[i * 3] = pos.x;
-        posArray[i * 3 + 1] = pos.y;
-        posArray[i * 3 + 2] = pos.z;
-        
-        const age = (now - strike.receivedAt) / 1000;
-        alphaArray[i] = age < 2.0 ? 1.0 - (age / 2.0) : 0;
-      } else {
-        birthTimes[i] = 0;
-        alphaArray[i] = 0;
-        dummy.matrix.identity().scale(new THREE.Vector3(0,0,0));
-        meshRef.current.setMatrixAt(i, dummy.matrix);
-      }
-    }
-    
-    meshRef.current.instanceMatrix.needsUpdate = true;
-    meshRef.current.geometry.attributes.birthTime.needsUpdate = true;
-    pointsRef.current.geometry.attributes.position.needsUpdate = true;
-    pointsRef.current.geometry.attributes.aAlpha.needsUpdate = true;
-  });
-
-  return (
-    <group>
-      <instancedMesh ref={meshRef} args={[baseGeom, boltMaterial, maxInstances]} frustumCulled={false} />
-      <points ref={pointsRef} args={[pointGeom, pointMaterial]} frustumCulled={false} />
-    </group>
-  );
-}
-
-function OrbitFlight({
-  groupRef,
-  controlsRef,
-}: {
-  groupRef: React.RefObject<THREE.Group | null>
-  controlsRef: React.RefObject<OrbitControlsImpl | null>
-}) {
-  const orbitTarget = useLiveStore((s) => s.orbitTarget)
-  const { camera } = useThree()
-  const flight = useRef<{
-    lat: number
-    lon: number
-    start: number
-    from: THREE.Vector3
-  } | null>(null)
-  const dest = useRef(new THREE.Vector3())
-
-  useEffect(() => {
-    if (!orbitTarget) return
-    if (Date.now() - orbitTarget.requestedAt > 5000) return
-
-    flight.current = {
-      lat: orbitTarget.lat,
-      lon: orbitTarget.lon,
-      start: performance.now(),
-      from: camera.position.clone(),
-    }
-    const controls = controlsRef.current
-    if (controls) {
-      controls.enabled = false
-      controls.enableDamping = false 
-    }
-  }, [orbitTarget, camera, controlsRef])
-
-  useFrame(() => {
-    const f = flight.current
-    if (!f) return
-
-    const t = Math.min(1, (performance.now() - f.start) / ORBIT_FLIGHT_MS)
-    const ease = 1 - Math.pow(1 - t, 3) 
-
-    const rotY = groupRef.current?.rotation.y ?? 0
-    dest.current
-      .copy(latLonToVector3(f.lat, f.lon, 1))
-      .applyAxisAngle(Y_AXIS, rotY)
-      .normalize()
-      .multiplyScalar(ORBIT_CAMERA_DISTANCE)
-
-    camera.position.lerpVectors(f.from, dest.current, ease)
-    camera.lookAt(0, 0, 0)
-
-    if (t >= 1) {
-      flight.current = null
-      const controls = controlsRef.current
-      if (controls) {
-        controls.enabled = true
-        controls.enableDamping = true
-        controls.update() 
-      }
-    }
-  })
-
-  return null
-}
-
-function Scene({
-  viewOnly,
-  groupRef,
-}: {
-  viewOnly: boolean
-  groupRef: React.RefObject<THREE.Group | null>
-}) {
-  const setCells = useGameStore((s) => s.setCells)
-  const cellCount = useGameStore((s) => Object.keys(s.cells).length)
-
-  useEffect(() => {
-    if (!viewOnly && cellCount === 0) setCells(buildInitialCells())
-  }, [viewOnly, cellCount, setCells])
-
-  useFrame(() => {
-    if (groupRef.current) groupRef.current.rotation.y += 0.001
-  })
-
-  return (
-    <group ref={groupRef}>
-      <Earth />
-      <Atmosphere />
-      {!viewOnly && <GridCells />}
-      <InstancedStrikes />
-    </group>
-  )
-}
-
-// ----------------------------- zoom controls -------------------------------
-
-const ZOOM_IN_FACTOR = 0.78
-const ZOOM_OUT_FACTOR = 1 / ZOOM_IN_FACTOR
-
-// Lerps the camera distance toward a target distance. It never touches React
-// state/props: it reads the target through getTarget() and signals completion
-// through onArrived() — the owning ref lives in LightningGlobe.
-function ZoomAnimator({
-  controlsRef,
-  getTarget,
-  onArrived,
-}: {
-  controlsRef: React.RefObject<OrbitControlsImpl | null>
-  getTarget: () => number | null
-  onArrived: () => void
-}) {
-  useFrame(() => {
-    const controls = controlsRef.current
-    const target = getTarget()
-    if (!controls || target == null) return
-
-    const cam = controls.object
-    const offset = cam.position.clone().sub(controls.target)
-    const dist = offset.length()
-    const next = THREE.MathUtils.lerp(dist, target, 0.18)
-
-    if (Math.abs(next - target) < 0.002) {
-      offset.setLength(target)
-      onArrived() // arrived
-    } else {
-      offset.setLength(next)
-    }
-    cam.position.copy(controls.target).add(offset)
-    controls.update()
-  })
-  return null
-}
-
-function ZoomButtons({
-  onZoomIn,
-  onZoomOut,
-}: {
-  onZoomIn: () => void
-  onZoomOut: () => void
-}) {
-  return (
-    <div
-      className="absolute bottom-6 right-6 z-20 flex flex-col gap-2"
-      onDoubleClick={(e) => e.stopPropagation()}
-    >
-      <button
-        type="button"
-        onClick={onZoomIn}
-        aria-label="Zoom in"
-        className="glass flex h-11 w-11 items-center justify-center rounded-xl text-2xl leading-none text-white/90 transition hover:bg-white/15 active:scale-95"
-      >
-        +
-      </button>
-      <button
-        type="button"
-        onClick={onZoomOut}
-        aria-label="Zoom out"
-        className="glass flex h-11 w-11 items-center justify-center rounded-xl text-2xl leading-none text-white/90 transition hover:bg-white/15 active:scale-95"
-      >
-        −
-      </button>
-    </div>
-  )
-}
+const STORM_BG = Cesium.Color.fromCssColorString('#04060d');
+const GRID_GRAY = Cesium.Color.fromCssColorString('#94a3b8');
 
 interface LightningGlobeProps {
-  viewOnly?: boolean
-  /** Fill the (positioned) parent instead of covering the whole viewport. */
-  fill?: boolean
-  /** Allow wheel / pinch zoom. Off on the landing hero so the page scrolls. */
-  enableZoom?: boolean
-  /** Render the on-globe + / − zoom controls + double-click-to-zoom. */
-  showZoomButtons?: boolean
+  viewOnly?: boolean;
+  fill?: boolean;
+  enableZoom?: boolean;
+  showZoomButtons?: boolean;
+  /** Gentle auto-spin until the user interacts. Defaults to on for view-only pages. */
+  autoRotate?: boolean;
+  /** If set, the camera frames this lon/lat box on load (used by country pages). */
+  initialBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number };
+  /** Fired once the first tiles are in — drives GlobeWrapper's loader. */
+  onReady?: () => void;
 }
 
 export default function LightningGlobe({
@@ -544,60 +41,396 @@ export default function LightningGlobe({
   fill = false,
   enableZoom = true,
   showZoomButtons = false,
+  autoRotate,
+  initialBounds,
+  onReady,
 }: LightningGlobeProps) {
-  useLightningSocket()
-  const groupRef = useRef<THREE.Group>(null)
-  const controlsRef = useRef<OrbitControlsImpl>(null)
-  const zoomCtl = useRef<{ target: number | null }>({ target: null })
+  useLightningSocket();
 
-  const applyZoom = (factor: number) => {
-    const controls = controlsRef.current
-    if (!controls) return
-    const cam = controls.object
-    const current =
-      zoomCtl.current.target ?? cam.position.distanceTo(controls.target)
-    zoomCtl.current.target = THREE.MathUtils.clamp(
-      current * factor,
-      controls.minDistance,
-      controls.maxDistance
-    )
-  }
-  const zoomIn = () => applyZoom(ZOOM_IN_FACTOR)
-  const zoomOut = () => applyZoom(ZOOM_OUT_FACTOR)
+  const containerRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const zoomInRef = useRef<() => void>(() => {});
+  const zoomOutRef = useRef<() => void>(() => {});
+  const [tilesLoading, setTilesLoading] = useState(false);
 
-  const getZoomTarget = () => zoomCtl.current.target
-  const clearZoomTarget = () => {
-    zoomCtl.current.target = null
-  }
+  // Keep the latest onReady in a ref so the main effect can call it without
+  // listing it as a dependency (which would tear down/rebuild the viewer).
+  const onReadyRef = useRef(onReady);
+  useEffect(() => {
+    onReadyRef.current = onReady;
+  }, [onReady]);
+
+  // Pull initialBounds into primitives so the effect's dep array is stable
+  // and lint-correct (referencing the object directly would force a rebuild
+  // on every new object reference).
+  const boundsMinLon = initialBounds?.minLon;
+  const boundsMinLat = initialBounds?.minLat;
+  const boundsMaxLon = initialBounds?.maxLon;
+  const boundsMaxLat = initialBounds?.maxLat;
+
+  const spin = autoRotate ?? (viewOnly && !initialBounds);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    setTilesLoading(false);
+
+    // When globe zoom is disabled (landing page + embedded country maps), let
+    // wheel events scroll the page. Cesium otherwise swallows the wheel on its
+    // canvas, so we intercept it on the container in the CAPTURE phase before it
+    // reaches Cesium — and we do NOT preventDefault, so the browser scrolls.
+    let onWheelCapture: ((e: Event) => void) | null = null;
+    if (!enableZoom) {
+      onWheelCapture = (e) => e.stopPropagation();
+      el.addEventListener('wheel', onWheelCapture, { capture: true, passive: true });
+    }
+
+    const viewer = new Cesium.Viewer(el, {
+      baseLayer: false, // we add our own imagery — no Ion token required
+      baseLayerPicker: false,
+      geocoder: false,
+      homeButton: false,
+      sceneModePicker: false,
+      navigationHelpButton: false,
+      animation: false,
+      timeline: false,
+      fullscreenButton: false,
+      infoBox: false,
+      selectionIndicator: false,
+    });
+
+    const { scene, camera } = viewer;
+
+    // ── Loading states ───────────────────────────────────────────────
+    //  1. onReady()        → fired once, when the first tiles are in. Tells
+    //     GlobeWrapper to fade out its full-screen loader.
+    //  2. tilesLoading=true → the small "Loading map detail…" pill, only
+    //     AFTER the first load, while higher-res tiles stream in on zoom.
+    let destroyed = false;
+    let showTimer: ReturnType<typeof setTimeout> | null = null;
+    let hideTimer: ReturnType<typeof setTimeout> | null = null;
+    let sawInitialTiles = false;
+    let initialReady = false;
+
+    const revealGlobe = () => {
+      if (initialReady) return;
+      initialReady = true;
+      if (!destroyed) onReadyRef.current?.();
+    };
+
+    // Safety net: never leave the loader stuck (e.g. if imagery tiles fail
+    // to load) — reveal the globe after a few seconds no matter what.
+    const readyFallback = setTimeout(revealGlobe, 8000);
+
+    const onTileProgress = (queued: number) => {
+      if (destroyed) return;
+
+      // (1) initial load: wait until tiles have actually started loading
+      // (queued > 0) and then drained to 0 → first frame is fully tiled.
+      if (!initialReady) {
+        if (queued > 0) sawInitialTiles = true;
+        if (sawInitialTiles && queued === 0) revealGlobe();
+        return; // don't drive the detail pill during the first load
+      }
+
+      // (2) subsequent zoom/scroll: the small detail loader (debounced).
+      if (queued > 0) {
+        if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+        if (!showTimer) showTimer = setTimeout(() => { setTilesLoading(true); showTimer = null; }, 150);
+      } else {
+        if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+        if (!hideTimer) hideTimer = setTimeout(() => { setTilesLoading(false); hideTimer = null; }, 300);
+      }
+    };
+    scene.globe.tileLoadProgressEvent.addEventListener(onTileProgress);
+
+    // ---- imagery: NASA "Black Marble" night lights, tiled via GIBS ----
+    viewer.imageryLayers.addImageryProvider(
+      new Cesium.UrlTemplateImageryProvider({
+        url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_Black_Marble/default/2016-01-01/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png',
+        maximumLevel: 8,
+        credit: 'NASA EOSDIS GIBS — VIIRS Black Marble',
+      })
+    );
+
+    // ---- look & feel: match the app's dark "storm" aesthetic + blue rim glow ----
+    scene.backgroundColor = STORM_BG;
+    if (scene.skyBox) scene.skyBox.show = false;
+    if (scene.sun) scene.sun.show = false;
+    if (scene.moon) scene.moon.show = false;
+
+    // Outer blue halo around the limb.
+    if (scene.skyAtmosphere) {
+      scene.skyAtmosphere.show = true;
+      scene.skyAtmosphere.atmosphereLightIntensity = 20;
+      scene.skyAtmosphere.brightnessShift = 0.4;
+      scene.skyAtmosphere.saturationShift = 0.1;
+      scene.skyAtmosphere.perFragmentAtmosphere = true;
+    }
+
+    // Ground atmosphere: STATIC lighting (relative to the camera, not the real
+    // sun) so the rim glows evenly no matter the time of day.
+    scene.globe.showGroundAtmosphere = true;
+    scene.globe.dynamicAtmosphereLighting = false;
+    scene.globe.dynamicAtmosphereLightingFromSun = false;
+    scene.globe.atmosphereBrightnessShift = 0.4;
+    scene.globe.enableLighting = false; // city lights shown uniformly, no terminator
+    scene.globe.baseColor = STORM_BG;
+    scene.fog.enabled = true;
+
+    if (
+      boundsMinLon != null &&
+      boundsMinLat != null &&
+      boundsMaxLon != null &&
+      boundsMaxLat != null
+    ) {
+      camera.setView({
+        destination: Cesium.Rectangle.fromDegrees(
+          boundsMinLon,
+          boundsMinLat,
+          boundsMaxLon,
+          boundsMaxLat,
+        ),
+      });
+    } else {
+      camera.setView({ destination: Cesium.Cartesian3.fromDegrees(0, 20, 20_000_000) });
+    }
+    camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z; // keeps the globe level + clean spin
+
+    // ---- camera controls / zoom range ----
+    const ctrl = scene.screenSpaceCameraController;
+    ctrl.enableZoom = enableZoom;
+    ctrl.minimumZoomDistance = 50_000; // ~50 km: zoom in to country / region level
+    ctrl.maximumZoomDistance = 30_000_000;
+
+    const zoomStep = () => Math.max(camera.positionCartographic.height * 0.3, 50_000);
+    zoomInRef.current = () => camera.zoomIn(zoomStep());
+    zoomOutRef.current = () => camera.zoomOut(zoomStep());
+
+    // double-click to zoom in (only where the +/- buttons are shown)
+    let onDblClick: (() => void) | null = null;
+    if (showZoomButtons) {
+      viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(
+        Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
+      );
+      onDblClick = () => zoomInRef.current();
+      el.addEventListener('dblclick', onDblClick);
+    }
+
+    // ---- auto-rotate until the user interacts ----
+    let interacted = false;
+    const stopSpin = () => {
+      interacted = true;
+    };
+    const interactionEvents = ['mousedown', 'touchstart', 'wheel', 'pointerdown'];
+    interactionEvents.forEach((ev) => el.addEventListener(ev, stopSpin, { passive: true }));
+    const onSpin = () => {
+      if (spin && !interacted) camera.rotateRight(0.0006);
+    };
+    if (spin) scene.preRender.addEventListener(onSpin);
+
+    // ---- live lightning strikes (shared module) ----
+    const disposeStrikes = attachLightningStrikes(scene);
+
+    // ---- betting grid (play mode only) ----
+    const cellEntities = new Map<string, Cesium.Entity>();
+    const cellBase = new Map<string, Cesium.Color>();
+    let pickHandler: Cesium.ScreenSpaceEventHandler | null = null;
+    let unsubCells: (() => void) | null = null;
+
+    const setHover = (cellId: string | null, on: boolean) => {
+      if (!cellId) return;
+      const ent = cellEntities.get(cellId);
+      const base = cellBase.get(cellId);
+      if (!ent || !ent.rectangle || !base) return;
+      ent.rectangle.material = new Cesium.ColorMaterialProperty(base.withAlpha(on ? 0.16 : 0.0));
+      ent.rectangle.outlineColor = new Cesium.ConstantProperty(
+        GRID_GRAY.withAlpha(on ? 0.6 : 0.22)
+      );
+    };
+
+    const syncCells = (cells: Record<string, GridCell>) => {
+      for (const cell of Object.values(cells)) {
+        const center = cellCenter(cell.lonMin, cell.latMin);
+        const { color } = cellColor(cell.multiplier);
+        const base = Cesium.Color.fromCssColorString(color);
+        cellBase.set(cell.id, base);
+        let ent = cellEntities.get(cell.id);
+        if (!ent) {
+          ent = viewer.entities.add({
+            id: `cell_${cell.id}`,
+            position: Cesium.Cartesian3.fromDegrees(center.lon, center.lat),
+            rectangle: {
+              coordinates: Cesium.Rectangle.fromDegrees(
+                cell.lonMin,
+                cell.latMin,
+                cell.lonMin + 20,
+                cell.latMin + 20
+              ),
+              material: new Cesium.ColorMaterialProperty(base.withAlpha(0.0)),
+              height: 0,
+              outline: true,
+              outlineColor: GRID_GRAY.withAlpha(0.22),
+            },
+            label: {
+              text: `${cell.multiplier.toFixed(1)}x`,
+              font: '600 13px sans-serif',
+              fillColor: GRID_GRAY.withAlpha(0.55),
+              showBackground: false,
+              disableDepthTestDistance: 0, // hidden when on the far side of the globe
+              verticalOrigin: Cesium.VerticalOrigin.CENTER,
+            },
+          });
+          cellEntities.set(cell.id, ent);
+        } else if (ent.label) {
+          ent.label.text = new Cesium.ConstantProperty(`${cell.multiplier.toFixed(1)}x`);
+        }
+      }
+    };
+
+    if (!viewOnly) {
+      if (Object.keys(useGameStore.getState().cells).length === 0) {
+        useGameStore.getState().setCells(buildInitialCells());
+      }
+      syncCells(useGameStore.getState().cells);
+
+      // keep labels/colours in sync with websocket multiplier updates
+      let prevCells = useGameStore.getState().cells;
+      unsubCells = useGameStore.subscribe((state) => {
+        if (state.cells !== prevCells) {
+          prevCells = state.cells;
+          syncCells(state.cells);
+        }
+      });
+
+      // hover + click picking
+      pickHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+      let hoveredId: string | null = null;
+
+      const pickedCellId = (pos: Cesium.Cartesian2): string | null => {
+        const picked = scene.pick(pos) as { id?: { id?: unknown } } | undefined;
+        const id = picked?.id?.id;
+        return typeof id === 'string' && id.startsWith('cell_') ? id.slice(5) : null;
+      };
+
+      pickHandler.setInputAction((m: Cesium.ScreenSpaceEventHandler.MotionEvent) => {
+        const cellId = pickedCellId(m.endPosition);
+        if (cellId !== hoveredId) {
+          setHover(hoveredId, false);
+          hoveredId = cellId;
+          setHover(hoveredId, true);
+          scene.canvas.style.cursor = cellId ? 'pointer' : 'default';
+        }
+        const tip = tooltipRef.current;
+        if (cellId && tip) {
+          const cell = useGameStore.getState().cells[cellId];
+          const c = cellCenter(cell.lonMin, cell.latMin);
+          tip.style.display = 'block';
+          tip.style.left = `${m.endPosition.x}px`;
+          tip.style.top = `${m.endPosition.y}px`;
+          tip.innerHTML =
+            `<div style="font-weight:600">${regionName(c.lat, c.lon)}</div>` +
+            `<div style="opacity:.7">${cell.multiplier.toFixed(1)}x multiplier</div>` +
+            `<div style="opacity:.5">${cell.strikeCount24h} strikes / 24h · ${cell.activeBets} bets</div>`;
+        } else if (tip) {
+          tip.style.display = 'none';
+        }
+      }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+      pickHandler.setInputAction((c: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
+        const cellId = pickedCellId(c.position);
+        if (cellId) useGameStore.getState().selectCell(cellId);
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    }
+
+    // ---- "orbit to" camera flights (driven by the /live HUD) ----
+    let unsubOrbit: (() => void) | null = null;
+    if (viewOnly) {
+      let lastReq = 0;
+      unsubOrbit = useLiveStore.subscribe((state) => {
+        const t = state.orbitTarget;
+        if (t && t.requestedAt !== lastReq) {
+          lastReq = t.requestedAt;
+          interacted = true; // stop the spin so it doesn't fight the flight
+          camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(t.lon, t.lat, FLY_HEIGHT_M),
+            duration: 1.6,
+          });
+        }
+      });
+    }
+
+    return () => {
+      destroyed = true;
+      clearTimeout(readyFallback);
+      if (showTimer) clearTimeout(showTimer);
+      if (hideTimer) clearTimeout(hideTimer);
+      scene.globe.tileLoadProgressEvent.removeEventListener(onTileProgress);
+      if (onWheelCapture) el.removeEventListener('wheel', onWheelCapture, { capture: true });
+      if (onDblClick) el.removeEventListener('dblclick', onDblClick);
+      interactionEvents.forEach((ev) => el.removeEventListener(ev, stopSpin));
+      pickHandler?.destroy();
+      unsubCells?.();
+      unsubOrbit?.();
+      disposeStrikes();
+      if (!viewer.isDestroyed()) viewer.destroy();
+    };
+  }, [
+    viewOnly,
+    enableZoom,
+    showZoomButtons,
+    spin,
+    boundsMinLon,
+    boundsMinLat,
+    boundsMaxLon,
+    boundsMaxLat,
+  ]);
 
   return (
-    <div
-      className={fill ? 'absolute inset-0' : 'fixed inset-0 bg-black'}
-      onDoubleClick={showZoomButtons ? zoomIn : undefined}
-    >
-      <Canvas camera={{ position: [0, 0, 5], fov: 50 }} dpr={[1, 2]}>
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[5, 3, 5]} intensity={1.2} />
-        <Suspense fallback={null}>
-          <Scene viewOnly={viewOnly} groupRef={groupRef} />
-        </Suspense>
-        {viewOnly && <OrbitFlight groupRef={groupRef} controlsRef={controlsRef} />}
-        <ZoomAnimator
-          controlsRef={controlsRef}
-          getTarget={getZoomTarget}
-          onArrived={clearZoomTarget}
-        />
-        <OrbitControls
-          ref={controlsRef}
-          enableDamping
-          dampingFactor={0.05}
-          minDistance={3}
-          maxDistance={10}
-          enablePan={false}
-          enableZoom={enableZoom}
-        />
-      </Canvas>
-      {showZoomButtons && <ZoomButtons onZoomIn={zoomIn} onZoomOut={zoomOut} />}
+    <div className={fill ? 'absolute inset-0' : 'fixed inset-0 bg-black'}>
+      <div ref={containerRef} className="cesium-globe h-full w-full" />
+
+      <div
+        ref={tooltipRef}
+        className="pointer-events-none absolute z-20 hidden -translate-x-1/2 translate-y-[-115%] whitespace-nowrap rounded-md border border-white/15 bg-black/80 px-3 py-2 text-xs text-white shadow-lg backdrop-blur"
+        style={{ display: 'none' }}
+      />
+
+      <div
+        className={`pointer-events-none absolute left-1/2 top-20 z-30 -translate-x-1/2 transition-opacity duration-300 ${
+          tilesLoading ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <div className="glass flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium text-white/80">
+          <span className="globe-loading-spinner" />
+          Loading map detail…
+        </div>
+      </div>
+
+      {showZoomButtons && (
+        <div
+          className="absolute bottom-6 right-6 z-20 flex flex-col gap-2"
+          onDoubleClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => zoomInRef.current()}
+            aria-label="Zoom in"
+            className="glass flex h-11 w-11 items-center justify-center rounded-xl text-2xl leading-none text-white/90 transition hover:bg-white/15 active:scale-95"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            onClick={() => zoomOutRef.current()}
+            aria-label="Zoom out"
+            className="glass flex h-11 w-11 items-center justify-center rounded-xl text-2xl leading-none text-white/90 transition hover:bg-white/15 active:scale-95"
+          >
+            −
+          </button>
+        </div>
+      )}
     </div>
-  )
+  );
 }
