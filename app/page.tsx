@@ -29,7 +29,7 @@ export default function HomePage() {
         <LiveHUD />
 
         {/* scroll affordance */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-6 z-30 flex justify-center">
+        <div className="pointer-events-none absolute inset-x-0 bottom-6 z-70 flex justify-center">
           <span className="flex flex-col items-center gap-1 text-[11px] uppercase tracking-[0.3em] text-white/45">
             Scroll to explore
             <span className="animate-bounce text-base">↓</span>

@@ -32,6 +32,8 @@ interface LightningGlobeProps {
   autoRotate?: boolean;
   /** If set, the camera frames this lon/lat box on load (used by country pages). */
   initialBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number };
+  /** Fired once the first tiles are in — drives GlobeWrapper's loader. */
+  onReady?: () => void;
 }
 
 export default function LightningGlobe({
@@ -41,6 +43,7 @@ export default function LightningGlobe({
   showZoomButtons = false,
   autoRotate,
   initialBounds,
+  onReady,
 }: LightningGlobeProps) {
   useLightningSocket();
 
@@ -50,11 +53,28 @@ export default function LightningGlobe({
   const zoomOutRef = useRef<() => void>(() => {});
   const [tilesLoading, setTilesLoading] = useState(false);
 
+  // Keep the latest onReady in a ref so the main effect can call it without
+  // listing it as a dependency (which would tear down/rebuild the viewer).
+  const onReadyRef = useRef(onReady);
+  useEffect(() => {
+    onReadyRef.current = onReady;
+  }, [onReady]);
+
+  // Pull initialBounds into primitives so the effect's dep array is stable
+  // and lint-correct (referencing the object directly would force a rebuild
+  // on every new object reference).
+  const boundsMinLon = initialBounds?.minLon;
+  const boundsMinLat = initialBounds?.minLat;
+  const boundsMaxLon = initialBounds?.maxLon;
+  const boundsMaxLat = initialBounds?.maxLat;
+
   const spin = autoRotate ?? (viewOnly && !initialBounds);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+
+    setTilesLoading(false);
 
     // When globe zoom is disabled (landing page + embedded country maps), let
     // wheel events scroll the page. Cesium otherwise swallows the wheel on its
@@ -82,13 +102,39 @@ export default function LightningGlobe({
 
     const { scene, camera } = viewer;
 
-    // Show a loading overlay while higher-res tiles stream in on zoom.
-    // Debounced both ways so quick loads don't flash and brief gaps don't flicker.
+    // ── Loading states ───────────────────────────────────────────────
+    //  1. onReady()        → fired once, when the first tiles are in. Tells
+    //     GlobeWrapper to fade out its full-screen loader.
+    //  2. tilesLoading=true → the small "Loading map detail…" pill, only
+    //     AFTER the first load, while higher-res tiles stream in on zoom.
     let destroyed = false;
     let showTimer: ReturnType<typeof setTimeout> | null = null;
     let hideTimer: ReturnType<typeof setTimeout> | null = null;
+    let sawInitialTiles = false;
+    let initialReady = false;
+
+    const revealGlobe = () => {
+      if (initialReady) return;
+      initialReady = true;
+      if (!destroyed) onReadyRef.current?.();
+    };
+
+    // Safety net: never leave the loader stuck (e.g. if imagery tiles fail
+    // to load) — reveal the globe after a few seconds no matter what.
+    const readyFallback = setTimeout(revealGlobe, 8000);
+
     const onTileProgress = (queued: number) => {
       if (destroyed) return;
+
+      // (1) initial load: wait until tiles have actually started loading
+      // (queued > 0) and then drained to 0 → first frame is fully tiled.
+      if (!initialReady) {
+        if (queued > 0) sawInitialTiles = true;
+        if (sawInitialTiles && queued === 0) revealGlobe();
+        return; // don't drive the detail pill during the first load
+      }
+
+      // (2) subsequent zoom/scroll: the small detail loader (debounced).
       if (queued > 0) {
         if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
         if (!showTimer) showTimer = setTimeout(() => { setTilesLoading(true); showTimer = null; }, 150);
@@ -133,13 +179,18 @@ export default function LightningGlobe({
     scene.globe.baseColor = STORM_BG;
     scene.fog.enabled = true;
 
-    if (initialBounds) {
+    if (
+      boundsMinLon != null &&
+      boundsMinLat != null &&
+      boundsMaxLon != null &&
+      boundsMaxLat != null
+    ) {
       camera.setView({
         destination: Cesium.Rectangle.fromDegrees(
-          initialBounds.minLon,
-          initialBounds.minLat,
-          initialBounds.maxLon,
-          initialBounds.maxLat,
+          boundsMinLon,
+          boundsMinLat,
+          boundsMaxLon,
+          boundsMaxLat,
         ),
       });
     } else {
@@ -312,6 +363,7 @@ export default function LightningGlobe({
 
     return () => {
       destroyed = true;
+      clearTimeout(readyFallback);
       if (showTimer) clearTimeout(showTimer);
       if (hideTimer) clearTimeout(hideTimer);
       scene.globe.tileLoadProgressEvent.removeEventListener(onTileProgress);
@@ -329,10 +381,10 @@ export default function LightningGlobe({
     enableZoom,
     showZoomButtons,
     spin,
-    initialBounds?.minLon,
-    initialBounds?.minLat,
-    initialBounds?.maxLon,
-    initialBounds?.maxLat,
+    boundsMinLon,
+    boundsMinLat,
+    boundsMaxLon,
+    boundsMaxLat,
   ]);
 
   return (
