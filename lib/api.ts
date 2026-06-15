@@ -1,5 +1,10 @@
 // lib/api.ts — REST client for the BoltBet game backend.
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+const API = process.env.API_INTERNAL_URL ?? 'http://localhost:8000'
+
+function csrf(): string {
+  if (typeof document === 'undefined') return ''
+  return document.cookie.split('; ').find((c) => c.startsWith('csrftoken='))?.split('=')[1] ?? ''
+}
 
 export interface GameState {
   active: boolean;
@@ -57,9 +62,10 @@ export async function getGameState(): Promise<GameState> {
 }
 
 export async function placePick(zoneId: string, username: string, country: string): Promise<PickResult> {
-  const res = await fetch(`${API}/api/game/pick/`, {
+    const res = await fetch(`${API}/api/game/pick/`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
+    credentials: 'same-origin',
     body: JSON.stringify({ zone_id: zoneId, username, country }),
   });
   if (!res.ok) {
