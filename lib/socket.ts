@@ -7,7 +7,14 @@ import { useGameStore } from '@/store/gameStore'
 import { usePlayStore } from '@/store/playStore'
 import type { LightningStrike } from '@/types'
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:8000/ws/lightning/'
+function resolveWsUrl(): string {
+  if (process.env.NEXT_PUBLIC_WS_URL) return process.env.NEXT_PUBLIC_WS_URL // dev/local override
+  if (typeof window !== 'undefined') {
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws'
+    return `${proto}://${location.host}/ws/lightning/`
+  }
+  return 'ws://localhost:8000/ws/lightning/'
+}
 
 export function useLightningSocket() {
   const addStrike = useGameStore((s) => s.addStrike)
@@ -19,7 +26,7 @@ export function useLightningSocket() {
     const play = usePlayStore.getState
 
     function connect() {
-      const ws = new WebSocket(WS_URL)
+      const ws = new WebSocket(resolveWsUrl())
       ref.current = ws
 
       ws.onmessage = (e) => {

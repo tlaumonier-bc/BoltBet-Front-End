@@ -47,7 +47,7 @@ export default async function LeaderboardPage() {
           {entries.map((e, i) => (
             <div
               key={e.username}
-              className="glass flex items-center gap-4 rounded-2xl px-5 py-4 transition hover:bg-white/[0.06]"
+              className="glass flex items-center gap-4 rounded-2xl px-5 py-4 transition hover:bg-white/6"
             >
               <span className="font-display w-8 text-center text-lg">
                 {MEDAL[i] ?? <span className="text-white/40">{i + 1}</span>}
