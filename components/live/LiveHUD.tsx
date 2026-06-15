@@ -31,11 +31,32 @@ export default function LiveHUD() {
   const setMode = useLiveStore((s) => s.setMode)
   const mapStyle = useLiveStore((s) => s.mapStyle)
   const setMapStyle = useLiveStore((s) => s.setMapStyle)
+  const atmosphere = useLiveStore((s) => s.atmosphere)
+  const setAtmosphere = useLiveStore((s) => s.setAtmosphere)
 
   return (
     <>
       {/* Left column: map style + mode switch (always visible) + console (beginner / pro) */}
       <div className="pointer-events-none fixed bottom-4 left-4 right-4 top-20 z-40 flex flex-col gap-3 md:right-auto md:w-75">
+        <div className="glass pointer-events-auto flex shrink-0 self-start rounded-full p-1 text-xs font-semibold">
+          {([
+            { on: true, label: 'Atmosphere' },
+            { on: false, label: 'Off' },
+          ] as const).map((o) => (
+            <button
+              key={String(o.on)}
+              onClick={() => setAtmosphere(o.on)}
+              className={`rounded-full px-3.5 py-1.5 transition ${
+                atmosphere === o.on
+                  ? 'bg-electric text-storm shadow-[0_0_14px_rgba(56,189,248,0.45)]'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+        
         {/* Day / Night globe imagery */}
         <div className="glass pointer-events-auto flex shrink-0 self-start rounded-full p-1 text-xs font-semibold">
           {MAP_STYLES.map((m) => (
