@@ -102,6 +102,31 @@ export default function LightningGlobe({
 
     const { scene, camera } = viewer;
 
+    // Adaptive resolution: native res when the view settles (crisp labels), 1×
+    // while the camera moves/spins (the eye can't catch the softness in motion).
+    const HIGH_SCALE = Math.min(window.devicePixelRatio || 1, 1.5);
+    viewer.useBrowserRecommendedResolution = false;
+    viewer.resolutionScale = HIGH_SCALE;
+    camera.percentageChanged = 0.05; // fire `changed` on small movements
+
+    let resTimer: ReturnType<typeof setTimeout> | null = null;
+    const onCameraMove = () => {
+      if (viewer.resolutionScale !== 1) viewer.resolutionScale = 1;
+      if (resTimer) clearTimeout(resTimer);
+      resTimer = setTimeout(() => { viewer.resolutionScale = HIGH_SCALE; }, 200);
+    };
+    camera.changed.addEventListener(onCameraMove);
+    disposers.push(() => {
+      camera.changed.removeEventListener(onCameraMove);
+      if (resTimer) clearTimeout(resTimer);
+    });
+
+    // Render at the device's native resolution so borders + labels stay crisp
+    // on hi-DPI / retina displays (Cesium otherwise renders at 1 CSS px and
+    // upscales, which is what makes the text look blurry).
+    viewer.useBrowserRecommendedResolution = false;
+    viewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 2); // cap at 2 for perf
+
     // loading states (wrapper loader + detail pill)
     disposers.push(
       createTileLoadTracker({

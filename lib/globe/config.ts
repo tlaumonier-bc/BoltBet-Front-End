@@ -27,27 +27,32 @@ export const COUNTRY_LABEL_COLOR = Cesium.Color.fromCssColorString('#cbd5e1').wi
 export const COUNTRY_LABEL_FONT = '600 14px sans-serif';
 
 // ── Camera zoom range ──────────────────────────────────────────────────────
-export const MIN_ZOOM_DISTANCE_M = 50_000; // ~50 km
-export const MAX_ZOOM_DISTANCE_M = 1_000_000;
+export const MIN_ZOOM_DISTANCE_M = 50_000;     // ~50 km
+export const MAX_ZOOM_DISTANCE_M = 25_000_000;
 
 // ── scene.skyAtmosphere — colour/brightness ONLY. These do NOT change the
 //    halo's apparent height (its radius is fixed inside Cesium). Use
 //    ATMOSPHERE_GLOW below for height. ───────────────────────────────────────
 export const ATMOSPHERE = {
-  show: true,            // set false to keep only the custom glow below
+  show: false,           // built-in scattering gradient OFF — we use a discrete shell instead
   lightIntensity: 10,
   brightnessShift: 0.0,
   saturationShift: 0.0,
   hueShift: 0.0,
-  rayleighScaleHeight: 18_000, // colour falloff, not height
+  rayleighScaleHeight: 18_000,
   mieScaleHeight: 6_000,
 };
 export const GROUND_ATMOSPHERE_BRIGHTNESS = -0.1;
 
-// ── Custom glow shell — THIS controls the visible atmosphere height ──────────
+// Country labels declutter: a label only shows when the camera is within
+// (angular size × this) metres. Bigger countries show from farther out.
+export const COUNTRY_LABEL_DISTANCE_PER_DEG = 600_000;
+
+// ── Atmosphere shell — a distinct back-side sphere with a crisp Fresnel rim,
+//    not a scattering gradient. Mirrors the reference orb. ────────────────────
 export const ATMOSPHERE_GLOW = {
-  heightM: 1_000_000,
-  color: '#3b82f6',
-  strength: 0.35, // brightness — drop toward 0.15 for fainter
-  falloff: 3.0,   // higher = thinner rim hugging the limb
+  scale: 1.14,       // shell radius as a multiple of Earth's radius (reference value)
+  color: '#4a6a8f',  // reference rim colour; use '#3b82f6' for a more vivid blue
+  strength: 0.35,    // peak rim opacity
+  falloff: 3.0,      // higher = thinner rim hugging the limb
 };

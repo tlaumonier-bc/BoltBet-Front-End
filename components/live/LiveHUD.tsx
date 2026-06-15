@@ -5,15 +5,17 @@
 // Blitzortung feed; weather / storm cells / alerts / pulse are SAMPLE values
 // shaped like the Xweather payloads they will be replaced by — see
 // lib/live/locations.ts (only that file changes when the API ships).
-
-import { useGameStore } from '@/store/gameStore'
-import { useLiveStore, type LiveViewMode, type GlobeMapStyle } from '@/store/liveStore'
+import { useMemo } from 'react';
+import { useGameStore } from '@/store/gameStore';
+import { useLiveStore, type LiveViewMode, type GlobeMapStyle } from '@/store/liveStore';
 import {
   ORBIT_LOCATIONS,
   type AlertSample,
   type StormCellSample,
 } from '@/lib/live/locations'
-import { nearestStrike, useLiveStats } from '@/lib/live/useLiveStats'
+import { nearestStrike, useLiveStats } from '@/lib/live/useLiveStats';
+import { useStrikeStats } from '@/lib/live/useStrikesStats';
+
 
 const MODES: { id: LiveViewMode; label: string }[] = [
   { id: 'free', label: 'Free' },
@@ -31,14 +33,14 @@ export default function LiveHUD() {
   const setMode = useLiveStore((s) => s.setMode)
   const mapStyle = useLiveStore((s) => s.mapStyle)
   const setMapStyle = useLiveStore((s) => s.setMapStyle)
-  const atmosphere = useLiveStore((s) => s.atmosphere)
-  const setAtmosphere = useLiveStore((s) => s.setAtmosphere)
+  // const atmosphere = useLiveStore((s) => s.atmosphere)
+  // const setAtmosphere = useLiveStore((s) => s.setAtmosphere)
 
   return (
     <>
       {/* Left column: map style + mode switch (always visible) + console (beginner / pro) */}
       <div className="pointer-events-none fixed bottom-4 left-4 right-4 top-20 z-40 flex flex-col gap-3 md:right-auto md:w-75">
-        <div className="glass pointer-events-auto flex shrink-0 self-start rounded-full p-1 text-xs font-semibold">
+        {/* <div className="glass pointer-events-auto flex shrink-0 self-start rounded-full p-1 text-xs font-semibold">
           {([
             { on: true, label: 'Atmosphere' },
             { on: false, label: 'Off' },
@@ -55,7 +57,7 @@ export default function LiveHUD() {
               {o.label}
             </button>
           ))}
-        </div>
+        </div> */}
         
         {/* Day / Night globe imagery */}
         <div className="glass pointer-events-auto flex shrink-0 self-start rounded-full p-1 text-xs font-semibold">
@@ -104,6 +106,7 @@ export default function LiveHUD() {
 
 function LeftPanel({ pro }: { pro: boolean }) {
   const stats = useLiveStats()
+  const db = useStrikeStats()
   const orbitTarget = useLiveStore((s) => s.orbitTarget)
   const orbitTo = useLiveStore((s) => s.orbitTo)
   const clearOrbit = useLiveStore((s) => s.clearOrbit)
@@ -170,8 +173,8 @@ function LeftPanel({ pro }: { pro: boolean }) {
       {/* STRIKES — real */}
       <Section title="Strikes">
         <div className="grid grid-cols-2 gap-2">
-          <BigStat value={stats.perMinute} label="last 60 s" />
-          <BigStat value={stats.last10Min} label="last 10 min" />
+          <BigStat value={db?.last_60s ?? stats.perMinute} label="last 60 s" />
+          <BigStat value={db?.last_10min ?? stats.last10Min} label="last 10 min" />
         </div>
         <Stat name="Hottest region" value={stats.topRegion ?? '—'} />
         {pro && (
@@ -253,6 +256,7 @@ function LeftPanel({ pro }: { pro: boolean }) {
 
 function RightPanel() {
   const stats = useLiveStats()
+  const db = useStrikeStats()
   const strikes = useGameStore((s) => s.strikes)
   const orbitTarget = useLiveStore((s) => s.orbitTarget)
 
@@ -260,8 +264,12 @@ function RightPanel() {
     ? ORBIT_LOCATIONS.find((l) => l.id === orbitTarget.id) ?? null
     : null
 
-  const near = focus ? nearestStrike(strikes, focus.lat, focus.lon, stats.now) : null
-  const peak = Math.max(0, ...stats.buckets)
+  const near = useMemo(
+    () => (focus ? nearestStrike(useGameStore.getState().strikes, focus.lat, focus.lon, stats.now) : null),
+    [focus, stats.now],
+  )
+  const buckets = db?.buckets_15min ?? stats.buckets
+  const peak = Math.max(0, ...buckets)
 
   return (
     <div className="pointer-events-none fixed bottom-4 right-4 top-20 z-40 hidden w-[320px] flex-col lg:flex">
@@ -275,14 +283,13 @@ function RightPanel() {
 
         {/* ACTIVITY — real */}
         <Section title="Activity · last 15 min">
-          <RateSparkline buckets={stats.buckets} />
+          <RateSparkline buckets={buckets} />
           <div className="mt-1 flex justify-between text-[10px] text-white/40">
             <span>−15 min</span>
             <span>peak {peak}/min</span>
             <span>now</span>
           </div>
         </Section>
-
         {/* RANGE — real */}
         <Section title="Range">
           {focus ? (

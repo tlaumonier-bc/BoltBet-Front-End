@@ -26,27 +26,30 @@ export function configureScene(scene: Cesium.Scene): void {
   }
 
   // Ground atmosphere: STATIC lighting (camera-relative) so the rim glows evenly.
-  scene.globe.showGroundAtmosphere = true;
+  scene.globe.showGroundAtmosphere = false; // was true — no surface limb gradient
   scene.globe.dynamicAtmosphereLighting = false;
   scene.globe.dynamicAtmosphereLightingFromSun = false;
   scene.globe.atmosphereBrightnessShift = GROUND_ATMOSPHERE_BRIGHTNESS;
   scene.globe.enableLighting = false; // city lights shown uniformly, no terminator
   scene.globe.baseColor = STORM_BG;
   scene.fog.enabled = true;
+  scene.debugShowFramesPerSecond = true;
+  
+
 
   // ── Anti-aliasing: crisp borders + labels ─────────────────────────────────
   // FXAA is a blur-based AA that softens thin lines and text — the cause of the
   // blurry borders/labels. Turn it off and use hardware MSAA instead, which
   // anti-aliases edges without smearing.
   scene.postProcessStages.fxaa.enabled = false;
-  scene.msaaSamples = 4; // 2 / 4 / 8 — higher = smoother, slightly costlier
+  scene.msaaSamples = 2; // 2 / 4 / 8 — higher = smoother, slightly costlier
 
   // Bloom: makes lightning strikes glow. It also adds a soft halo to any bright
   // pixel, so if labels still look slightly fuzzy, lower contrast/brightness or
   // disable it here.
   if (scene.postProcessStages?.bloom) {
     const bloom = scene.postProcessStages.bloom;
-    bloom.enabled = true;
+    bloom.enabled = false;
     bloom.uniforms.glowOnly = false;
     bloom.uniforms.contrast = 120;
     bloom.uniforms.brightness = -0.2;

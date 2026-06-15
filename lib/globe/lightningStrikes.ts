@@ -2,6 +2,7 @@
 import * as Cesium from 'cesium';
 import { useGameStore } from '@/store/gameStore';
 import type { LightningStrike } from '@/types';
+import { ATMOSPHERE_GLOW } from './config';
 
 // ──────────────────────────────────────────────────────────────────────────
 //  APPEARANCE — change strikes here.
@@ -10,7 +11,10 @@ import type { LightningStrike } from '@/types';
 const STRIKE_COLOR = Cesium.Color.fromCssColorString('#7dd3fc'); // bolt / glow color
 const CORE_COLOR = Cesium.Color.fromCssColorString('#eaf4ff'); // hot center of the ground flash
 
-const STRIKE_TOP_M = 160_000;  // beam starts this high — kept inside the visible atmosphere
+// Bolts descend from the atmosphere shell down to the surface, so they read as
+// full-height strikes from the edge of the atmosphere to the ground. Derived
+// from ATMOSPHERE_GLOW.scale so it stays in sync if you change the shell.
+const STRIKE_TOP_M = (ATMOSPHERE_GLOW.scale - 1) * Cesium.Ellipsoid.WGS84.maximumRadius;
 const STRIKE_WIDTH = 6;        // max beam thickness (px)
 const BASE_POINT_SIZE = 16;    // max size of the dot where it hits the globe
 const STRIKE_GLOW = 0.55;      // PolylineGlow glowPower (higher = softer / glowier)

@@ -8,6 +8,7 @@ import {
   COUNTRY_BORDER_WIDTH,
   COUNTRY_LABEL_COLOR,
   COUNTRY_LABEL_FONT,
+  COUNTRY_LABEL_DISTANCE_PER_DEG,
 } from './config';
 
 // Lift borders a couple of km off the surface so the (sharp) non-clamped
@@ -26,7 +27,7 @@ export function loadCountryBorders(viewer: Cesium.Viewer): void {
       if (viewer.isDestroyed()) return;
       const now = Cesium.JulianDate.now();
 
-      const labels = new Map<string, { center: Cesium.Cartesian3; size: number }>();
+      const labels = new Map<string, { center: Cesium.Cartesian3; size: number; spanDeg: number }>();
       let drew = 0;
 
       for (const entity of ds.entities.values) {
@@ -65,37 +66,42 @@ export function loadCountryBorders(viewer: Cesium.Viewer): void {
         if (!name) continue;
 
         const main = rings.reduce((a, b) => (b.length > a.length ? b : a));
+        const rect = Cesium.Rectangle.fromCartesianArray(main);
+        const spanDeg = Cesium.Math.toDegrees(Math.max(rect.width, rect.height));
+
         const lx = props?.LABEL_X?.getValue(now) as number | undefined;
         const ly = props?.LABEL_Y?.getValue(now) as number | undefined;
         let center: Cesium.Cartesian3;
         if (typeof lx === 'number' && typeof ly === 'number') {
           center = Cesium.Cartesian3.fromDegrees(lx, ly, 20_000);
         } else {
-          const rect = Cesium.Rectangle.fromCartesianArray(main);
           const carto = Cesium.Rectangle.center(rect);
           center = Cesium.Cartesian3.fromRadians(carto.longitude, carto.latitude, 20_000);
         }
 
         const prev = labels.get(name);
-        if (!prev || main.length > prev.size) labels.set(name, { center, size: main.length });
+        if (!prev || main.length > prev.size) labels.set(name, { center, size: main.length, spanDeg });
       }
 
-      for (const [name, { center }] of labels) {
-        viewer.entities.add({
+      const scene = viewer.scene;
+      const labelCollection = scene.primitives.add(new Cesium.LabelCollection());
+      for (const [name, { center, spanDeg }] of labels) {
+        labelCollection.add({
           position: center,
-          label: {
-            text: name,
-            font: COUNTRY_LABEL_FONT,
-            fillColor: COUNTRY_LABEL_COLOR,
-            outlineColor: Cesium.Color.BLACK.withAlpha(0.8),
-            outlineWidth: 2,
-            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-            scaleByDistance: new Cesium.NearFarScalar(2.0e6, 1.0, 2.0e7, 0.55), // ≤1: never upscale (would blur)
-            translucencyByDistance: new Cesium.NearFarScalar(2.0e7, 1.0, 3.0e7, 0.0),
-            disableDepthTestDistance: 0, // hidden on the far side of the globe
-            verticalOrigin: Cesium.VerticalOrigin.CENTER,
-            horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-          },
+          text: name,
+          font: COUNTRY_LABEL_FONT,
+          fillColor: COUNTRY_LABEL_COLOR,
+          outlineColor: Cesium.Color.BLACK.withAlpha(0.8),
+          outlineWidth: 2,
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(
+            0.0,
+            spanDeg * COUNTRY_LABEL_DISTANCE_PER_DEG,
+          ),
+          scaleByDistance: new Cesium.NearFarScalar(2.0e6, 1.0, 2.0e7, 0.55),
+          disableDepthTestDistance: 0, // hidden on the far side of the globe
+          verticalOrigin: Cesium.VerticalOrigin.CENTER,
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
         });
       }
 
