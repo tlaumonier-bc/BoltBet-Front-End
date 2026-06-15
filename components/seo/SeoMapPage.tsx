@@ -11,6 +11,7 @@ import { playHrefFor } from '@/lib/content/content';
 import { boundsForLocale } from '@/lib/map/countryBounds';
 import { pageJsonLd } from '@/lib/seo/schema';
 import GlobeWrapper from '@/components/Globe/GlobeWrapper';
+import GlobeMapStyleToggle from '@/components/Globe/GlobeMapStyleToggle';
 
 export default function SeoMapPage({ page }: { page: LocalePage }) {
   const bounds = boundsForLocale(page.locale);
@@ -37,8 +38,13 @@ export default function SeoMapPage({ page }: { page: LocalePage }) {
           initialBounds={bounds}
         />
 
+        {/* Night / Day imagery — SEO map pages default to Day */}
+        <div className="absolute left-4 top-20 z-50">
+          <GlobeMapStyleToggle defaultStyle="day" />
+        </div>
+
         {/* scroll affordance */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-6 z-[70] flex justify-center">
+        <div className="pointer-events-none absolute inset-x-0 bottom-6 z-70 flex justify-center">
           <span className="flex flex-col items-center gap-1 text-[11px] uppercase tracking-[0.3em] text-white/45">
             Scroll to explore
             <span className="animate-bounce text-base">↓</span>

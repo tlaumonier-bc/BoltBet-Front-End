@@ -10,25 +10,29 @@ export function generateStaticParams() {
 
 export const dynamicParams = false
 
+type Params = { cellId: string }
+
 export async function generateMetadata({
   params,
 }: {
-  params: { cellId: string }
+  params: Promise<Params>
 }): Promise<Metadata> {
-  const parsed = parseCellId(params.cellId)
+  const { cellId } = await params
+  const parsed = parseCellId(cellId)
   if (!parsed) return { title: 'Zone not found' }
   const { lat, lon } = cellCenter(parsed.lonMin, parsed.latMin)
   const region = regionName(lat, lon)
   return {
     title: `Lightning Prediction: ${region} Zone`,
     description: `Live lightning strike statistics and predictions for the ${region} zone (around ${lat}°, ${lon}°). Track real-time bolts and place predictions on Lightning Map Bets.`,
-    alternates: { canonical: `https://lightningmapgames.com/zone/${params.cellId}` },
+    alternates: { canonical: `https://lightningmapgames.com/zone/${cellId}` },
     robots: { index: false, follow: true },
   }
 }
 
-export default function ZonePage({ params }: { params: { cellId: string } }) {
-  const parsed = parseCellId(params.cellId)
+export default async function ZonePage({ params }: { params: Promise<Params> }) {
+  const { cellId } = await params
+  const parsed = parseCellId(cellId)
   if (!parsed) notFound()
   const { lat, lon } = cellCenter(parsed.lonMin, parsed.latMin)
   const region = regionName(lat, lon)
@@ -38,7 +42,7 @@ export default function ZonePage({ params }: { params: { cellId: string } }) {
       <Backdrop />
       <div className="mx-auto max-w-2xl px-6 pb-24 pt-32">
         <p className="text-xs uppercase tracking-[0.3em] text-electric/70">
-          Lightning zone · {params.cellId}
+          Lightning zone · {cellId}
         </p>
         <h1 className="font-display mt-3 text-4xl font-extrabold leading-tight sm:text-5xl">
           {region} <span className="text-gradient">Lightning</span> Zone
