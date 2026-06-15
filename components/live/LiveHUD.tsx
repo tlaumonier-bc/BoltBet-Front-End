@@ -7,7 +7,7 @@
 // lib/live/locations.ts (only that file changes when the API ships).
 
 import { useGameStore } from '@/store/gameStore'
-import { useLiveStore, type LiveViewMode } from '@/store/liveStore'
+import { useLiveStore, type LiveViewMode, type GlobeMapStyle } from '@/store/liveStore'
 import {
   ORBIT_LOCATIONS,
   type AlertSample,
@@ -21,14 +21,39 @@ const MODES: { id: LiveViewMode; label: string }[] = [
   { id: 'pro', label: 'Pro' },
 ]
 
+const MAP_STYLES: { id: GlobeMapStyle; label: string }[] = [
+  { id: 'night', label: 'Night' },
+  { id: 'day', label: 'Day' },
+]
+
 export default function LiveHUD() {
   const mode = useLiveStore((s) => s.mode)
   const setMode = useLiveStore((s) => s.setMode)
+  const mapStyle = useLiveStore((s) => s.mapStyle)
+  const setMapStyle = useLiveStore((s) => s.setMapStyle)
 
   return (
     <>
-      {/* Left column: mode switch (always visible) + console (beginner / pro) */}
+      {/* Left column: map style + mode switch (always visible) + console (beginner / pro) */}
       <div className="pointer-events-none fixed bottom-4 left-4 right-4 top-20 z-40 flex flex-col gap-3 md:right-auto md:w-75">
+        {/* Day / Night globe imagery */}
+        <div className="glass pointer-events-auto flex shrink-0 self-start rounded-full p-1 text-xs font-semibold">
+          {MAP_STYLES.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => setMapStyle(m.id)}
+              className={`rounded-full px-3.5 py-1.5 transition ${
+                mapStyle === m.id
+                  ? 'bg-electric text-storm shadow-[0_0_14px_rgba(56,189,248,0.45)]'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Free / Beginner / Pro */}
         <div className="glass pointer-events-auto flex shrink-0 self-start rounded-full p-1 text-xs font-semibold">
           {MODES.map((m) => (
             <button

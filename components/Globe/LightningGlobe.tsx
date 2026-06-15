@@ -5,7 +5,9 @@ import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { useGameStore } from '@/store/gameStore';
 import { useLiveStore } from '@/store/liveStore';
+import { usePlayStore } from '@/store/playStore';
 import { buildInitialCells, cellCenter, cellColor, regionName } from '@/lib/grid';
+import { zoneFor, zoneBounds, allZones } from '@/lib/zones';
 import { attachLightningStrikes } from '@/lib/globe/lightningStrikes';
 import { useLightningSocket } from '@/lib/socket';
 import type { GridCell } from '@/types';
@@ -20,8 +22,17 @@ if (ION_TOKEN) Cesium.Ion.defaultAccessToken = ION_TOKEN;
 
 const FLY_HEIGHT_M = 2_500_000;
 
+// SEO/country framing zoom. 1 = frame the country box exactly; higher = more
+// zoomed out (more context around the country).
+const SEO_ZOOM_PADDING = 1.8;
+
 const STORM_BG = Cesium.Color.fromCssColorString('#04060d');
 const GRID_GRAY = Cesium.Color.fromCssColorString('#94a3b8');
+const LOCK_COLOR = Cesium.Color.fromCssColorString('#38bdf8'); // electric — game lock highlight
+
+// Vector country borders (crisp at every zoom, unlike raster labels).
+const COUNTRY_BORDER_COLOR = Cesium.Color.fromCssColorString('#94a3b8').withAlpha(0.55); // modern gray
+const COUNTRY_BORDER_WIDTH = 1.2;
 
 interface LightningGlobeProps {
   viewOnly?: boolean;
@@ -34,6 +45,12 @@ interface LightningGlobeProps {
   initialBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number };
   /** Fired once the first tiles are in — drives GlobeWrapper's loader. */
   onReady?: () => void;
+  /** New round-based game: clicking a zone fires onPickZone; the player's locked
+   *  zone (from the play store) is highlighted. */
+  gameMode?: boolean;
+  onPickZone?: (zoneId: string) => void;
+  /** Accepted for API compatibility; the lock highlight is driven by the play store. */
+  lockedZoneId?: string | null;
 }
 
 export default function LightningGlobe({
@@ -44,6 +61,8 @@ export default function LightningGlobe({
   autoRotate,
   initialBounds,
   onReady,
+  gameMode = false,
+  onPickZone,
 }: LightningGlobeProps) {
   useLightningSocket();
 
@@ -59,6 +78,12 @@ export default function LightningGlobe({
   useEffect(() => {
     onReadyRef.current = onReady;
   }, [onReady]);
+
+  // Same trick for the pick callback, so changing it never rebuilds the viewer.
+  const onPickRef = useRef(onPickZone);
+  useEffect(() => {
+    onPickRef.current = onPickZone;
+  }, [onPickZone]);
 
   // Pull initialBounds into primitives so the effect's dep array is stable
   // and lint-correct (referencing the object directly would force a rebuild
@@ -145,14 +170,72 @@ export default function LightningGlobe({
     };
     scene.globe.tileLoadProgressEvent.addEventListener(onTileProgress);
 
-    // ---- imagery: NASA "Black Marble" night lights, tiled via GIBS ----
-    viewer.imageryLayers.addImageryProvider(
+    // ---- base imagery: night (Black Marble) + day (Blue Marble), toggled via the HUD ----
+    const nightLayer = viewer.imageryLayers.addImageryProvider(
       new Cesium.UrlTemplateImageryProvider({
         url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_Black_Marble/default/2016-01-01/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png',
         maximumLevel: 8,
         credit: 'NASA EOSDIS GIBS — VIIRS Black Marble',
       })
     );
+    const dayLayer = viewer.imageryLayers.addImageryProvider(
+      new Cesium.UrlTemplateImageryProvider({
+        url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg',
+        maximumLevel: 8,
+        credit: 'NASA EOSDIS GIBS — Blue Marble',
+      })
+    );
+
+    // ---- borders + place-name labels: transparent overlay, stays on top ----
+    const labelsLayer = viewer.imageryLayers.addImageryProvider(
+      new Cesium.UrlTemplateImageryProvider({
+        url: 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png',
+        subdomains: ['a', 'b', 'c', 'd'],
+        maximumLevel: 30, // was 10 — let names stay sharp when zoomed in
+        credit: '© OpenStreetMap contributors © CARTO',
+      })
+    );
+    labelsLayer.alpha = 0.85;
+
+    // ---- crisp vector country borders (Natural Earth GeoJSON in /public) ----
+    // Raster labels blur when zoomed; vector borders stay sharp at every zoom.
+    // Drop a countries file at public/geo/countries.geojson (Natural Earth 110m
+    // admin-0). The loader no-ops if the file is missing, so nothing breaks.
+    Cesium.GeoJsonDataSource.load('/geo/countries.geojson')
+      .then((ds) => {
+        if (destroyed) return;
+        const now = Cesium.JulianDate.now();
+        for (const entity of ds.entities.values) {
+          const hierarchy = entity.polygon?.hierarchy?.getValue(now);
+          if (!hierarchy) continue;
+          const rings = [
+            hierarchy.positions,
+            ...(hierarchy.holes ?? []).map((h) => h.positions),
+          ];
+          for (const positions of rings) {
+            if (!positions || positions.length < 2) continue;
+            viewer.entities.add({
+              polyline: {
+                positions: positions.concat([positions[0]]), // close the ring
+                width: COUNTRY_BORDER_WIDTH,
+                material: COUNTRY_BORDER_COLOR,
+                clampToGround: true,
+              },
+            });
+          }
+        }
+      })
+      .catch(() => {
+        /* no GeoJSON yet → just no borders */
+      });
+
+    // initial style from the store (night is the default), then keep it in sync.
+    const applyMapStyle = (style: 'night' | 'day') => {
+      nightLayer.show = style === 'night';
+      dayLayer.show = style === 'day';
+    };
+    applyMapStyle(useLiveStore.getState().mapStyle);
+    const unsubMapStyle = useLiveStore.subscribe((state) => applyMapStyle(state.mapStyle));
 
     // ---- look & feel: match the app's dark "storm" aesthetic + blue rim glow ----
     scene.backgroundColor = STORM_BG;
@@ -160,13 +243,16 @@ export default function LightningGlobe({
     if (scene.sun) scene.sun.show = false;
     if (scene.moon) scene.moon.show = false;
 
-    // Outer blue halo around the limb.
+    // Outer blue halo around the limb — kept dim/transparent so the night
+    // imagery stays readable, and a bit taller so strike beams begin inside it.
     if (scene.skyAtmosphere) {
       scene.skyAtmosphere.show = true;
-      scene.skyAtmosphere.atmosphereLightIntensity = 20;
-      scene.skyAtmosphere.brightnessShift = 0.4;
-      scene.skyAtmosphere.saturationShift = 0.1;
+      scene.skyAtmosphere.atmosphereLightIntensity = 8;   // was 20 — dimmer / more transparent
+      scene.skyAtmosphere.brightnessShift = 0.0;          // was 0.4
+      scene.skyAtmosphere.saturationShift = 0.0;          // was 0.1
       scene.skyAtmosphere.perFragmentAtmosphere = true;
+      scene.skyAtmosphere.atmosphereRayleighScaleHeight = 18_000; // taller, softer band
+      scene.skyAtmosphere.atmosphereMieScaleHeight = 6_000;
     }
 
     // Ground atmosphere: STATIC lighting (relative to the camera, not the real
@@ -174,10 +260,24 @@ export default function LightningGlobe({
     scene.globe.showGroundAtmosphere = true;
     scene.globe.dynamicAtmosphereLighting = false;
     scene.globe.dynamicAtmosphereLightingFromSun = false;
-    scene.globe.atmosphereBrightnessShift = 0.4;
+    scene.globe.atmosphereBrightnessShift = -0.1; // was 0.4 — let night imagery show through
     scene.globe.enableLighting = false; // city lights shown uniformly, no terminator
     scene.globe.baseColor = STORM_BG;
     scene.fog.enabled = true;
+
+    // ---- bloom: blooms bright pixels, so the rim reads as atmosphere and the
+    // lightning strikes glow against the dark globe. Tune to taste. ----
+    if (scene.postProcessStages?.bloom) {
+      const bloom = scene.postProcessStages.bloom;
+      bloom.enabled = true;
+      bloom.uniforms.glowOnly = false;
+      bloom.uniforms.contrast = 120;
+      bloom.uniforms.brightness = -0.2;
+      bloom.uniforms.delta = 1.2;
+      bloom.uniforms.sigma = 2.5;
+      bloom.uniforms.stepSize = 1.0;
+    }
+    scene.highDynamicRange = false; // HDR over-brightened the night side / atmosphere
 
     if (
       boundsMinLon != null &&
@@ -185,12 +285,15 @@ export default function LightningGlobe({
       boundsMaxLon != null &&
       boundsMaxLat != null
     ) {
+      // Pad the country box so the framing isn't glued to the borders.
+      const lonPad = ((boundsMaxLon - boundsMinLon) * (SEO_ZOOM_PADDING - 1)) / 2;
+      const latPad = ((boundsMaxLat - boundsMinLat) * (SEO_ZOOM_PADDING - 1)) / 2;
       camera.setView({
         destination: Cesium.Rectangle.fromDegrees(
-          boundsMinLon,
-          boundsMinLat,
-          boundsMaxLon,
-          boundsMaxLat,
+          boundsMinLon - lonPad,
+          boundsMinLat - latPad,
+          boundsMaxLon + lonPad,
+          boundsMaxLat + latPad,
         ),
       });
     } else {
@@ -233,7 +336,7 @@ export default function LightningGlobe({
     // ---- live lightning strikes (shared module) ----
     const disposeStrikes = attachLightningStrikes(scene);
 
-    // ---- betting grid (play mode only) ----
+    // ---- legacy multiplier betting grid (only the old play mode) ----
     const cellEntities = new Map<string, Cesium.Entity>();
     const cellBase = new Map<string, Cesium.Color>();
     let pickHandler: Cesium.ScreenSpaceEventHandler | null = null;
@@ -289,7 +392,7 @@ export default function LightningGlobe({
       }
     };
 
-    if (!viewOnly) {
+    if (!viewOnly && !gameMode) {
       if (Object.keys(useGameStore.getState().cells).length === 0) {
         useGameStore.getState().setCells(buildInitialCells());
       }
@@ -361,6 +464,105 @@ export default function LightningGlobe({
       });
     }
 
+    // ---- round-based game: click a zone to pick it; highlight the locked zone ----
+    let gameHandler: Cesium.ScreenSpaceEventHandler | null = null;
+    let unsubLock: (() => void) | null = null;
+    let highlight: Cesium.Entity | null = null;
+
+    if (gameMode) {
+      // (a) the 648-zone grid as faint gray borders, so the layer is visible
+      for (const z of allZones()) {
+        viewer.entities.add({
+          rectangle: {
+            coordinates: Cesium.Rectangle.fromDegrees(z.lonMin, z.latMin, z.lonMax, z.latMax),
+            material: Cesium.Color.TRANSPARENT,
+            height: 0,
+            outline: true,
+            outlineColor: GRID_GRAY.withAlpha(0.18),
+          },
+        });
+      }
+
+      // (b) hovered-zone highlight
+      let hoverEnt: Cesium.Entity | null = null;
+      let hoverZone: string | null = null;
+      const showHover = (zoneId: string | null) => {
+        if (zoneId === hoverZone) return;
+        hoverZone = zoneId;
+        scene.canvas.style.cursor = zoneId ? 'pointer' : 'default';
+        if (!zoneId) {
+          if (hoverEnt) {
+            viewer.entities.remove(hoverEnt);
+            hoverEnt = null;
+          }
+          return;
+        }
+        const b = zoneBounds(zoneId);
+        const coords = Cesium.Rectangle.fromDegrees(b.lonMin, b.latMin, b.lonMax, b.latMax);
+        if (!hoverEnt) {
+          hoverEnt = viewer.entities.add({
+            rectangle: {
+              coordinates: coords,
+              material: new Cesium.ColorMaterialProperty(GRID_GRAY.withAlpha(0.12)),
+              height: 0,
+              outline: true,
+              outlineColor: GRID_GRAY.withAlpha(0.5),
+            },
+          });
+        } else if (hoverEnt.rectangle) {
+          hoverEnt.rectangle.coordinates = new Cesium.ConstantProperty(coords);
+        }
+      };
+
+      // (c) locked-zone highlight, driven by the play store (clears when the lock expires)
+      const applyLock = (zoneId: string | null) => {
+        if (highlight) {
+          viewer.entities.remove(highlight);
+          highlight = null;
+        }
+        if (!zoneId) return;
+        const b = zoneBounds(zoneId);
+        highlight = viewer.entities.add({
+          rectangle: {
+            coordinates: Cesium.Rectangle.fromDegrees(b.lonMin, b.latMin, b.lonMax, b.latMax),
+            material: new Cesium.ColorMaterialProperty(LOCK_COLOR.withAlpha(0.22)),
+            height: 0,
+            outline: true,
+            outlineColor: LOCK_COLOR.withAlpha(0.9),
+          },
+        });
+      };
+
+      let lastLock = usePlayStore.getState().lockZoneId;
+      applyLock(lastLock);
+      unsubLock = usePlayStore.subscribe((state) => {
+        if (state.lockZoneId !== lastLock) {
+          lastLock = state.lockZoneId;
+          applyLock(lastLock);
+        }
+      });
+
+      // (d) hover + click-to-pick (zone resolved from the surface point)
+      const zoneAt = (pos: Cesium.Cartesian2): string | null => {
+        const cartesian = camera.pickEllipsoid(pos, scene.globe.ellipsoid);
+        if (!cartesian) return null;
+        const carto = Cesium.Cartographic.fromCartesian(cartesian);
+        return zoneFor(
+          Cesium.Math.toDegrees(carto.latitude),
+          Cesium.Math.toDegrees(carto.longitude),
+        );
+      };
+
+      gameHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+      gameHandler.setInputAction((m: Cesium.ScreenSpaceEventHandler.MotionEvent) => {
+        showHover(zoneAt(m.endPosition));
+      }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+      gameHandler.setInputAction((c: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
+        const zid = zoneAt(c.position);
+        if (zid) onPickRef.current?.(zid);
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    }
+
     return () => {
       destroyed = true;
       clearTimeout(readyFallback);
@@ -371,8 +573,11 @@ export default function LightningGlobe({
       if (onDblClick) el.removeEventListener('dblclick', onDblClick);
       interactionEvents.forEach((ev) => el.removeEventListener(ev, stopSpin));
       pickHandler?.destroy();
+      gameHandler?.destroy();
       unsubCells?.();
       unsubOrbit?.();
+      unsubLock?.();
+      unsubMapStyle();
       disposeStrikes();
       if (!viewer.isDestroyed()) viewer.destroy();
     };
@@ -381,6 +586,7 @@ export default function LightningGlobe({
     enableZoom,
     showZoomButtons,
     spin,
+    gameMode,
     boundsMinLon,
     boundsMinLat,
     boundsMaxLon,

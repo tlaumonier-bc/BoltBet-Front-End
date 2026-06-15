@@ -1,28 +1,37 @@
 'use client'
+// lib/socket.ts — single WebSocket to the backend.
+// Strikes -> globe store; game events (round_start / round_end / leaderboard) -> play store.
+
 import { useEffect, useRef } from 'react'
 import { useGameStore } from '@/store/gameStore'
+import { usePlayStore } from '@/store/playStore'
 import type { LightningStrike } from '@/types'
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:8000/ws/lightning/'
 
 export function useLightningSocket() {
-  const updateCells = useGameStore((s) => s.updateCells)
   const addStrike = useGameStore((s) => s.addStrike)
-  const resolveBet = useGameStore((s) => s.resolveBet)
   const ref = useRef<WebSocket | null>(null)
 
   useEffect(() => {
     let closed = false
     let retry: ReturnType<typeof setTimeout>
+    const play = usePlayStore.getState
 
     function connect() {
       const ws = new WebSocket(WS_URL)
       ref.current = ws
 
       ws.onmessage = (e) => {
+        let msg
         try {
-          const msg = JSON.parse(e.data)
-          if (msg.type === 'strike') {
+          msg = JSON.parse(e.data)
+        } catch {
+          return
+        }
+
+        switch (msg.type) {
+          case 'strike': {
             const ts =
               typeof msg.timestamp === 'number'
                 ? msg.timestamp
@@ -32,23 +41,29 @@ export function useLightningSocket() {
               lat: msg.lat,
               lon: msg.lon,
               timestamp: ts,
-              receivedAt: Date.now(), 
+              receivedAt: Date.now(),
               quality: msg.quality ?? 'good',
             }
-            console.log('STRIKE RECEIVED', strike.lat, strike.lon)
             addStrike(strike)
-          } else if (msg.type === 'grid_update') {
-            updateCells(msg.cells ?? [])
-          } else if (msg.type === 'bet_resolved') {
-            resolveBet(msg.betId, !!msg.won, msg.payout ?? 0)
+            break
           }
-        } catch {
-          /* ignore malformed frames */
+          case 'round_start':
+            play().setRound(msg.round, msg.endsAt, msg.durationSeconds)
+            play().clearLock()
+            break
+          case 'round_end':
+            play().endRound(msg.round, msg.leaderboard ?? [], msg.nextRoundAt)
+            break
+          case 'leaderboard':
+            play().setBoard(msg.leaderboard ?? [])
+            break
+          default:
+            break
         }
       }
 
       ws.onclose = () => {
-        if (!closed) retry = setTimeout(connect, 3000) // reconnect
+        if (!closed) retry = setTimeout(connect, 3000)
       }
       ws.onerror = () => ws.close()
     }
@@ -59,5 +74,5 @@ export function useLightningSocket() {
       clearTimeout(retry)
       ref.current?.close()
     }
-  }, [updateCells, addStrike, resolveBet])
+  }, [addStrike])
 }

@@ -1,19 +1,13 @@
-import type { Metadata } from 'next'
-import GlobeWrapper from '@/components/Globe/GlobeWrapper'
-import GameHUD from '@/components/HUD/GameHUD'
+import type { Metadata } from 'next';
+import PlayClient from './PlayClient';
 
 export const metadata: Metadata = {
-  title: 'Play — Live Lightning Globe',
+  title: 'Play — Guess the next 60 seconds of lightning',
   description:
-    'Place predictions on a live 3D globe of real-time lightning strikes. Click any zone to bet on the next bolt.',
+    'Watch live lightning on the globe and lock a zone to capture the next strikes. Free to play, virtual points only.',
   robots: { index: false, follow: true },
-}
+};
 
 export default function PlayPage() {
-  return (
-    <main>
-      <GlobeWrapper />
-      <GameHUD />
-    </main>
-  )
+  return <PlayClient />;
 }

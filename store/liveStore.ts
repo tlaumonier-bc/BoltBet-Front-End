@@ -6,6 +6,7 @@
 import { create } from 'zustand'
 
 export type LiveViewMode = 'free' | 'beginner' | 'pro'
+export type GlobeMapStyle = 'night' | 'day'
 
 export interface OrbitTarget {
   id: string
@@ -22,6 +23,8 @@ interface LiveStore {
   orbitTarget: OrbitTarget | null
   orbitTo: (target: Omit<OrbitTarget, 'requestedAt'>) => void
   clearOrbit: () => void
+  mapStyle: GlobeMapStyle
+  setMapStyle: (style: GlobeMapStyle) => void
 }
 
 export const useLiveStore = create<LiveStore>((set) => ({
@@ -30,4 +33,7 @@ export const useLiveStore = create<LiveStore>((set) => ({
   orbitTarget: null,
   orbitTo: (target) => set({ orbitTarget: { ...target, requestedAt: Date.now() } }),
   clearOrbit: () => set({ orbitTarget: null }),
+  mapStyle: 'night',
+  setMapStyle: (mapStyle) => set({ mapStyle }),
+
 }))
