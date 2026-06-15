@@ -27,8 +27,10 @@ export interface LiveStats {
 }
 
 export function useLiveStats(): LiveStats {
-  const strikes = useGameStore((s) => s.strikes)
-  const totalSession = useGameStore((s) => s.totalStrikes)
+  // Recompute on a 1 s tick rather than on every strike. The buffer can now
+  // hold tens of thousands of entries; scanning it once per incoming strike
+  // (~50×/s) would thrash the HUD. A per-second snapshot is plenty for a
+  // console readout and keeps cost bounded regardless of buffer size.
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
@@ -37,6 +39,7 @@ export function useLiveStats(): LiveStats {
   }, [])
 
   return useMemo(() => {
+    const { strikes, totalStrikes: totalSession } = useGameStore.getState()
     const minuteAgo = now - MINUTE
     const tenMinAgo = now - 10 * MINUTE
 
@@ -106,7 +109,7 @@ export function useLiveStats(): LiveStats {
       feedLive: !!latest && now - latest.receivedAt < 30_000,
       now,
     }
-  }, [strikes, totalSession, now])
+  }, [now])
 }
 
 // ---------- proximity helper (real data, used by the pro card) --------------

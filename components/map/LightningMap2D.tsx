@@ -209,7 +209,7 @@ export default function LightningMap2D({
       const now = Date.now();
       for (const s of strikes) {
         const age = now - s.receivedAt;
-        if (age > STRIKE_FADE_MS) continue;
+        if (age > STRIKE_FADE_MS) break;
         if (s.lon < view.minLon || s.lon > view.maxLon || s.lat < view.minLat || s.lat > view.maxLat)
           continue;
         const [x, y] = project(s.lon, s.lat, w, h);

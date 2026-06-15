@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import type { GridCell, LightningStrike, Bet } from '@/types'
 
-const MAX_STRIKES = 200
+const STRIKE_WINDOW_MS = 20 * 60_000
+const MAX_STRIKES = 80_000 
 
 interface Notification {
   id: string
@@ -53,6 +54,11 @@ export const useGameStore = create<GameStore>((set) => ({
   addStrike: (strike) =>
     set((state) => {
       const strikes = [strike, ...state.strikes]
+      // strikes are newest-first; drop the tail once it falls outside the window
+      const cutoff = strike.receivedAt - STRIKE_WINDOW_MS
+      let len = strikes.length
+      while (len > 0 && strikes[len - 1].receivedAt < cutoff) len--
+      if (len < strikes.length) strikes.length = len
       if (strikes.length > MAX_STRIKES) strikes.length = MAX_STRIKES // ring buffer
       return { strikes, totalStrikes: state.totalStrikes + 1 }
     }),

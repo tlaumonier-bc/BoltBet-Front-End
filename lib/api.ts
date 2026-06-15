@@ -29,9 +29,12 @@ export interface LeaderboardRow {
 }
 
 export interface StrikeStats {
+  last_60s: number;      
+  last_10min: number;    
   last_15_min: number;
   last_60_min: number;
   last_24h: number;
+  buckets_15min: number[]; 
   avg_latency_ms_60min: number | null;
   server_time: string;
 }
