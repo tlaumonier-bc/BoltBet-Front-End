@@ -1,5 +1,5 @@
 // lib/api.ts — REST client for the BoltBet game backend.
-const API = process.env.API_INTERNAL_URL ?? 'http://localhost:8000'
+const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
 function csrf(): string {
   if (typeof document === 'undefined') return ''
@@ -13,8 +13,8 @@ export interface GameState {
   server_time: string;
   duration_seconds?: number;
   lock_seconds?: number;
-  intermission?: boolean;     // true during the buffer between rounds
-  next_round_at?: string;     // ISO, when the next round starts
+  intermission?: boolean;
+  next_round_at?: string;
 }
 
 export interface PickResult {
@@ -34,12 +34,12 @@ export interface LeaderboardRow {
 }
 
 export interface StrikeStats {
-  last_60s: number;      
-  last_10min: number;    
+  last_60s: number;
+  last_10min: number;
   last_15_min: number;
   last_60_min: number;
   last_24h: number;
-  buckets_15min: number[]; 
+  buckets_15min: number[];
   avg_latency_ms_60min: number | null;
   server_time: string;
 }
