@@ -103,7 +103,7 @@ export default function HowItWorksPage() {
             </thead>
             <tbody>
               {TOP_ZONES.map((z) => (
-                <tr key={z.rank} className="border-b border-white/5 transition hover:bg-white/[0.03]">
+                <tr key={z.rank} className="border-b border-white/5 transition hover:bg-white/3">
                   <td className="px-5 py-3 font-display text-white/40">{z.rank}</td>
                   <td className="px-5 py-3">{z.region}</td>
                   <td className="px-5 py-3 text-right font-medium text-bolt">{z.flashes}</td>

@@ -257,7 +257,7 @@ function LeftPanel({ pro }: { pro: boolean }) {
 function RightPanel() {
   const stats = useLiveStats()
   const db = useStrikeStats()
-  const strikes = useGameStore((s) => s.strikes)
+  // const strikes = useGameStore((s) => s.strikes)
   const orbitTarget = useLiveStore((s) => s.orbitTarget)
 
   const focus = orbitTarget

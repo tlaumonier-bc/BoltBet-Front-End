@@ -47,7 +47,7 @@ export default function PageLoadRipples() {
   if (done) return null
 
   return (
-    <div className="hero-ripples pointer-events-none fixed inset-0 z-[60]" aria-hidden="true">
+    <div className="hero-ripples pointer-events-none fixed inset-0 z-60" aria-hidden="true">
       {FLASHES.map((f, i) => (
         <div
           key={`f${i}`}

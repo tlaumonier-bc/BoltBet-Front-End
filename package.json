@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/copy-cesium.mjs && next build",
+    "build": "node scripts/copy-cesium.mjs && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "node scripts/copy-cesium.mjs"
@@ -26,5 +26,8 @@
     "eslint-config-next": "16.2.7",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@spz-loader/core": "0.3.0"
   }
 }
