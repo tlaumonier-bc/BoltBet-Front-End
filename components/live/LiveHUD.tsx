@@ -18,10 +18,9 @@ import {
   type StormCellSample,
 } from '@/lib/live/locations'
 import { nearestStrike, useLiveStats } from '@/lib/live/useLiveStats';
-import { useStrikeStats } from '@/lib/live/useStrikesStats';
-import type { GlobeQuality } from '@/lib/globe/quality'
-import { layersForTier, type GlobeLayerDef } from '@/lib/globe/layers'
-
+import { useStrikesPerMinute } from '@/lib/live/useStrikesPerMinutes';
+import type { GlobeQuality } from '@/lib/globe/quality';
+import { layersForTier, type GlobeLayerDef } from '@/lib/globe/layers';
 
 const MODES: { id: LiveViewMode; label: string }[] = [
   { id: 'free', label: 'Free' },
@@ -91,7 +90,6 @@ export default function LiveHUD() {
 
 function LeftPanel({ pro }: { pro: boolean }) {
   const stats = useLiveStats()
-  const db = useStrikeStats()
   const orbitTarget = useLiveStore((s) => s.orbitTarget)
   const orbitTo = useLiveStore((s) => s.orbitTo)
   const clearOrbit = useLiveStore((s) => s.clearOrbit)
@@ -182,8 +180,8 @@ function LeftPanel({ pro }: { pro: boolean }) {
       {/* STRIKES — real */}
       <Section title="Strikes">
         <div className="grid grid-cols-2 gap-2">
-          <BigStat value={db?.last_60s ?? stats.perMinute} label="last 60 s" />
-          <BigStat value={db?.last_10min ?? stats.last10Min} label="last 10 min" />
+          <BigStat value={stats.perMinute} label="last 60 s" />
+          <BigStat value={stats.last10Min} label="last 10 min" />
         </div>
         <Stat name="Hottest region" value={stats.topRegion ?? '—'} />
         {pro && (
@@ -265,7 +263,6 @@ function LeftPanel({ pro }: { pro: boolean }) {
 
 function RightPanel() {
   const stats = useLiveStats()
-  const db = useStrikeStats()
   const orbitTarget = useLiveStore((s) => s.orbitTarget)
 
   const focus = orbitTarget
@@ -276,7 +273,7 @@ function RightPanel() {
     () => (focus ? nearestStrike(useGameStore.getState().strikes, focus.lat, focus.lon, stats.now) : null),
     [focus, stats.now],
   )
-  const buckets = db?.buckets_15min ?? stats.buckets
+  const buckets = useStrikesPerMinute(15).map((b) => b.count)
   const peak = Math.max(0, ...buckets)
 
   return (
