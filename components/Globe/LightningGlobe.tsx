@@ -9,7 +9,7 @@ import { attachLightningStrikes } from '@/lib/globe/lightningStrikes';
 import { setupImagery } from '@/lib/globe/imagery';
 import { configureScene } from '@/lib/globe/scene';
 import { createTileLoadTracker } from '@/lib/globe/tileLoadTracker';
-import { loadCountryBorders } from '@/lib/globe/countryBorders';
+import { loadCountryBorders, type CountryLink } from '@/lib/globe/countryBorders';
 import {
   attachOrbitFlights,
   frameCamera,
@@ -28,17 +28,14 @@ interface LightningGlobeProps {
   fill?: boolean;
   enableZoom?: boolean;
   showZoomButtons?: boolean;
-  /** Gentle auto-spin until the user interacts. Defaults on for view-only pages. */
   autoRotate?: boolean;
-  /** If set, the camera frames this lon/lat box on load (country pages). */
   initialBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number };
-  /** Fired once the first tiles are in — drives GlobeWrapper's loader. */
   onReady?: () => void;
-  /** Round-based game: clicking a zone fires onPickZone; the locked zone is highlighted. */
   gameMode?: boolean;
   onPickZone?: (zoneId: string) => void;
-  /** Accepted for API compatibility; the lock highlight is driven by the play store. */
   lockedZoneId?: string | null;
+  countryLinks?: CountryLink[];
+  onPickCountry?: (slug: string) => void;
 }
 
 export default function LightningGlobe({
@@ -51,6 +48,8 @@ export default function LightningGlobe({
   onReady,
   gameMode = false,
   onPickZone,
+  countryLinks,
+  onPickCountry,
 }: LightningGlobeProps) {
   useLightningSocket();
 
@@ -60,13 +59,15 @@ export default function LightningGlobe({
   const zoomOutRef = useRef<() => void>(() => {});
   const [tilesLoading, setTilesLoading] = useState(false);
 
-  // Keep latest callbacks in refs so changing them never rebuilds the viewer.
   const onReadyRef = useRef(onReady);
   useEffect(() => { onReadyRef.current = onReady; }, [onReady]);
   const onPickRef = useRef(onPickZone);
   useEffect(() => { onPickRef.current = onPickZone; }, [onPickZone]);
+  const onPickCountryRef = useRef(onPickCountry);
+  useEffect(() => { onPickCountryRef.current = onPickCountry; }, [onPickCountry]);
+  const linksRef = useRef(countryLinks);
+  useEffect(() => { linksRef.current = countryLinks; }, [countryLinks]);
 
-  // Pull bounds into primitives so the effect's dep array stays stable.
   const boundsMinLon = initialBounds?.minLon;
   const boundsMinLat = initialBounds?.minLat;
   const boundsMaxLon = initialBounds?.maxLon;
@@ -87,7 +88,7 @@ export default function LightningGlobe({
     if (removeWheel) disposers.push(removeWheel);
 
     const viewer = new Cesium.Viewer(el, {
-      baseLayer: false, // we add our own imagery — no Ion token required
+      baseLayer: false,
       baseLayerPicker: false,
       geocoder: false,
       homeButton: false,
@@ -102,12 +103,10 @@ export default function LightningGlobe({
 
     const { scene, camera } = viewer;
 
-    // Adaptive resolution: native res when the view settles (crisp labels), 1×
-    // while the camera moves/spins (the eye can't catch the softness in motion).
     const HIGH_SCALE = Math.min(window.devicePixelRatio || 1, 1.5);
     viewer.useBrowserRecommendedResolution = false;
     viewer.resolutionScale = HIGH_SCALE;
-    camera.percentageChanged = 0.05; // fire `changed` on small movements
+    camera.percentageChanged = 0.05;
 
     let resTimer: ReturnType<typeof setTimeout> | null = null;
     const onCameraMove = () => {
@@ -121,13 +120,6 @@ export default function LightningGlobe({
       if (resTimer) clearTimeout(resTimer);
     });
 
-    // Render at the device's native resolution so borders + labels stay crisp
-    // on hi-DPI / retina displays (Cesium otherwise renders at 1 CSS px and
-    // upscales, which is what makes the text look blurry).
-    viewer.useBrowserRecommendedResolution = false;
-    viewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 2); // cap at 2 for perf
-
-    // loading states (wrapper loader + detail pill)
     disposers.push(
       createTileLoadTracker({
         scene,
@@ -136,47 +128,41 @@ export default function LightningGlobe({
       }),
     );
 
-    // base imagery + day/night sync
     disposers.push(setupImagery(viewer));
 
-    // crisp vector borders + labels (async; self-guards on viewer.isDestroyed)
-    loadCountryBorders(viewer);
+    const links = linksRef.current;
+    const countryInteractive =
+      links && links.length && !gameMode
+        ? { scene, links, onPick: (slug: string) => onPickCountryRef.current?.(slug) }
+        : undefined;
+    disposers.push(loadCountryBorders(viewer, countryInteractive));
 
-    // dark "storm" look & feel + atmosphere
     configureScene(scene);
-
     disposers.push(attachAtmosphereGlow(scene));
 
-    // camera framing
     const bounds =
       boundsMinLon != null && boundsMinLat != null && boundsMaxLon != null && boundsMaxLat != null
         ? { minLon: boundsMinLon, minLat: boundsMinLat, maxLon: boundsMaxLon, maxLat: boundsMaxLat }
         : null;
     frameCamera(camera, bounds);
 
-    // zoom controls
     const controls = setupCameraControls({ viewer, el, enableZoom, showZoomButtons });
     zoomInRef.current = controls.zoomIn;
     zoomOutRef.current = controls.zoomOut;
     disposers.push(controls.dispose);
 
-    // auto-rotate (+ interaction tracking shared with orbit flights)
     disposers.push(setupAutoRotate({ scene, el, camera, enabled: spin, interaction }));
 
-    // live lightning strikes
     disposers.push(attachLightningStrikes(scene));
 
-    // legacy multiplier betting grid (old play mode only)
     if (!viewOnly && !gameMode) {
       disposers.push(attachBettingGrid({ viewer, scene, tooltipEl: tooltipRef.current }));
     }
 
-    // "orbit to" flights (view-only pages)
     if (viewOnly) {
       disposers.push(attachOrbitFlights({ camera, interaction }));
     }
 
-    // round-based game zones
     if (gameMode) {
       disposers.push(
         attachGameZones({

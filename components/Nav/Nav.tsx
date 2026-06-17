@@ -1,4 +1,15 @@
 import Link from 'next/link';
+import CountryMenu from './CountryMenu';
+import { pages, launchablePages } from '@/lib/content/content';
+
+// Targeted countries: the live (authored) pages, falling back to all configured
+// pages while copy is still being written.
+const live = launchablePages();
+const COUNTRIES = (live.length ? live : pages).map((p) => ({
+  slug: p.slug,
+  country: p.country,
+  primaryKeyword: p.primaryKeyword,
+}));
 
 export default function Nav() {
   return (
@@ -11,6 +22,7 @@ export default function Nav() {
           <Link href="/live" className="rounded-lg px-3 py-1.5 transition hover:bg-white/10 hover:text-white">
             Live map
           </Link>
+          <CountryMenu countries={COUNTRIES} />
           <Link href="/how-it-works" className="rounded-lg px-3 py-1.5 transition hover:bg-white/10 hover:text-white">
             How it works
           </Link>
