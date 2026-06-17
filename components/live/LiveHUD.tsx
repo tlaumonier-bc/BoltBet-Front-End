@@ -5,6 +5,10 @@
 // Blitzortung feed; weather / storm cells / alerts / pulse are SAMPLE values
 // shaped like the Xweather payloads they will be replaced by — see
 // lib/live/locations.ts (only that file changes when the API ships).
+//
+// Left panel now also carries the Layers section (lib/globe/layers.ts): 4
+// layers in Beginner mode, all 8 in Pro. Toggling a layer flips liveStore
+// state; lib/globe/layerManager.ts applies it to the globe.
 import { useMemo, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { useLiveStore, type LiveViewMode, type GlobeMapStyle } from '@/store/liveStore';
@@ -16,6 +20,7 @@ import {
 import { nearestStrike, useLiveStats } from '@/lib/live/useLiveStats';
 import { useStrikeStats } from '@/lib/live/useStrikesStats';
 import type { GlobeQuality } from '@/lib/globe/quality'
+import { layersForTier, type GlobeLayerDef } from '@/lib/globe/layers'
 
 
 const MODES: { id: LiveViewMode; label: string }[] = [
@@ -34,32 +39,11 @@ export default function LiveHUD() {
   const setMode = useLiveStore((s) => s.setMode)
   const mapStyle = useLiveStore((s) => s.mapStyle)
   const setMapStyle = useLiveStore((s) => s.setMapStyle)
-  // const atmosphere = useLiveStore((s) => s.atmosphere)
-  // const setAtmosphere = useLiveStore((s) => s.setAtmosphere)
 
   return (
     <>
       {/* Left column: map style + mode switch (always visible) + console (beginner / pro) */}
       <div className="pointer-events-none fixed bottom-4 left-4 right-4 top-20 z-40 flex flex-col gap-3 md:right-auto md:w-75">
-        {/* <div className="glass pointer-events-auto flex shrink-0 self-start rounded-full p-1 text-xs font-semibold">
-          {([
-            { on: true, label: 'Atmosphere' },
-            { on: false, label: 'Off' },
-          ] as const).map((o) => (
-            <button
-              key={String(o.on)}
-              onClick={() => setAtmosphere(o.on)}
-              className={`rounded-full px-3.5 py-1.5 transition ${
-                atmosphere === o.on
-                  ? 'bg-electric text-storm shadow-[0_0_14px_rgba(56,189,248,0.45)]'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div> */}
-        
         {/* Day / Night globe imagery */}
         <div className="glass pointer-events-auto flex shrink-0 self-start rounded-full p-1 text-xs font-semibold">
           {MAP_STYLES.map((m) => (
@@ -112,6 +96,10 @@ function LeftPanel({ pro }: { pro: boolean }) {
   const orbitTo = useLiveStore((s) => s.orbitTo)
   const clearOrbit = useLiveStore((s) => s.clearOrbit)
 
+  const activeLayers = useLiveStore((s) => s.activeLayers)
+  const toggleLayer = useLiveStore((s) => s.toggleLayer)
+  const layers = layersForTier(pro)
+
   const focus = orbitTarget
     ? ORBIT_LOCATIONS.find((l) => l.id === orbitTarget.id) ?? null
     : null
@@ -125,7 +113,7 @@ function LeftPanel({ pro }: { pro: boolean }) {
         <QualitySettings />
       </div>
 
-      {/* ORBIT TO */}
+      {/* ORBIT TO — continents */}
       <Section
         title="Orbit to"
         badge={
@@ -147,7 +135,13 @@ function LeftPanel({ pro }: { pro: boolean }) {
               <button
                 key={loc.id}
                 onClick={() =>
-                  orbitTo({ id: loc.id, label: loc.label, lat: loc.lat, lon: loc.lon })
+                  orbitTo({
+                    id: loc.id,
+                    label: loc.label,
+                    lat: loc.lat,
+                    lon: loc.lon,
+                    flyHeightM: loc.flyHeightM,
+                  })
                 }
                 className={`rounded-lg border px-2.5 py-2 text-left transition ${
                   active
@@ -168,6 +162,20 @@ function LeftPanel({ pro }: { pro: boolean }) {
               </button>
             )
           })}
+        </div>
+      </Section>
+
+      {/* LAYERS — 4 in beginner, 8 in pro */}
+      <Section title={pro ? 'Layers · Pro' : 'Layers'}>
+        <div className="space-y-1.5">
+          {layers.map((def) => (
+            <LayerToggle
+              key={def.id}
+              def={def}
+              active={!!activeLayers[def.id]}
+              onToggle={() => toggleLayer(def.id)}
+            />
+          ))}
         </div>
       </Section>
 
@@ -241,7 +249,7 @@ function LeftPanel({ pro }: { pro: boolean }) {
             )}
           </>
         ) : (
-          <Empty>Pick a location above to load conditions.</Empty>
+          <Empty>Pick a continent above to load conditions.</Empty>
         )}
       </Section>
 
@@ -258,7 +266,6 @@ function LeftPanel({ pro }: { pro: boolean }) {
 function RightPanel() {
   const stats = useLiveStats()
   const db = useStrikeStats()
-  // const strikes = useGameStore((s) => s.strikes)
   const orbitTarget = useLiveStore((s) => s.orbitTarget)
 
   const focus = orbitTarget
@@ -310,7 +317,7 @@ function RightPanel() {
               <Empty>No detections in the last 10 min.</Empty>
             )
           ) : (
-            <Empty>Pick a location on the left.</Empty>
+            <Empty>Pick a continent on the left.</Empty>
           )}
         </Section>
 
@@ -327,7 +334,7 @@ function RightPanel() {
               <Empty>No tracked cells near {focus.short}.</Empty>
             )
           ) : (
-            <Empty>Pick a location on the left.</Empty>
+            <Empty>Pick a continent on the left.</Empty>
           )}
         </Section>
 
@@ -344,7 +351,7 @@ function RightPanel() {
               <Empty>No active alerts for {focus.short}.</Empty>
             )
           ) : (
-            <Empty>Pick a location on the left.</Empty>
+            <Empty>Pick a continent on the left.</Empty>
           )}
         </Section>
 
@@ -357,7 +364,7 @@ function RightPanel() {
               <Stat name="CAPE" value={`${focus.wx.capeJkg.toLocaleString('en-US')} J/kg`} />
             </>
           ) : (
-            <Empty>Pick a location on the left.</Empty>
+            <Empty>Pick a continent on the left.</Empty>
           )}
         </Section>
 
@@ -391,6 +398,64 @@ function Section({
       </div>
       {children}
     </section>
+  )
+}
+
+function LayerToggle({
+  def,
+  active,
+  onToggle,
+}: {
+  def: GlobeLayerDef
+  active: boolean
+  onToggle: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={active}
+      title={def.description}
+      className={`flex w-full items-start gap-2.5 rounded-lg border px-2.5 py-2 text-left transition ${
+        active
+          ? 'border-electric/50 bg-electric/10'
+          : 'border-white/10 bg-white/4 hover:border-white/25 hover:bg-white/8'
+      }`}
+    >
+      <span className="mt-0.5 w-4 shrink-0 text-center text-xs leading-4" aria-hidden>
+        {def.icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span
+          className={`flex items-center gap-1.5 text-xs font-semibold ${
+            active ? 'text-electric' : 'text-white/85'
+          }`}
+        >
+          {def.label}
+          {def.needsBackend && (
+            <span className="rounded bg-white/10 px-1 py-0.5 text-[8px] font-medium uppercase tracking-wider text-white/35">
+              data
+            </span>
+          )}
+        </span>
+        <span className="mt-0.5 block text-[10px] leading-snug text-white/40">
+          {def.description}
+        </span>
+      </span>
+      {/* on/off pill */}
+      <span
+        className={`mt-0.5 flex h-4 w-7 shrink-0 items-center rounded-full p-0.5 transition ${
+          active ? 'bg-electric/80' : 'bg-white/15'
+        }`}
+        aria-hidden
+      >
+        <span
+          className={`h-3 w-3 rounded-full bg-storm transition-transform ${
+            active ? 'translate-x-3' : 'translate-x-0'
+          }`}
+        />
+      </span>
+    </button>
   )
 }
 

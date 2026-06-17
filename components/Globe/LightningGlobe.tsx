@@ -24,6 +24,7 @@ import { attachBettingGrid } from '@/lib/globe/bettingGrid';
 import { attachGameZones } from '@/lib/globe/gameZones';
 import { GlobeTooltip, GlobeZoomButtons, TileLoadingPill } from './GlobeOverlays';
 import { attachAtmosphereGlow } from '@/lib/globe/atmosphereGlow';
+import { attachLayers } from '@/lib/globe/layerManager';
 
 interface LightningGlobeProps {
   viewOnly?: boolean;
@@ -204,6 +205,10 @@ export default function LightningGlobe({
     );
 
     disposers.push(attachAtmosphereGlow(scene));
+
+    // Toggleable globe layers (fog / day-night / data-driven). Attached after
+    // configureScene + applyQuality so the initial active-layer state wins.
+    disposers.push(attachLayers(viewer, scene));
 
     // camera framing
     const bounds =
