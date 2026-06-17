@@ -5,7 +5,11 @@
 // Blitzortung feed; weather / storm cells / alerts / pulse are SAMPLE values
 // shaped like the Xweather payloads they will be replaced by — see
 // lib/live/locations.ts (only that file changes when the API ships).
-import { useMemo } from 'react';
+//
+// Left panel now also carries the Layers section (lib/globe/layers.ts): 4
+// layers in Beginner mode, all 8 in Pro. Toggling a layer flips liveStore
+// state; lib/globe/layerManager.ts applies it to the globe.
+import { useMemo, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { useLiveStore, type LiveViewMode, type GlobeMapStyle } from '@/store/liveStore';
 import {
@@ -15,6 +19,8 @@ import {
 } from '@/lib/live/locations'
 import { nearestStrike, useLiveStats } from '@/lib/live/useLiveStats';
 import { useStrikeStats } from '@/lib/live/useStrikesStats';
+import type { GlobeQuality } from '@/lib/globe/quality'
+import { layersForTier, type GlobeLayerDef } from '@/lib/globe/layers'
 
 
 const MODES: { id: LiveViewMode; label: string }[] = [
@@ -33,32 +39,11 @@ export default function LiveHUD() {
   const setMode = useLiveStore((s) => s.setMode)
   const mapStyle = useLiveStore((s) => s.mapStyle)
   const setMapStyle = useLiveStore((s) => s.setMapStyle)
-  // const atmosphere = useLiveStore((s) => s.atmosphere)
-  // const setAtmosphere = useLiveStore((s) => s.setAtmosphere)
 
   return (
     <>
       {/* Left column: map style + mode switch (always visible) + console (beginner / pro) */}
       <div className="pointer-events-none fixed bottom-4 left-4 right-4 top-20 z-40 flex flex-col gap-3 md:right-auto md:w-75">
-        {/* <div className="glass pointer-events-auto flex shrink-0 self-start rounded-full p-1 text-xs font-semibold">
-          {([
-            { on: true, label: 'Atmosphere' },
-            { on: false, label: 'Off' },
-          ] as const).map((o) => (
-            <button
-              key={String(o.on)}
-              onClick={() => setAtmosphere(o.on)}
-              className={`rounded-full px-3.5 py-1.5 transition ${
-                atmosphere === o.on
-                  ? 'bg-electric text-storm shadow-[0_0_14px_rgba(56,189,248,0.45)]'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div> */}
-        
         {/* Day / Night globe imagery */}
         <div className="glass pointer-events-auto flex shrink-0 self-start rounded-full p-1 text-xs font-semibold">
           {MAP_STYLES.map((m) => (
@@ -111,6 +96,10 @@ function LeftPanel({ pro }: { pro: boolean }) {
   const orbitTo = useLiveStore((s) => s.orbitTo)
   const clearOrbit = useLiveStore((s) => s.clearOrbit)
 
+  const activeLayers = useLiveStore((s) => s.activeLayers)
+  const toggleLayer = useLiveStore((s) => s.toggleLayer)
+  const layers = layersForTier(pro)
+
   const focus = orbitTarget
     ? ORBIT_LOCATIONS.find((l) => l.id === orbitTarget.id) ?? null
     : null
@@ -121,10 +110,10 @@ function LeftPanel({ pro }: { pro: boolean }) {
         <span className="font-display text-[11px] font-bold uppercase tracking-[0.25em] text-white/80">
           Live console
         </span>
-        <FeedBadge live={stats.feedLive} />
+        <QualitySettings />
       </div>
 
-      {/* ORBIT TO */}
+      {/* ORBIT TO — continents */}
       <Section
         title="Orbit to"
         badge={
@@ -146,7 +135,13 @@ function LeftPanel({ pro }: { pro: boolean }) {
               <button
                 key={loc.id}
                 onClick={() =>
-                  orbitTo({ id: loc.id, label: loc.label, lat: loc.lat, lon: loc.lon })
+                  orbitTo({
+                    id: loc.id,
+                    label: loc.label,
+                    lat: loc.lat,
+                    lon: loc.lon,
+                    flyHeightM: loc.flyHeightM,
+                  })
                 }
                 className={`rounded-lg border px-2.5 py-2 text-left transition ${
                   active
@@ -167,6 +162,20 @@ function LeftPanel({ pro }: { pro: boolean }) {
               </button>
             )
           })}
+        </div>
+      </Section>
+
+      {/* LAYERS — 4 in beginner, 8 in pro */}
+      <Section title={pro ? 'Layers · Pro' : 'Layers'}>
+        <div className="space-y-1.5">
+          {layers.map((def) => (
+            <LayerToggle
+              key={def.id}
+              def={def}
+              active={!!activeLayers[def.id]}
+              onToggle={() => toggleLayer(def.id)}
+            />
+          ))}
         </div>
       </Section>
 
@@ -240,7 +249,7 @@ function LeftPanel({ pro }: { pro: boolean }) {
             )}
           </>
         ) : (
-          <Empty>Pick a location above to load conditions.</Empty>
+          <Empty>Pick a continent above to load conditions.</Empty>
         )}
       </Section>
 
@@ -257,7 +266,6 @@ function LeftPanel({ pro }: { pro: boolean }) {
 function RightPanel() {
   const stats = useLiveStats()
   const db = useStrikeStats()
-  // const strikes = useGameStore((s) => s.strikes)
   const orbitTarget = useLiveStore((s) => s.orbitTarget)
 
   const focus = orbitTarget
@@ -309,7 +317,7 @@ function RightPanel() {
               <Empty>No detections in the last 10 min.</Empty>
             )
           ) : (
-            <Empty>Pick a location on the left.</Empty>
+            <Empty>Pick a continent on the left.</Empty>
           )}
         </Section>
 
@@ -326,7 +334,7 @@ function RightPanel() {
               <Empty>No tracked cells near {focus.short}.</Empty>
             )
           ) : (
-            <Empty>Pick a location on the left.</Empty>
+            <Empty>Pick a continent on the left.</Empty>
           )}
         </Section>
 
@@ -343,7 +351,7 @@ function RightPanel() {
               <Empty>No active alerts for {focus.short}.</Empty>
             )
           ) : (
-            <Empty>Pick a location on the left.</Empty>
+            <Empty>Pick a continent on the left.</Empty>
           )}
         </Section>
 
@@ -356,7 +364,7 @@ function RightPanel() {
               <Stat name="CAPE" value={`${focus.wx.capeJkg.toLocaleString('en-US')} J/kg`} />
             </>
           ) : (
-            <Empty>Pick a location on the left.</Empty>
+            <Empty>Pick a continent on the left.</Empty>
           )}
         </Section>
 
@@ -393,6 +401,64 @@ function Section({
   )
 }
 
+function LayerToggle({
+  def,
+  active,
+  onToggle,
+}: {
+  def: GlobeLayerDef
+  active: boolean
+  onToggle: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={active}
+      title={def.description}
+      className={`flex w-full items-start gap-2.5 rounded-lg border px-2.5 py-2 text-left transition ${
+        active
+          ? 'border-electric/50 bg-electric/10'
+          : 'border-white/10 bg-white/4 hover:border-white/25 hover:bg-white/8'
+      }`}
+    >
+      <span className="mt-0.5 w-4 shrink-0 text-center text-xs leading-4" aria-hidden>
+        {def.icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span
+          className={`flex items-center gap-1.5 text-xs font-semibold ${
+            active ? 'text-electric' : 'text-white/85'
+          }`}
+        >
+          {def.label}
+          {def.needsBackend && (
+            <span className="rounded bg-white/10 px-1 py-0.5 text-[8px] font-medium uppercase tracking-wider text-white/35">
+              data
+            </span>
+          )}
+        </span>
+        <span className="mt-0.5 block text-[10px] leading-snug text-white/40">
+          {def.description}
+        </span>
+      </span>
+      {/* on/off pill */}
+      <span
+        className={`mt-0.5 flex h-4 w-7 shrink-0 items-center rounded-full p-0.5 transition ${
+          active ? 'bg-electric/80' : 'bg-white/15'
+        }`}
+        aria-hidden
+      >
+        <span
+          className={`h-3 w-3 rounded-full bg-storm transition-transform ${
+            active ? 'translate-x-3' : 'translate-x-0'
+          }`}
+        />
+      </span>
+    </button>
+  )
+}
+
 function Stat({ name, value }: { name: string; value: React.ReactNode }) {
   return (
     <div className="mt-1.5 flex items-baseline justify-between gap-3 text-sm">
@@ -411,20 +477,80 @@ function BigStat({ value, label }: { value: number; label: string }) {
   )
 }
 
-function FeedBadge({ live }: { live: boolean }) {
+
+const QUALITY_OPTIONS: { id: GlobeQuality; label: string }[] = [
+  { id: 'low', label: 'Low' },
+  { id: 'medium', label: 'Medium' },
+  { id: 'high', label: 'High' },
+]
+
+function QualitySettings() {
+  const quality = useLiveStore((s) => s.quality)
+  const setQuality = useLiveStore((s) => s.setQuality)
+  const [open, setOpen] = useState(false)
+
   return (
-    <span className="flex items-center gap-1.5 text-[10px] font-medium">
-      <span
-        className={`inline-block h-1.5 w-1.5 rounded-full ${
-          live ? 'live-dot bg-bolt shadow-[0_0_8px_#fde047]' : 'bg-white/30'
-        }`}
-      />
-      <span className={live ? 'text-bolt' : 'text-white/40'}>
-        {live ? 'LIVE' : 'IDLE'}
-      </span>
-    </span>
+    <div className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Graphics quality"
+        aria-expanded={open}
+        className="flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-white/60 transition hover:bg-white/10 hover:text-white"
+      >
+        <GearIcon className="h-3.5 w-3.5" />
+        <span className="text-[10px] font-medium uppercase tracking-wider">{quality}</span>
+      </button>
+
+      {open && (
+        <>
+          {/* click-away catcher */}
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 z-50 mt-1 w-32 overflow-hidden rounded-lg border border-white/10 bg-storm/95 p-1 shadow-xl backdrop-blur">
+            <p className="px-2 py-1 text-[9px] uppercase tracking-wider text-white/35">
+              Graphics
+            </p>
+            {QUALITY_OPTIONS.map((o) => (
+              <button
+                key={o.id}
+                onClick={() => {
+                  setQuality(o.id)
+                  setOpen(false)
+                }}
+                className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs transition ${
+                  quality === o.id
+                    ? 'bg-electric/15 text-electric'
+                    : 'text-white/70 hover:bg-white/10'
+                }`}
+              >
+                {o.label}
+                {quality === o.id && <span aria-hidden>✓</span>}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
   )
 }
+
+function GearIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}
+
 
 function SampleTag({ label = 'sample' }: { label?: string }) {
   return (

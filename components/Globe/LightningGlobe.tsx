@@ -5,6 +5,8 @@ import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 
 import { useLightningSocket } from '@/lib/socket';
+import { useLiveStore } from '@/store/liveStore';
+import { QUALITY_PRESETS, type GlobeQuality } from '@/lib/globe/quality';
 import { attachLightningStrikes } from '@/lib/globe/lightningStrikes';
 import { setupImagery } from '@/lib/globe/imagery';
 import { configureScene } from '@/lib/globe/scene';
@@ -22,6 +24,7 @@ import { attachBettingGrid } from '@/lib/globe/bettingGrid';
 import { attachGameZones } from '@/lib/globe/gameZones';
 import { GlobeTooltip, GlobeZoomButtons, TileLoadingPill } from './GlobeOverlays';
 import { attachAtmosphereGlow } from '@/lib/globe/atmosphereGlow';
+import { attachLayers } from '@/lib/globe/layerManager';
 
 interface LightningGlobeProps {
   viewOnly?: boolean;
@@ -102,18 +105,24 @@ export default function LightningGlobe({
 
     const { scene, camera } = viewer;
 
-    // Adaptive resolution: native res when the view settles (crisp labels), 1×
-    // while the camera moves/spins (the eye can't catch the softness in motion).
-    const HIGH_SCALE = Math.min(window.devicePixelRatio || 1, 1.5);
+    // ── Resolution + framerate (driven by the graphics-quality preset) ──────
+    // `highScale` is the settled resolution; during motion we drop to 1× (the
+    // eye can't catch the softness while spinning) and restore after 200 ms.
+    // Both the cap and the fps come from QUALITY_PRESETS and update live.
+    let highScale = Math.min(
+      window.devicePixelRatio || 1,
+      QUALITY_PRESETS[useLiveStore.getState().quality].resolutionScaleCap,
+    );
     viewer.useBrowserRecommendedResolution = false;
-    viewer.resolutionScale = HIGH_SCALE;
+    viewer.resolutionScale = highScale;
+    viewer.targetFrameRate = QUALITY_PRESETS[useLiveStore.getState().quality].targetFrameRate;
     camera.percentageChanged = 0.05; // fire `changed` on small movements
 
     let resTimer: ReturnType<typeof setTimeout> | null = null;
     const onCameraMove = () => {
       if (viewer.resolutionScale !== 1) viewer.resolutionScale = 1;
       if (resTimer) clearTimeout(resTimer);
-      resTimer = setTimeout(() => { viewer.resolutionScale = HIGH_SCALE; }, 200);
+      resTimer = setTimeout(() => { viewer.resolutionScale = highScale; }, 200);
     };
     camera.changed.addEventListener(onCameraMove);
     disposers.push(() => {
@@ -121,11 +130,39 @@ export default function LightningGlobe({
       if (resTimer) clearTimeout(resTimer);
     });
 
-    // Render at the device's native resolution so borders + labels stay crisp
-    // on hi-DPI / retina displays (Cesium otherwise renders at 1 CSS px and
-    // upscales, which is what makes the text look blurry).
-    viewer.useBrowserRecommendedResolution = false;
-    viewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 2); // cap at 2 for perf
+    // ── Pause rendering when off-screen or the tab is hidden ────────────────
+    // The globe is a full-viewport hero; once the user scrolls past it (home /
+    // SEO pages) or switches tab, it would keep rendering at full cost for
+    // nothing. Stopping the render loop entirely = zero GPU until it's visible
+    // again. We render only when (on-screen AND tab visible).
+    let onScreen = true;
+    let pageVisible = !document.hidden;
+    const applyRenderActivity = () => {
+      if (viewer.isDestroyed()) return;
+      const shouldRender = onScreen && pageVisible;
+      if (viewer.useDefaultRenderLoop !== shouldRender) {
+        viewer.useDefaultRenderLoop = shouldRender;
+      }
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        onScreen = entries[0]?.isIntersecting ?? true;
+        applyRenderActivity();
+      },
+      { threshold: 0.01 }, // any sliver visible counts as on-screen
+    );
+    io.observe(el);
+
+    const onVisibility = () => {
+      pageVisible = !document.hidden;
+      applyRenderActivity();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    disposers.push(() => {
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onVisibility);
+    });
 
     // loading states (wrapper loader + detail pill)
     disposers.push(
@@ -145,7 +182,33 @@ export default function LightningGlobe({
     // dark "storm" look & feel + atmosphere
     configureScene(scene);
 
+    // ── Graphics quality: apply the preset and react to live changes ────────
+    const applyQuality = (q: GlobeQuality) => {
+      if (viewer.isDestroyed()) return;
+      const p = QUALITY_PRESETS[q];
+      highScale = Math.min(window.devicePixelRatio || 1, p.resolutionScaleCap);
+      viewer.resolutionScale = highScale;
+      viewer.targetFrameRate = p.targetFrameRate;
+      scene.msaaSamples = p.msaaSamples;
+      scene.fog.enabled = p.fog;
+      useLiveStore.getState().setAtmosphere(p.atmosphere); // atmosphereGlow reacts
+    };
+    applyQuality(useLiveStore.getState().quality);
+    let lastQuality = useLiveStore.getState().quality;
+    disposers.push(
+      useLiveStore.subscribe((s) => {
+        if (s.quality !== lastQuality) {
+          lastQuality = s.quality;
+          applyQuality(s.quality);
+        }
+      }),
+    );
+
     disposers.push(attachAtmosphereGlow(scene));
+
+    // Toggleable globe layers (fog / day-night / data-driven). Attached after
+    // configureScene + applyQuality so the initial active-layer state wins.
+    disposers.push(attachLayers(viewer, scene));
 
     // camera framing
     const bounds =

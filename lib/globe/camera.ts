@@ -152,7 +152,8 @@ export function attachOrbitFlights({
       lastReq = t.requestedAt;
       interaction.stopped = true; // stop the spin so it doesn't fight the flight
       camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(t.lon, t.lat, FLY_HEIGHT_M),
+        // Continents pass a higher flyHeightM; point targets fall back to the default.
+        destination: Cesium.Cartesian3.fromDegrees(t.lon, t.lat, t.flyHeightM ?? FLY_HEIGHT_M),
         duration: 1.6,
       });
     }
