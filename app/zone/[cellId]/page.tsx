@@ -24,7 +24,7 @@ export async function generateMetadata({
   const region = regionName(lat, lon)
   return {
     title: `Lightning Prediction: ${region} Zone`,
-    description: `Live lightning strike statistics and predictions for the ${region} zone (around ${lat}°, ${lon}°). Track real-time bolts and place predictions on Lightning Map Bets.`,
+    description: `Live lightning strike statistics and predictions for the ${region} zone (around ${lat}°, ${lon}°). Track real-time bolts and place predictions on Lightning Map Game.`,
     alternates: { canonical: `https://lightningmapgames.com/zone/${cellId}` },
     robots: { index: false, follow: true },
   }
@@ -51,7 +51,7 @@ export default async function ZonePage({ params }: { params: Promise<Params> }) 
         <p className="mt-5 text-white/65">
           This zone covers the area from {parsed.lonMin}° to {parsed.lonMin + 20}°
           longitude and {parsed.latMin}° to {parsed.latMin + 20}° latitude, centered
-          near {lat}°, {lon}°. It is one of 162 prediction zones on the Lightning Map Bets live
+          near {lat}°, {lon}°. It is one of 162 prediction zones on the Lightning Map Game live
           lightning globe.
         </p>
 

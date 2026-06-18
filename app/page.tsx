@@ -32,7 +32,7 @@ export default function HomePage() {
         <GlobeWrapper viewOnly fill enableZoom countryLinks={COUNTRY_LINKS} />
         <LiveHUD />
         <h1 className="sr-only">
-          Lightning Map Bets — live real-time lightning strike map &amp; 60-second prediction game
+          Lightning Map Game — live real-time lightning strike map &amp; 60-second prediction game
         </h1>
       </section>
     </main>

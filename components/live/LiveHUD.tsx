@@ -1,16 +1,17 @@
 'use client'
 // components/live/LiveHUD.tsx — the /live console shell.
-// Left column: map-style + mode switch (always) + the console (Beginner / Pro).
-//   In Pro mode the console now also contains what used to be the right panel.
-// Right column: dedicated to the clicked-country panel (CountryPanel self-hides
-//   when nothing is selected). lg+ screens only.
+// Left column: map-style + mode switch (always) + trimmed console.
+// Right column: country panel when a country is selected, otherwise overall
+//   globe stats (beginner/pro). lg+ screens only.
 import { useLiveStore } from '@/store/liveStore'
 import ModeBar from './ModeBar'
 import LeftPanel from './LeftPanel'
 import CountryPanel from './CountryPanel'
+import GlobeInfoPanel from './GlobeInfoPanel'
 
 export default function LiveHUD() {
   const mode = useLiveStore((s) => s.mode)
+  const selectedCountry = useLiveStore((s) => s.selectedCountry)
 
   return (
     <>
@@ -20,9 +21,13 @@ export default function LiveHUD() {
         {mode !== 'free' && <LeftPanel pro={mode === 'pro'} />}
       </div>
 
-      {/* Right column — country info, shows on country click */}
+      {/* Right column — country info on click, else overall globe stats */}
       <div className="pointer-events-none fixed bottom-4 right-4 top-20 z-40 hidden w-[320px] flex-col lg:flex">
-        <CountryPanel />
+        {selectedCountry ? (
+          <CountryPanel />
+        ) : (
+          mode !== 'free' && <GlobeInfoPanel pro={mode === 'pro'} />
+        )}
       </div>
     </>
   )

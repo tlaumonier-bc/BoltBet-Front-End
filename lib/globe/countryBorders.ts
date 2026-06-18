@@ -109,7 +109,14 @@ function pointInRing(lon: number, lat: number, ring: number[][]): boolean {
 function expandRect(rect: Cesium.Rectangle, factor: number): Cesium.Rectangle {
   const w = (rect.width * (factor - 1)) / 2;
   const h = (rect.height * (factor - 1)) / 2;
-  return new Cesium.Rectangle(rect.west - w, rect.south - h, rect.east + w, rect.north + h);
+  const HALF_PI = Math.PI / 2;
+  const PI = Math.PI;
+  return new Cesium.Rectangle(
+    Math.max(-PI, rect.west - w),
+    Math.max(-HALF_PI, rect.south - h),
+    Math.min(PI, rect.east + w),
+    Math.min(HALF_PI, rect.north + h),
+  );
 }
 
 // True when the unioned rect can't be trusted for framing — either it literally
@@ -237,12 +244,21 @@ export function loadCountryBorders(
             lat: Cesium.Math.toDegrees(cc.latitude),
             lon: Cesium.Math.toDegrees(cc.longitude),
           };
-          // Center of THIS (largest) ring's own rect — safe even when the whole
-          // country wraps the antimeridian, because a single ring doesn't.
+          // Arithmetic centroid of the largest ring's own points. Done in raw
+          // lon/lat (NOT via Cesium.Rectangle, which applies antimeridian
+          // wrapping and would put Canada's center out in the Pacific).
+          const mainLonLat = toLonLat(main, ell);
+          let sumLon = 0;
+          let sumLat = 0;
+          for (const [lo, la] of mainLonLat) {
+            sumLon += lo;
+            sumLat += la;
+          }
           const ringCenter = {
-            lat: Cesium.Math.toDegrees(cc.latitude),
-            lon: Cesium.Math.toDegrees(cc.longitude),
+            lat: mainLonLat.length ? sumLat / mainLonLat.length : geoCenter.lat,
+            lon: mainLonLat.length ? sumLon / mainLonLat.length : geoCenter.lon,
           };
+
           const prev = metaById.get(id);
           // Union the rect across this country's parts so the fly-to frames it all.
           const unionRect = prev ? Cesium.Rectangle.union(prev.rect, rect) : rect;
@@ -388,6 +404,7 @@ export function loadCountryBorders(
       const DEFAULT_OUT_HEIGHT_M = 12_000_000;
       const flyOut = () => {
         const carto = camera.positionCartographic;
+        console.log('[flyOut]');
         camera.flyTo({
           destination: Cesium.Cartesian3.fromRadians(
             carto.longitude,
@@ -396,7 +413,7 @@ export function loadCountryBorders(
           ),
           orientation: {
             heading: camera.heading,
-            pitch: Cesium.Math.toRadians(-90), // straight down
+            pitch: Cesium.Math.toRadians(-90),
             roll: 0,
           },
           duration: 1.2,
@@ -417,6 +434,7 @@ export function loadCountryBorders(
 
       handler.setInputAction((c: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
         const id = idAtScreen(c.position);
+        console.log('[country click] id =', id);
         if (!id) return;
 
         // Click the already-selected country → deselect + zoom back out.
@@ -437,20 +455,32 @@ export function loadCountryBorders(
 
         const meta = metaById.get(id);
         if (meta) {
+          console.log(
+            meta.label,
+            'rectCenterLon', Cesium.Math.toDegrees(Cesium.Rectangle.center(meta.rect).longitude).toFixed(1),
+            'mainCenterLon', meta.mainCenter.lon.toFixed(1),
+            'mainCenterLat', meta.mainCenter.lat.toFixed(1),
+            'widthDeg', Cesium.Math.toDegrees(meta.rect.width).toFixed(1),
+            'untrustworthy', rectUntrustworthy(meta.rect, meta.mainCenter),
+          );
           if (rectUntrustworthy(meta.rect, meta.mainCenter)) {
-            // Antimeridian-spanning country: frame by main landmass center + size.
             const spanDeg = Cesium.Math.toDegrees(Math.max(meta.rect.width, meta.rect.height));
             const heightM = Cesium.Math.clamp(spanDeg * 110_000, 2_000_000, 16_000_000);
+            console.log('[fly WRAPPED]', meta.label, meta.mainCenter.lon.toFixed(1), meta.mainCenter.lat.toFixed(1), heightM);
             camera.flyTo({
               destination: Cesium.Cartesian3.fromDegrees(meta.mainCenter.lon, meta.mainCenter.lat, heightM),
               duration: 1.4,
             });
           } else {
-            camera.flyTo({
-              destination: expandRect(meta.rect, COUNTRY_FLY_PADDING),
-              duration: 1.4,
-            });
+            const dest = expandRect(meta.rect, COUNTRY_FLY_PADDING);
+            console.log('[fly RECT]', meta.label,
+              'W', Cesium.Math.toDegrees(dest.west).toFixed(1),
+              'S', Cesium.Math.toDegrees(dest.south).toFixed(1),
+              'E', Cesium.Math.toDegrees(dest.east).toFixed(1),
+              'N', Cesium.Math.toDegrees(dest.north).toFixed(1));
+            camera.flyTo({ destination: dest, duration: 1.4 });
           }
+          if (meta.slug) console.log('[onPick]', meta.slug);
           useLiveStore.getState().setSelectedCountry({ name: meta.label, iso2: meta.iso2 });
           if (meta.slug) interactive.onPick?.(meta.slug); // navigation hook (page countries only)
         }

@@ -180,7 +180,8 @@ export function attachOrbitFlights({
     const t = state.orbitTarget;
     if (t && t.requestedAt !== lastReq) {
       lastReq = t.requestedAt;
-      interaction.stopped = true; // stop the spin so it doesn't fight the flight
+      interaction.stopped = true;
+      console.log('[orbitTo fired]', t.id, t.lat, t.lon, t.flyHeightM);
       camera.flyTo({
         // Continents pass a higher flyHeightM; point targets fall back to the default.
         destination: Cesium.Cartesian3.fromDegrees(t.lon, t.lat, t.flyHeightM ?? FLY_HEIGHT_M),

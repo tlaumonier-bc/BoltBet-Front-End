@@ -4,7 +4,7 @@ import Backdrop from '@/components/Backdrop/Backdrop'
 export const metadata: Metadata = {
   title: 'Leaderboard — Top Lightning Predictors',
   description:
-    'See the top Lightning Map Bets players ranked by credits won predicting real-time lightning strikes.',
+    'See the top Lightning Map Game players ranked by credits won predicting real-time lightning strikes.',
 }
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'

@@ -4,7 +4,7 @@ import Backdrop from '@/components/Backdrop/Backdrop'
 export const metadata: Metadata = {
   title: 'How It Works — Predict Real Lightning Strikes in Real Time',
   description:
-    'Learn how Lightning Map Bets works: how the live lightning strike map updates, how multipliers are calculated, and where lightning strikes most on Earth.',
+    'Learn how Lightning Map Game works: how the live lightning strike map updates, how multipliers are calculated, and where lightning strikes most on Earth.',
   keywords: [
     'how to predict lightning strikes',
     'lightning strike map real time',
@@ -35,7 +35,7 @@ const faq = {
       name: 'How does the lightning strike map work?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Lightning Map Bets streams real-time lightning detections onto a live 3D globe. Each strike appears as a bolt at its detected latitude and longitude, fading over a couple of seconds.',
+        text: 'Lightning Map Game streams real-time lightning detections onto a live 3D globe. Each strike appears as a bolt at its detected latitude and longitude, fading over a couple of seconds.',
       },
     },
     {
@@ -48,10 +48,10 @@ const faq = {
     },
     {
       '@type': 'Question',
-      name: 'Is Lightning Map Bets a real-money game?',
+      name: 'Is Lightning Map Game a real-money game?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'No. Lightning Map Bets uses virtual in-game credits only. There is no real-money wagering.',
+        text: 'No. Lightning Map Game uses virtual in-game credits only. There is no real-money wagering.',
       },
     },
   ],
