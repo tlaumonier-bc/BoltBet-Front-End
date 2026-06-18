@@ -1,5 +1,5 @@
 'use client'
-// components/live/OrbitSection.tsx — "Orbit to" continent buttons.
+// components/live/OrbitSection.tsx — "Back to globe" reset + "Orbit to" continents.
 import { useLiveStore } from '@/store/liveStore'
 import { ORBIT_LOCATIONS } from '@/lib/live/locations'
 import { Section, coord } from './hudShared'
@@ -11,6 +11,10 @@ export default function OrbitSection() {
   const focus = orbitTarget
     ? ORBIT_LOCATIONS.find((l) => l.id === orbitTarget.id) ?? null
     : null
+
+  const onGlobe = orbitTarget?.id === 'globe'
+  const backToGlobe = () =>
+    orbitTo({ id: 'globe', label: 'Whole globe', lat: 20, lon: 0, flyHeightM: 20_000_000 })
 
   return (
     <Section
@@ -27,6 +31,18 @@ export default function OrbitSection() {
         ) : null
       }
     >
+      <button
+        onClick={backToGlobe}
+        className={`mb-2 flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-3 text-xs font-semibold transition ${
+          onGlobe
+            ? 'border-electric/50 bg-electric/10 text-electric'
+            : 'border-white/10 bg-white/4 text-white/85 hover:border-white/25 hover:bg-white/8'
+        }`}
+      >
+        <span aria-hidden>🌍</span>
+        Back to globe
+      </button>
+
       <div className="grid grid-cols-2 gap-1.5">
         {ORBIT_LOCATIONS.map((loc) => {
           const active = orbitTarget?.id === loc.id
@@ -48,11 +64,7 @@ export default function OrbitSection() {
                   : 'border-white/10 bg-white/4 hover:border-white/25 hover:bg-white/8'
               }`}
             >
-              <span
-                className={`block text-xs font-semibold ${
-                  active ? 'text-bolt' : 'text-white/85'
-                }`}
-              >
+              <span className={`block text-xs font-semibold ${active ? 'text-bolt' : 'text-white/85'}`}>
                 {loc.short}
               </span>
               <span className="block text-[10px] text-white/40">{coord(loc.lat, loc.lon)}</span>

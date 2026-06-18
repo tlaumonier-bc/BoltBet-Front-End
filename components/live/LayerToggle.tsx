@@ -32,9 +32,9 @@ export default function LayerToggle({
           }`}
         >
           {def.label}
-          {def.needsBackend && (
-            <span className="rounded bg-white/10 px-1 py-0.5 text-[8px] font-medium uppercase tracking-wider text-white/35">
-              data
+          {def.tier === 'pro' && (
+            <span className="rounded bg-bolt/15 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-bolt">
+              pro
             </span>
           )}
         </span>

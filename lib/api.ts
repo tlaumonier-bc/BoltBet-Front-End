@@ -44,7 +44,8 @@ export interface RecentStrike {
 
 export interface RecentStrikesResponse {
   minutes: number;
-  count: number;        // number actually returned (may hit the backend cap)
+  older_than?: number;
+  count: number;
   strikes: RecentStrike[];
 }
 
@@ -105,9 +106,17 @@ export async function getLeaderboard(kind: LeaderboardKind): Promise<Leaderboard
   return res.json();
 }
 
-/** Raw strike positions over a recent window — drives the "Recent strikes" layer. */
-export async function getRecentStrikes(minutes: number, limit = 5000): Promise<RecentStrikesResponse> {
-  const q = new URLSearchParams({ minutes: String(minutes), limit: String(limit) });
+/** Raw strike positions over a recent window (or age band via olderThan). */
+export async function getRecentStrikes(
+  minutes: number,
+  limit = 5000,
+  olderThan = 0,
+): Promise<RecentStrikesResponse> {
+  const q = new URLSearchParams({
+    minutes: String(minutes),
+    limit: String(limit),
+    older_than: String(olderThan),
+  });
   const res = await fetch(`${API}/api/strikes/recent/?${q}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`recent strikes ${res.status}`);
   return res.json();

@@ -1,14 +1,16 @@
 // lib/globe/layers.ts
-// The catalog of toggleable globe layers (pure data — no Cesium here).
-// Beginner = Recent strikes + Storm fog. Pro adds Density grid + Alert zones.
+// Beginner = Strikes · 1 h + Clouds + Rain.
+// Pro adds Strikes · 6 h + Strikes · 24 h + Temperature + Wind.
+// Array order = display order in the panel.
 
 export type GlobeLayerId =
-  // ── beginner ──
-  | 'recent-strikes'
+  | 'recent-strikes-1h'
   | 'storm-fog'
-  // ── pro ──
-  | 'density-grid'
-  | 'alert-zones';
+  | 'precipitation'
+  | 'recent-strikes-6h'
+  | 'recent-strikes-24h'
+  | 'temperature'
+  | 'wind';
 
 export type LayerTier = 'beginner' | 'pro';
 
@@ -18,66 +20,31 @@ export interface GlobeLayerDef {
   description: string;
   tier: LayerTier;
   icon: string;
-  needsBackend: boolean;
 }
 
 export const GLOBE_LAYERS: GlobeLayerDef[] = [
-  // ───────────────────────── BEGINNER ─────────────────────────
-  {
-    id: 'recent-strikes',
-    label: 'Recent strikes',
-    description: 'Heat-map of strikes from the last 30 minutes.',
-    tier: 'beginner',
-    icon: '⚡',
-    needsBackend: true,
-  },
-  {
-    id: 'storm-fog',
-    label: 'Storm fog',
-    description: 'Drifting haze that thickens near active storms.',
-    tier: 'beginner',
-    icon: '🌫️',
-    needsBackend: false,
-  },
-
-  // ─────────────────────────── PRO ────────────────────────────
-  {
-    id: 'density-grid',
-    label: 'Density grid',
-    description: 'Colour each zone by its 24-hour strike count.',
-    tier: 'pro',
-    icon: '▦',
-    needsBackend: true,
-  },
-  {
-    id: 'alert-zones',
-    label: 'Alert zones',
-    description: 'Shaded severe-weather warnings and watches.',
-    tier: 'pro',
-    icon: '⚠️',
-    needsBackend: true,
-  },
+  { id: 'recent-strikes-1h', label: 'Strikes · 1 h', description: 'Strikes from the last hour.', tier: 'beginner', icon: '⚡' },
+  { id: 'recent-strikes-6h', label: 'Strikes · 6 h', description: 'Strikes 1 to 6 hours old.', tier: 'pro', icon: '⚡' },
+  { id: 'recent-strikes-24h', label: 'Strikes · 24 h', description: 'Strikes 6 to 24 hours old.', tier: 'pro', icon: '⚡' },
+  { id: 'storm-fog', label: 'Clouds', description: 'Live cloud cover across the globe.', tier: 'beginner', icon: '☁️' },
+  { id: 'precipitation', label: 'Rain', description: 'Live rain, minute by minute.', tier: 'beginner', icon: '🌧️' },
+  { id: 'temperature', label: 'Temperature', description: "The planet's heat, blue to red.", tier: 'pro', icon: '🌡️' },
+  { id: 'wind', label: 'Wind', description: 'The air in motion, worldwide.', tier: 'pro', icon: '💨' },
 ];
 
-/** Layers visible in Beginner mode. */
 export const beginnerLayers = GLOBE_LAYERS.filter((l) => l.tier === 'beginner');
-
-/** All layers (Pro mode). */
 export const proLayers = GLOBE_LAYERS;
-
-/** Layers to show for the current mode. */
-export const layersForTier = (pro: boolean): GlobeLayerDef[] =>
-  pro ? proLayers : beginnerLayers;
-
-/** All layer ids — handy for building default state / diffing. */
+export const layersForTier = (pro: boolean): GlobeLayerDef[] => (pro ? proLayers : beginnerLayers);
 export const ALL_LAYER_IDS = GLOBE_LAYERS.map((l) => l.id);
 
-/** Initial on/off state — everything off so the globe looks unchanged until opt-in. */
 export function defaultLayerState(): Record<GlobeLayerId, boolean> {
   return {
-    'recent-strikes': false,
+    'recent-strikes-1h': false,
     'storm-fog': false,
-    'density-grid': false,
-    'alert-zones': false,
+    'precipitation': false,
+    'recent-strikes-6h': false,
+    'recent-strikes-24h': false,
+    'temperature': false,
+    'wind': false,
   };
 }

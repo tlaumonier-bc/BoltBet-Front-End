@@ -6,6 +6,26 @@
 import * as Cesium from 'cesium';
 import { useLiveStore } from '@/store/liveStore';
 
+export const OWM_KEY = process.env.NEXT_PUBLIC_OWM_API_KEY;
+
+
+export function addOwmLayer(
+  viewer: Cesium.Viewer,
+  layer: string,
+  alpha: number,
+  label: string,
+): Cesium.ImageryLayer {
+  const imageryLayer = viewer.imageryLayers.addImageryProvider(
+    new Cesium.UrlTemplateImageryProvider({
+      url: `https://tile.openweathermap.org/map/${layer}/{z}/{x}/{y}.png?appid=${OWM_KEY}`,
+      maximumLevel: 8,
+      credit: `OpenWeatherMap — ${label}`,
+    }),
+  );
+  imageryLayer.alpha = alpha;
+  return imageryLayer;
+}
+
 export function setupImagery(viewer: Cesium.Viewer): () => void {
   const nightLayer = viewer.imageryLayers.addImageryProvider(
     new Cesium.UrlTemplateImageryProvider({
@@ -21,6 +41,10 @@ export function setupImagery(viewer: Cesium.Viewer): () => void {
       credit: 'NASA EOSDIS GIBS — Blue Marble',
     }),
   );
+
+  if (!OWM_KEY && typeof window !== 'undefined') {
+    console.warn('[imagery] NEXT_PUBLIC_OWM_API_KEY not set — Clouds/Rain layers disabled.');
+  }
 
   const applyMapStyle = (style: 'night' | 'day') => {
     nightLayer.show = style === 'night';
