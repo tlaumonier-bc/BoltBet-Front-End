@@ -1,8 +1,8 @@
 'use client'
-// components/live/LeftPanel.tsx — the left console card: quality, orbit, layers.
-import QualitySettings from './QualitySettings'
+// components/live/LeftPanel.tsx — carte de console gauche : quality, orbit, layers.
 import OrbitSection from './OrbitSection'
 import LayersSection from './LayersSection'
+import QualitySettings from './QualitySettings'
 
 export default function LeftPanel({ pro }: { pro: boolean }) {
   return (

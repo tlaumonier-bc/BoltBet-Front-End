@@ -1,6 +1,7 @@
 'use client'
-// components/live/GlobeInfoPanel.tsx — right-side panel for overall globe stats,
-// shown when no country is selected. Strikes (all modes) + Telemetry & Activity (pro).
+// components/live/GlobeInfoPanel.tsx — panneau de droite par défaut (aucun pays
+// sélectionné) : stats globales du globe. Strikes (tous modes) + Telemetry &
+// Activity (pro). Réutilise StrikesSection et ProTelemetry.
 import { useLiveStats } from '@/lib/live/useLiveStats'
 import StrikesSection from './StrikesSection'
 import ProTelemetry from './ProTelemetry'

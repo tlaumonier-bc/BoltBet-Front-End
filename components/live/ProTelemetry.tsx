@@ -1,6 +1,6 @@
 'use client'
-// components/live/ProTelemetry.tsx — Activity sparkline: global strikes/min over
-// the last 15 minutes. Shown in the overall-globe right panel in Pro mode.
+// components/live/ProTelemetry.tsx — sparkline d'activité : strikes/min sur les
+// 15 dernières minutes. Affiché dans le panneau de droite (globe) en mode Pro.
 import { useStrikesPerMinute } from '@/lib/live/useStrikesPerMinutes'
 import { Section, RateSparkline } from './hudShared'
 

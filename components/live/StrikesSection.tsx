@@ -1,4 +1,4 @@
-// components/live/StrikesSection.tsx — overall-globe strike rates + telemetry.
+// components/live/StrikesSection.tsx — stats de strikes globales + télémétrie.
 import type { LiveStats } from '@/lib/live/useLiveStats'
 import { Section, Stat, BigStat, QualityBar } from './hudShared'
 
@@ -11,7 +11,7 @@ export default function StrikesSection({
 }) {
   return (
     <>
-      {/* STRIKES — real */}
+      {/* STRIKES — réel */}
       <Section title="Strikes">
         <div className="grid grid-cols-2 gap-2">
           <BigStat value={stats.perMinute} label="last 60 s" />
@@ -33,7 +33,7 @@ export default function StrikesSection({
         )}
       </Section>
 
-      {/* TELEMETRY — real, pro only */}
+      {/* TELEMETRY — réel, pro uniquement */}
       {pro && (
         <Section title="Telemetry">
           <Stat

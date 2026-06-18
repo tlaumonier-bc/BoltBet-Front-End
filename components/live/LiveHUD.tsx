@@ -1,8 +1,8 @@
 'use client'
-// components/live/LiveHUD.tsx — the /live console shell.
-// Left column: map-style + mode switch (always) + trimmed console.
-// Right column: country panel when a country is selected, otherwise overall
-//   globe stats (beginner/pro). lg+ screens only.
+// components/live/LiveHUD.tsx — coquille de la console /live.
+// Colonne gauche : map-style + mode (toujours) + console allégée (Orbit + Layers).
+// Colonne droite : panneau pays si un pays est sélectionné, sinon stats globales
+//   du globe (beginner/pro). lg+ uniquement.
 import { useLiveStore } from '@/store/liveStore'
 import ModeBar from './ModeBar'
 import LeftPanel from './LeftPanel'
@@ -15,13 +15,13 @@ export default function LiveHUD() {
 
   return (
     <>
-      {/* Left column */}
+      {/* Colonne gauche */}
       <div className="pointer-events-none fixed bottom-4 left-4 right-4 top-20 z-40 flex flex-col gap-3 md:right-auto md:w-75">
         <ModeBar />
         {mode !== 'free' && <LeftPanel pro={mode === 'pro'} />}
       </div>
 
-      {/* Right column — country info on click, else overall globe stats */}
+      {/* Colonne droite — pays au clic, sinon stats globales */}
       <div className="pointer-events-none fixed bottom-4 right-4 top-20 z-40 hidden w-[320px] flex-col lg:flex">
         {selectedCountry ? (
           <CountryPanel />
