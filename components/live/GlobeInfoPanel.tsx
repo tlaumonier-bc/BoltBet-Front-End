@@ -1,22 +1,27 @@
 'use client'
-// components/live/GlobeInfoPanel.tsx — panneau de droite par défaut (aucun pays
-// sélectionné) : stats globales du globe. Strikes (tous modes) + Telemetry &
-// Activity (pro). Réutilise StrikesSection et ProTelemetry.
+// components/live/GlobeInfoPanel.tsx — right panel (no country selected):
+// global Strikes stats (pinned) + a live list of recent strikes by country
+// that fills the rest of the panel and scrolls.
 import { useLiveStats } from '@/lib/live/useLiveStats'
 import StrikesSection from './StrikesSection'
-import ProTelemetry from './ProTelemetry'
+import RecentStrikesSection from './RecentStrikesSection'
 
-export default function GlobeInfoPanel({ pro }: { pro: boolean }) {
+export default function GlobeInfoPanel() {
   const stats = useLiveStats()
 
   return (
-    <div className="glass panel-scroll pointer-events-auto min-h-0 w-full overflow-y-auto rounded-2xl p-4">
-      <span className="font-display text-[11px] font-bold uppercase tracking-[0.25em] text-white/80">
+    <div className="glass pointer-events-auto flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl p-4">
+      <span className="shrink-0 font-display text-[11px] font-bold uppercase tracking-[0.25em] text-white/80">
         Globe activity
       </span>
 
-      <StrikesSection stats={stats} pro={pro} />
-      {pro && <ProTelemetry />}
+      <div className="shrink-0">
+        <StrikesSection stats={stats} />
+      </div>
+
+      <div className="panel-scroll min-h-0 flex-1 overflow-y-auto">
+        <RecentStrikesSection />
+      </div>
     </div>
   )
 }

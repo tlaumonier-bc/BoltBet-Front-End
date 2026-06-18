@@ -143,25 +143,21 @@ body {
   height: 100%;
   background: #04060d;
 }
-.cesium-globe .cesium-viewer-bottom {
-  bottom: 4px;
-  right: 4px;
-  left: auto; /* keep attribution clear of the bottom-left HUD */
-}
-.cesium-globe .cesium-widget-credits {
-  font-size: 10px;
-  opacity: 0.45;
+
+/* Hide the Cesium credit + ion logo entirely (it was showing bottom-left).
+   Unscoped on purpose so it works regardless of the viewer's container class. */
+.cesium-viewer-bottom,
+.cesium-widget-credits,
+.cesium-credit-logoContainer {
+  display: none !important;
 }
 
 
 /* Nudge the rendered globe down so it clears the fixed header. We move our own
-   container (robust to Cesium's internal DOM) and push the attribution credit
-   back up so it isn't clipped. Picking/zoom stay correct. Raise/lower 4vh. */
+   container (robust to Cesium's internal DOM). Picking/zoom stay correct.
+   Raise/lower 4vh. */
 .globe-drop .cesium-globe {
   transform: translateY(4vh);
-}
-.globe-drop .cesium-globe .cesium-viewer-bottom {
-  transform: translateY(-4vh);
 }
 
 /* Cesium tile-loading spinner */
