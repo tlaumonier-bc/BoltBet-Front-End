@@ -36,6 +36,15 @@ export const COUNTRY_BOUNDS: Record<string, Bounds> = {
   ro: { minLon: 20.2, minLat: 43.6, maxLon: 29.7, maxLat: 48.3, label: 'Romania' },
 };
 
+// Countries whose map geometry spans overseas territories — fitting the full
+// feature centers the camera in the ocean, so frame the mainland instead.
+// Add more locales here if another multi-territory country misbehaves.
+const EXTRA_MAINLAND_BOUNDS: Record<string, Bounds> = {
+  pt: { minLon: -9.6, minLat: 36.9, maxLon: -6.2, maxLat: 42.2, label: 'Portugal' },
+  nz: { minLon: 166, minLat: -47.5, maxLon: 179, maxLat: -34, label: 'New Zealand' },
+  ru: { minLon: 27, minLat: 41, maxLon: 180, maxLat: 78, label: 'Russia' },
+};
+
 /** World fallback for the global landing / view-only map. */
 export const WORLD_BOUNDS: Bounds = {
   minLon: -180, minLat: -60, maxLon: 180, maxLat: 80, label: 'World',
@@ -43,3 +52,14 @@ export const WORLD_BOUNDS: Bounds = {
 
 export const boundsForLocale = (locale: string): Bounds =>
   COUNTRY_BOUNDS[locale] ?? WORLD_BOUNDS;
+
+/**
+ * Mainland framing box for a clicked country (ISO-2 / locale, any case).
+ * Returns null when there's no override — caller should fall back to the
+ * geometry bounding box from the picked feature.
+ */
+export const framingBoundsForIso = (iso: string | null | undefined): Bounds | null => {
+  if (!iso) return null;
+  const k = iso.toLowerCase();
+  return EXTRA_MAINLAND_BOUNDS[k] ?? COUNTRY_BOUNDS[k] ?? null;
+};

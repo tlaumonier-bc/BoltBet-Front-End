@@ -27,6 +27,7 @@ import { attachAtmosphereGlow } from '@/lib/globe/atmosphereGlow';
 import { attachLayers } from '@/lib/globe/layerManager';
 import { attachCountryStrikes } from '@/lib/globe/countryStrikesLayer';
 
+
 interface LightningGlobeProps {
   viewOnly?: boolean;
   fill?: boolean;

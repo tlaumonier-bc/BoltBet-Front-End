@@ -9,8 +9,8 @@ const MODES: { id: LiveViewMode; label: string }[] = [
 ]
 
 const MAP_STYLES: { id: GlobeMapStyle; label: string }[] = [
-  { id: 'night', label: 'Night' },
   { id: 'day', label: 'Day' },
+  { id: 'night', label: 'Night' },
 ]
 
 export default function ModeBar() {

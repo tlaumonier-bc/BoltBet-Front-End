@@ -21,6 +21,7 @@ import {
   COUNTRY_LABEL_FONT,
   COUNTRY_LABEL_DISTANCE_PER_DEG,
 } from './config';
+import { framingBoundsForIso } from '@/lib/map/countryBounds';
 
 const BORDER_LIFT = 1.0003; // ~2 km
 const HOVER_COLOR = Cesium.Color.fromCssColorString('#38bdf8');
@@ -455,14 +456,26 @@ export function loadCountryBorders(
 
         const meta = metaById.get(id);
         if (meta) {
-          console.log(
-            meta.label,
-            'rectCenterLon', Cesium.Math.toDegrees(Cesium.Rectangle.center(meta.rect).longitude).toFixed(1),
-            'mainCenterLon', meta.mainCenter.lon.toFixed(1),
-            'mainCenterLat', meta.mainCenter.lat.toFixed(1),
-            'widthDeg', Cesium.Math.toDegrees(meta.rect.width).toFixed(1),
-            'untrustworthy', rectUntrustworthy(meta.rect, meta.mainCenter),
-          );
+          // Curated mainland box wins over geometry framing for countries whose
+          // map parts span overseas territories (France→Guiana, etc.), which
+          // otherwise union into an ocean-centered rect.
+          const mainland = framingBoundsForIso(meta.iso2);
+          if (mainland) {
+            const lonPad = ((mainland.maxLon - mainland.minLon) * (COUNTRY_FLY_PADDING - 1)) / 2;
+            const latPad = ((mainland.maxLat - mainland.minLat) * (COUNTRY_FLY_PADDING - 1)) / 2;
+            camera.flyTo({
+              destination: Cesium.Rectangle.fromDegrees(
+                mainland.minLon - lonPad,
+                mainland.minLat - latPad,
+                mainland.maxLon + lonPad,
+                mainland.maxLat + latPad,
+              ),
+              duration: 1.4,
+            });
+            useLiveStore.getState().setSelectedCountry({ name: meta.label, iso2: meta.iso2 });
+            if (meta.slug) interactive.onPick?.(meta.slug);
+            return;
+          }
           if (rectUntrustworthy(meta.rect, meta.mainCenter)) {
             const spanDeg = Cesium.Math.toDegrees(Math.max(meta.rect.width, meta.rect.height));
             const heightM = Cesium.Math.clamp(spanDeg * 110_000, 2_000_000, 16_000_000);

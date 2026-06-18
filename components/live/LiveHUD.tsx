@@ -33,7 +33,7 @@ export default function LiveHUD() {
         {selectedCountry ? (
           <CountryPanel />
         ) : (
-          mode !== 'free' && <GlobeInfoPanel />
+          mode !== 'free' && <GlobeInfoPanel pro={mode === 'pro'} />
         )}
       </div>
     </>
