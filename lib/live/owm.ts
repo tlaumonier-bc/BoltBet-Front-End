@@ -1,44 +1,23 @@
-// lib/live/owm.ts
-// Minimal OpenWeatherMap "current weather" client (free tier, same key as the
-// globe tiles) + helpers to turn a condition into an emoji and an ISO-2 code
-// into a flag + country name. Works from the browser (OWM allows CORS).
-
-const KEY = process.env.NEXT_PUBLIC_OWM_API_KEY;
-const BASE = 'https://api.openweathermap.org/data/2.5/weather';
+// lib/live/owm.ts — weather now via OUR backend (key stays server-side).
+const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 
 export interface OwmNow {
   tempC: number;
-  clouds: number;   // %
+  clouds: number;
   windKph: number;
-  humidity: number; // %
-  main: string;     // "Clouds", "Rain", "Thunderstorm", …
-  icon: string;     // OWM icon code, e.g. "10d"
-  country: string | null; // ISO-2
+  humidity: number;
+  main: string;
+  icon: string;
+  country: string | null;
 }
 
 export async function fetchOwmNow(lat: number, lon: number): Promise<OwmNow | null> {
-  if (!KEY) return null;
-  const q = new URLSearchParams({
-    lat: String(lat),
-    lon: String(lon),
-    units: 'metric',
-    appid: KEY,
-  });
-  const res = await fetch(`${BASE}?${q}`, { cache: 'no-store' });
+  const q = new URLSearchParams({ lat: String(lat), lon: String(lon) });
+  const res = await fetch(`${API}/api/weather/now/?${q}`, { cache: 'no-store' });
   if (!res.ok) return null;
-  const d = await res.json();
-  return {
-    tempC: Math.round(d.main?.temp ?? 0),
-    clouds: Math.round(d.clouds?.all ?? 0),
-    windKph: Math.round((d.wind?.speed ?? 0) * 3.6),
-    humidity: Math.round(d.main?.humidity ?? 0),
-    main: d.weather?.[0]?.main ?? '—',
-    icon: d.weather?.[0]?.icon ?? '',
-    country: d.sys?.country ?? null,
-  };
+  return res.json();
 }
 
-/** Emoji for an OWM condition (night-aware for clear sky). */
 export function weatherEmoji(main: string, icon = ''): string {
   const night = icon.endsWith('n');
   switch (main) {
@@ -56,7 +35,6 @@ export function weatherEmoji(main: string, icon = ''): string {
   }
 }
 
-/** ISO-2 (e.g. "FR") → flag emoji. */
 export function flagEmoji(iso2: string | null): string {
   if (!iso2 || !/^[A-Za-z]{2}$/.test(iso2)) return '🏳️';
   const A = 0x1f1e6;
@@ -64,7 +42,6 @@ export function flagEmoji(iso2: string | null): string {
   return String.fromCodePoint(A + cc.charCodeAt(0) - 65, A + cc.charCodeAt(1) - 65);
 }
 
-/** ISO-2 → readable country name, via the browser's built-in Intl. */
 export function countryName(iso2: string | null): string {
   if (!iso2) return '—';
   try {

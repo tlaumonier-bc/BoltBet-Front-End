@@ -38,8 +38,8 @@ export interface RecentStrike {
   lat: number;
   lon: number;
   quality: string;
-  timestamp: string;    // ISO
-  received_at: string;  // ISO
+  timestamp: string;
+  received_at: string;
 }
 
 export interface RecentStrikesResponse {
@@ -48,6 +48,7 @@ export interface RecentStrikesResponse {
   count: number;
   strikes: RecentStrike[];
 }
+
 
 // ── NEW: per-minute series (/api/strikes/per-minute/) ───────────────────────
 export interface MinuteBucket {
@@ -111,12 +112,15 @@ export async function getRecentStrikes(
   minutes: number,
   limit = 5000,
   olderThan = 0,
+  opts: { after?: string; downsample?: number } = {},
 ): Promise<RecentStrikesResponse> {
   const q = new URLSearchParams({
     minutes: String(minutes),
     limit: String(limit),
     older_than: String(olderThan),
   });
+  if (opts.after) q.set('after', opts.after);
+  if (opts.downsample && opts.downsample > 1) q.set('downsample', String(opts.downsample));
   const res = await fetch(`${API}/api/strikes/recent/?${q}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`recent strikes ${res.status}`);
   return res.json();
