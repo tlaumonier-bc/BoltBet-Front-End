@@ -15,6 +15,7 @@ export interface LightningStrike {
   timestamp: number // epoch ms
   receivedAt: number
   quality: string   // good/medium/bad
+  country?: string | null // ISO-3166 alpha-2 from the backend ('XX' if unknown)
 }
 
 export interface Bet {

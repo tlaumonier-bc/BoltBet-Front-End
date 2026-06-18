@@ -50,6 +50,7 @@ export function useLightningSocket() {
               timestamp: ts,
               receivedAt: Date.now(),
               quality: msg.quality ?? 'good',
+              country: msg.country ?? null,
             }
             addStrike(strike)
             break
