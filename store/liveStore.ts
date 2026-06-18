@@ -1,10 +1,8 @@
 // store/liveStore.ts — state for the /live console.
 import { create } from 'zustand'
 import { DEFAULT_QUALITY, type GlobeQuality } from '@/lib/globe/quality'
-import {
-  defaultLayerState,
-  type GlobeLayerId,
-} from '@/lib/globe/layers'
+import { defaultLayerState, type GlobeLayerId } from '@/lib/globe/layers'
+import type { CountryStrike } from '@/lib/api'
 
 export type LiveViewMode = 'free' | 'beginner' | 'pro'
 export type GlobeMapStyle = 'night' | 'day'
@@ -15,10 +13,15 @@ export interface OrbitTarget {
   label: string
   lat: number
   lon: number
-  /** Camera altitude for the fly-to (m). Continents want a higher value than
-   *  point locations; falls back to FLY_HEIGHT_M in camera.ts when omitted. */
   flyHeightM?: number
   requestedAt: number
+}
+
+/** A country selected by clicking the globe. iso2 may be null for territories
+ *  Natural Earth has no ISO-2 code for (the strikes layer is then disabled). */
+export interface SelectedCountry {
+  name: string
+  iso2: string | null
 }
 
 interface LiveStore {
@@ -38,6 +41,14 @@ interface LiveStore {
   activeLayers: Record<GlobeLayerId, boolean>
   toggleLayer: (id: GlobeLayerId) => void
   setLayer: (id: GlobeLayerId, on: boolean) => void
+
+  // ── Selected country + its "latest 1000 strikes" layer ──
+  selectedCountry: SelectedCountry | null
+  setSelectedCountry: (c: SelectedCountry | null) => void
+  countryStrikesOn: boolean
+  setCountryStrikesOn: (on: boolean) => void
+  countryStrikes: CountryStrike[]
+  setCountryStrikes: (rows: CountryStrike[]) => void
 }
 
 export const useLiveStore = create<LiveStore>((set) => ({
@@ -58,4 +69,18 @@ export const useLiveStore = create<LiveStore>((set) => ({
     set((s) => ({ activeLayers: { ...s.activeLayers, [id]: !s.activeLayers[id] } })),
   setLayer: (id, on) =>
     set((s) => ({ activeLayers: { ...s.activeLayers, [id]: on } })),
+
+  selectedCountry: null,
+  // Selecting a country turns the strikes layer ON by default and clears stale
+  // points/stats; deselecting (null) turns it off.
+  setSelectedCountry: (selectedCountry) =>
+    set({
+      selectedCountry,
+      countryStrikesOn: !!selectedCountry,
+      countryStrikes: [],
+    }),
+  countryStrikesOn: false,
+  setCountryStrikesOn: (countryStrikesOn) => set({ countryStrikesOn }),
+  countryStrikes: [],
+  setCountryStrikes: (countryStrikes) => set({ countryStrikes }),
 }))

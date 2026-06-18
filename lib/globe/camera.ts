@@ -41,6 +41,36 @@ export function frameCamera(camera: Cesium.Camera, bounds: GlobeBounds | null): 
   camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z; // keeps the globe level + clean spin
 }
 
+
+/** Animated version of frameCamera — flies (instead of snapping) to the bounds,
+ *  or to the whole-globe view when bounds is null. Used to reset after a
+ *  country deselect. */
+export function flyToBounds(
+  camera: Cesium.Camera,
+  bounds: GlobeBounds | null,
+  duration = 1.2,
+): void {
+  if (bounds) {
+    const lonPad = ((bounds.maxLon - bounds.minLon) * (SEO_ZOOM_PADDING - 1)) / 2;
+    const latPad = ((bounds.maxLat - bounds.minLat) * (SEO_ZOOM_PADDING - 1)) / 2;
+    camera.flyTo({
+      destination: Cesium.Rectangle.fromDegrees(
+        bounds.minLon - lonPad,
+        bounds.minLat - latPad,
+        bounds.maxLon + lonPad,
+        bounds.maxLat + latPad,
+      ),
+      duration,
+    });
+  } else {
+    camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(0, 20, 20_000_000),
+      duration,
+    });
+  }
+}
+
+
 /**
  * When zoom is disabled, let wheel events scroll the page instead of being
  * swallowed by Cesium. Stop propagation in the capture phase but never
@@ -160,3 +190,5 @@ export function attachOrbitFlights({
   });
   return () => unsub();
 }
+
+

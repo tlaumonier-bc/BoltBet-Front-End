@@ -1,6 +1,5 @@
 // lib/globe/layerManager.ts
-// Applies the toggleable globe layers (lib/globe/layers.ts) to the Cesium
-// scene, driven by liveStore.activeLayers.
+// Applies the toggleable globe layers (lib/globe/layers.ts) to the Cesium scene.
 
 import * as Cesium from 'cesium';
 import { useLiveStore } from '@/store/liveStore';
@@ -25,20 +24,6 @@ export function attachLayers(viewer: Cesium.Viewer, scene: Cesium.Scene): () => 
     },
   };
 
-  // ── day-night terminator (frontend-only) ──────────────────────────────────
-  const dayNight: LayerEffect = {
-    enable: () => {
-      scene.globe.enableLighting = true;
-      scene.globe.dynamicAtmosphereLighting = true;
-      scene.globe.dynamicAtmosphereLightingFromSun = true;
-    },
-    disable: () => {
-      scene.globe.enableLighting = false;
-      scene.globe.dynamicAtmosphereLighting = false;
-      scene.globe.dynamicAtmosphereLightingFromSun = false;
-    },
-  };
-
   // ── backend-driven layers still stubbed ───────────────────────────────────
   const stub = (id: GlobeLayerId): LayerEffect => {
     let primitives: Cesium.PrimitiveCollection | null = null;
@@ -46,10 +31,8 @@ export function attachLayers(viewer: Cesium.Viewer, scene: Cesium.Scene): () => 
       enable: () => {
         if (primitives) return;
         primitives = scene.primitives.add(new Cesium.PrimitiveCollection());
-        //   density-grid   → /api/strikes/by-country/ or zone counts
-        //   storm-cells    → /api/stormcells
-        //   pulse-type     → /api/lightning (CG/IC)
-        //   alert-zones    → /api/alerts
+        //   density-grid → /api/strikes/by-country/ (per-country counts → choropleth)
+        //   alert-zones  → /api/alerts (shaded polygons)
         if (process.env.NODE_ENV !== 'production') {
           console.debug(`[layer] "${id}" enabled — backend wiring TODO`);
         }
@@ -64,11 +47,7 @@ export function attachLayers(viewer: Cesium.Viewer, scene: Cesium.Scene): () => 
   const effects: Record<GlobeLayerId, LayerEffect> = {
     'recent-strikes': makeRecentStrikesEffect(scene), // real (/api/strikes/recent/), last 30 min
     'storm-fog': stormFog,
-    'strike-pulse': stub('strike-pulse'),
-    'day-night': dayNight,
     'density-grid': stub('density-grid'),
-    'storm-cells': stub('storm-cells'),
-    'pulse-type': stub('pulse-type'),
     'alert-zones': stub('alert-zones'),
   };
 

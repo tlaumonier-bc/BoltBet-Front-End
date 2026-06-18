@@ -25,6 +25,7 @@ import { attachGameZones } from '@/lib/globe/gameZones';
 import { GlobeTooltip, GlobeZoomButtons, TileLoadingPill } from './GlobeOverlays';
 import { attachAtmosphereGlow } from '@/lib/globe/atmosphereGlow';
 import { attachLayers } from '@/lib/globe/layerManager';
+import { attachCountryStrikes } from '@/lib/globe/countryStrikesLayer';
 
 interface LightningGlobeProps {
   viewOnly?: boolean;
@@ -176,8 +177,15 @@ export default function LightningGlobe({
     // base imagery + day/night sync
     disposers.push(setupImagery(viewer));
 
-    // crisp vector borders + labels (async; self-guards on viewer.isDestroyed)
-    loadCountryBorders(viewer);
+    // camera framing target (computed early so country-picking can reset to it)
+    const bounds =
+      boundsMinLon != null && boundsMinLat != null && boundsMaxLon != null && boundsMaxLat != null
+        ? { minLon: boundsMinLon, minLat: boundsMinLat, maxLon: boundsMaxLon, maxLat: boundsMaxLat }
+        : null;
+
+    // crisp vector borders + labels (async; self-guards on viewer.isDestroyed).
+    // `interactive` makes countries clickable (fill + fly-to) on view-only globes.
+    disposers.push(loadCountryBorders(viewer, { interactive: viewOnly, homeBounds: bounds }));
 
     // dark "storm" look & feel + atmosphere
     configureScene(scene);
@@ -211,10 +219,6 @@ export default function LightningGlobe({
     disposers.push(attachLayers(viewer, scene));
 
     // camera framing
-    const bounds =
-      boundsMinLon != null && boundsMinLat != null && boundsMaxLon != null && boundsMaxLat != null
-        ? { minLon: boundsMinLon, minLat: boundsMinLat, maxLon: boundsMaxLon, maxLat: boundsMaxLat }
-        : null;
     frameCamera(camera, bounds);
 
     // zoom controls
@@ -234,9 +238,10 @@ export default function LightningGlobe({
       disposers.push(attachBettingGrid({ viewer, scene, tooltipEl: tooltipRef.current }));
     }
 
-    // "orbit to" flights (view-only pages)
+    // "orbit to" flights + per-country "latest 1000 strikes" layer (view-only)
     if (viewOnly) {
       disposers.push(attachOrbitFlights({ camera, interaction }));
+      disposers.push(attachCountryStrikes(scene));
     }
 
     // round-based game zones
