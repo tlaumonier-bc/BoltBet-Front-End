@@ -33,15 +33,39 @@ export interface LeaderboardRow {
   games_played?: number;
 }
 
-export interface StrikeStats {
-  last_60s: number;
-  last_10min: number;
-  last_15_min: number;
-  last_60_min: number;
-  last_24h: number;
-  buckets_15min: number[];
-  avg_latency_ms_60min: number | null;
-  server_time: string;
+// ── NEW: raw recent strikes (/api/strikes/recent/) ──────────────────────────
+export interface RecentStrike {
+  lat: number;
+  lon: number;
+  quality: string;
+  timestamp: string;    // ISO
+  received_at: string;  // ISO
+}
+
+export interface RecentStrikesResponse {
+  minutes: number;
+  count: number;        // number actually returned (may hit the backend cap)
+  strikes: RecentStrike[];
+}
+
+// ── NEW: per-minute series (/api/strikes/per-minute/) ───────────────────────
+export interface MinuteBucket {
+  minute: string;       // ISO, start of the minute
+  count: number;
+}
+
+export interface StrikesPerMinuteResponse {
+  minutes: number;
+  series: MinuteBucket[]; // oldest → newest, zero-filled
+}
+
+// ── NEW: per-country strikes (/api/strikes/by-country/) ─────────────────────
+export interface CountryStrike {
+  lat: number;
+  lon: number;
+  timestamp: string;
+  quality: string;
+  received_at: string;
 }
 
 export type LeaderboardKind = 'current' | 'wins' | 'average';
@@ -62,7 +86,7 @@ export async function getGameState(): Promise<GameState> {
 }
 
 export async function placePick(zoneId: string, username: string, country: string): Promise<PickResult> {
-    const res = await fetch(`${API}/api/game/pick/`, {
+  const res = await fetch(`${API}/api/game/pick/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
     credentials: 'same-origin',
@@ -81,8 +105,27 @@ export async function getLeaderboard(kind: LeaderboardKind): Promise<Leaderboard
   return res.json();
 }
 
-export async function getStrikeStats(): Promise<StrikeStats> {
-  const res = await fetch(`${API}/api/stats/strikes/`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`strike stats ${res.status}`);
+/** Raw strike positions over a recent window — drives the "Recent strikes" layer. */
+export async function getRecentStrikes(minutes: number, limit = 5000): Promise<RecentStrikesResponse> {
+  const q = new URLSearchParams({ minutes: String(minutes), limit: String(limit) });
+  const res = await fetch(`${API}/api/strikes/recent/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`recent strikes ${res.status}`);
   return res.json();
+}
+
+/** Global strike count per minute — drives the "Activity" sparkline. */
+export async function getStrikesPerMinute(minutes = 15): Promise<StrikesPerMinuteResponse> {
+  const q = new URLSearchParams({ minutes: String(minutes) });
+  const res = await fetch(`${API}/api/strikes/per-minute/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`per-minute ${res.status}`);
+  return res.json();
+}
+
+/** Newest N strikes for a single country (e.g. 'FR'). */
+export async function getCountryStrikes(country: string, limit = 1000): Promise<CountryStrike[]> {
+  const q = new URLSearchParams({ country, limit: String(limit) });
+  const res = await fetch(`${API}/api/strikes/by-country/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`country strikes ${res.status}`);
+  const data = (await res.json()) as Record<string, CountryStrike[]>;
+  return data[country.toUpperCase()] ?? [];
 }
