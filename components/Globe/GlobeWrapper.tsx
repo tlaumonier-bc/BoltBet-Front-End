@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
+import type { CountryLink } from '@/lib/globe/countryBorders';
 
 interface LightningGlobeProps {
   viewOnly?: boolean;
@@ -16,12 +17,12 @@ interface LightningGlobeProps {
   gameMode?: boolean;
   onPickZone?: (zoneId: string) => void;
   lockedZoneId?: string | null;
+  countryLinks?: CountryLink[];
+  onPickCountry?: (slug: string) => void;
 }
 
 const LightningGlobe = dynamic<LightningGlobeProps>(
   () => import('./LightningGlobe'),
-  // No `loading` placeholder: the GlobeLoader below covers BOTH the chunk
-  // download and the first tile load, so there's one continuous loader.
   { ssr: false }
 );
 

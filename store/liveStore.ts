@@ -57,7 +57,7 @@ export const useLiveStore = create<LiveStore>((set) => ({
   orbitTarget: null,
   orbitTo: (target) => set({ orbitTarget: { ...target, requestedAt: Date.now() } }),
   clearOrbit: () => set({ orbitTarget: null }),
-  mapStyle: 'night',
+  mapStyle: 'day',
   setMapStyle: (mapStyle) => set({ mapStyle }),
   atmosphere: true,
   setAtmosphere: (atmosphere) => set({ atmosphere }),

@@ -154,6 +154,16 @@ body {
 }
 
 
+/* Nudge the rendered globe down so it clears the fixed header. We move our own
+   container (robust to Cesium's internal DOM) and push the attribution credit
+   back up so it isn't clipped. Picking/zoom stay correct. Raise/lower 4vh. */
+.globe-drop .cesium-globe {
+  transform: translateY(4vh);
+}
+.globe-drop .cesium-globe .cesium-viewer-bottom {
+  transform: translateY(-4vh);
+}
+
 /* Cesium tile-loading spinner */
 .globe-loading-spinner {
   width: 14px;
