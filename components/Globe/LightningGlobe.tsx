@@ -180,6 +180,10 @@ export default function LightningGlobe({
             scene,
             links: links ?? [],
             onPick: (slug: string) => onPickCountryRef.current?.(slug),
+            homeBounds:
+              boundsMinLon != null && boundsMinLat != null && boundsMaxLon != null && boundsMaxLat != null
+                ? { minLon: boundsMinLon, minLat: boundsMinLat, maxLon: boundsMaxLon, maxLat: boundsMaxLat }
+                : null,
           }
         : undefined;
     disposers.push(loadCountryBorders(viewer, countryInteractive));

@@ -3,9 +3,13 @@
 // admin-0 GeoJSON at /public/geo/countries.geojson.
 // When `interactive` is provided, EVERY country becomes interactive:
 //   • hover  -> a subtle glowing border (invites a click)
-//   • click  -> a stronger, pulsing "light up" that stays on, + an orbit fly-in,
+//   • click  -> a stronger, pulsing "light up" that stays on, + an adaptive
+//               fly-in framed on the country's bounding box (or, for countries
+//               that wrap the ±180° antimeridian, on the main landmass center),
 //               and the country is written to liveStore.selectedCountry (drives
 //               the right-hand CountryPanel + the per-country strikes layer).
+//   • click again on the selected country (or close the panel) -> deselect and
+//               zoom straight back out in place (no recentering).
 // Countries that have a page (a CountryLink) also expose their slug via onPick.
 
 import * as Cesium from 'cesium';
@@ -26,6 +30,7 @@ const HOVER_FILL_ALPHA = 0.12;
 const SEL_REST = { width: 4.0, glow: 0.5, fill: 0.18 };
 const SEL_PEAK = { width: 7.0, glow: 1.0, fill: 0.42 };
 const PULSE_MS = 700;
+const COUNTRY_FLY_PADDING = 1.4; // breathing room around the country on zoom
 
 export interface CountryLink {
   iso: string;
@@ -39,6 +44,8 @@ export interface CountryInteractivity {
   scene: Cesium.Scene;
   links: CountryLink[];
   onPick?: (slug: string) => void;
+  /** Only used to decide how far to pull back on deselect. */
+  homeBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number } | null;
 }
 
 interface DetectPoly {
@@ -51,7 +58,9 @@ interface DetectPoly {
 interface CountryMeta {
   slug?: string; // present only for countries that have a page
   iso2: string | null; // ISO alpha-2 (uppercase) for the country-strikes endpoint
-  center: { lat: number; lon: number };
+  center: { lat: number; lon: number };     // link-provided or rect center
+  mainCenter: { lat: number; lon: number };  // centroid of the largest ring (robust to antimeridian)
+  rect: Cesium.Rectangle; // union bounds — drives adaptive zoom
   label: string;
   size: number; // vertices of the largest ring seen (to pick the best center)
 }
@@ -97,6 +106,24 @@ function pointInRing(lon: number, lat: number, ring: number[][]): boolean {
   return inside;
 }
 
+function expandRect(rect: Cesium.Rectangle, factor: number): Cesium.Rectangle {
+  const w = (rect.width * (factor - 1)) / 2;
+  const h = (rect.height * (factor - 1)) / 2;
+  return new Cesium.Rectangle(rect.west - w, rect.south - h, rect.east + w, rect.north + h);
+}
+
+// True when the unioned rect can't be trusted for framing — either it literally
+// spans >170° OR its center lands far from the country's main landmass, which
+// happens when parts straddle the ±180° antimeridian (Canada, Russia, Fiji, the
+// US with Alaska/Aleutians…). In those cases we frame by the main ring center.
+function rectUntrustworthy(rect: Cesium.Rectangle, mainCenter: { lon: number }): boolean {
+  if (Cesium.Math.toDegrees(rect.width) > 170) return true;
+  const rectCenterLon = Cesium.Math.toDegrees(Cesium.Rectangle.center(rect).longitude);
+  let d = Math.abs(rectCenterLon - mainCenter.lon);
+  if (d > 180) d = 360 - d;
+  return d > 40; // rect center > 40° of longitude from the main landmass = wrapped
+}
+
 export function loadCountryBorders(
   viewer: Cesium.Viewer,
   interactive?: CountryInteractivity,
@@ -124,6 +151,7 @@ export function loadCountryBorders(
     .then((ds) => {
       if (disposed || viewer.isDestroyed()) return;
       const scene = viewer.scene;
+      const camera = scene.camera;
       const ell = scene.globe.ellipsoid;
       const now = Cesium.JulianDate.now();
       const labels = new Map<string, { center: Cesium.Cartesian3; size: number; spanDeg: number }>();
@@ -209,15 +237,27 @@ export function loadCountryBorders(
             lat: Cesium.Math.toDegrees(cc.latitude),
             lon: Cesium.Math.toDegrees(cc.longitude),
           };
+          // Center of THIS (largest) ring's own rect — safe even when the whole
+          // country wraps the antimeridian, because a single ring doesn't.
+          const ringCenter = {
+            lat: Cesium.Math.toDegrees(cc.latitude),
+            lon: Cesium.Math.toDegrees(cc.longitude),
+          };
           const prev = metaById.get(id);
+          // Union the rect across this country's parts so the fly-to frames it all.
+          const unionRect = prev ? Cesium.Rectangle.union(prev.rect, rect) : rect;
           if (!prev || main.length > prev.size) {
             metaById.set(id, {
               slug: link?.slug,
               iso2: iso && iso !== '-99' ? iso.toUpperCase() : null,
               center: link?.center ?? geoCenter,
+              mainCenter: ringCenter, // centroid of the largest ring so far
+              rect: unionRect,
               label: link?.label ?? name ?? id,
               size: main.length,
             });
+          } else {
+            prev.rect = unionRect; // keep growing the union even for smaller parts
           }
         }
 
@@ -319,7 +359,7 @@ export function loadCountryBorders(
       };
 
       const idAtScreen = (pos: Cesium.Cartesian2): string | null => {
-        const cart = scene.camera.pickEllipsoid(pos, ell);
+        const cart = camera.pickEllipsoid(pos, ell);
         if (!cart) return null;
         const c = Cesium.Cartographic.fromCartesian(cart, ell);
         if (!c) return null;
@@ -341,6 +381,28 @@ export function loadCountryBorders(
         pulseRaf = requestAnimationFrame(tick);
       };
 
+      const homeBounds = interactive.homeBounds ?? null;
+
+      // Zoom out in place: keep the current lon/lat under the camera, just pull
+      // the altitude back. (No recentering — stays in front of the country.)
+      const DEFAULT_OUT_HEIGHT_M = 12_000_000;
+      const flyOut = () => {
+        const carto = camera.positionCartographic;
+        camera.flyTo({
+          destination: Cesium.Cartesian3.fromRadians(
+            carto.longitude,
+            carto.latitude,
+            homeBounds ? DEFAULT_OUT_HEIGHT_M * 0.6 : DEFAULT_OUT_HEIGHT_M,
+          ),
+          orientation: {
+            heading: camera.heading,
+            pitch: Cesium.Math.toRadians(-90), // straight down
+            roll: 0,
+          },
+          duration: 1.2,
+        });
+      };
+
       handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
       handler.setInputAction((m: Cesium.ScreenSpaceEventHandler.MotionEvent) => {
         const id = idAtScreen(m.endPosition);
@@ -356,27 +418,45 @@ export function loadCountryBorders(
       handler.setInputAction((c: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
         const id = idAtScreen(c.position);
         if (!id) return;
+
+        // Click the already-selected country → deselect + zoom back out.
+        if (id === selected) {
+          const prev = selected;
+          selected = null;
+          refresh(prev);
+          useLiveStore.getState().setSelectedCountry(null);
+          flyOut();
+          return;
+        }
+
         const prev = selected;
         selected = id;
         if (prev && prev !== id) refresh(prev);
         applyMode(id, 'selected');
         startPulse();
+
         const meta = metaById.get(id);
         if (meta) {
-          useLiveStore.getState().orbitTo({
-            id,
-            label: meta.label,
-            lat: meta.center.lat,
-            lon: meta.center.lon,
-          });
-          // Drive the right-hand CountryPanel + per-country strikes layer.
+          if (rectUntrustworthy(meta.rect, meta.mainCenter)) {
+            // Antimeridian-spanning country: frame by main landmass center + size.
+            const spanDeg = Cesium.Math.toDegrees(Math.max(meta.rect.width, meta.rect.height));
+            const heightM = Cesium.Math.clamp(spanDeg * 110_000, 2_000_000, 16_000_000);
+            camera.flyTo({
+              destination: Cesium.Cartesian3.fromDegrees(meta.mainCenter.lon, meta.mainCenter.lat, heightM),
+              duration: 1.4,
+            });
+          } else {
+            camera.flyTo({
+              destination: expandRect(meta.rect, COUNTRY_FLY_PADDING),
+              duration: 1.4,
+            });
+          }
           useLiveStore.getState().setSelectedCountry({ name: meta.label, iso2: meta.iso2 });
           if (meta.slug) interactive.onPick?.(meta.slug); // navigation hook (page countries only)
         }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-      // If the panel's close button (or anything) clears the store selection,
-      // turn off the country's lit border too.
+      // Panel ✕ (or anything clearing the store selection) → unlight + zoom out.
       let lastSelName = useLiveStore.getState().selectedCountry?.name ?? null;
       unsubStore = useLiveStore.subscribe((state) => {
         const cur = state.selectedCountry?.name ?? null;
@@ -386,6 +466,7 @@ export function loadCountryBorders(
           const prev = selected;
           selected = null;
           refresh(prev);
+          flyOut();
         }
       });
     })
