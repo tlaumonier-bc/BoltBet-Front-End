@@ -10,9 +10,9 @@ import { useState } from 'react';
 import { useLiveStore, type GlobeMapStyle } from '@/store/liveStore';
 
 const MAP_STYLES: { id: GlobeMapStyle; label: string }[] = [
-  { id: 'night', label: 'Night' },
   { id: 'day', label: 'Day' },
-];
+  { id: 'night', label: 'Night' },
+]
 
 export default function GlobeMapStyleToggle({
   defaultStyle,
