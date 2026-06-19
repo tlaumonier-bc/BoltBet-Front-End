@@ -8,7 +8,9 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import { useLiveStore } from '@/store/liveStore'
+import { useGameStore } from '@/store/gameStore'
 import { primaryPageForLocale } from '@/lib/content/content'
+import StrikeHistoryChart from './StrikeHistoryChart'
 
 function flagEmoji(iso2: string | null): string {
   if (!iso2 || !/^[A-Za-z]{2}$/.test(iso2)) return '🏳️'
@@ -27,6 +29,7 @@ function intensityFor(perMin: number): { label: string; color: string } {
 }
 
 function ago(sec: number): string {
+  if (sec < 5) return 'Now'
   if (sec < 90) return `${sec}s ago`
   const m = Math.round(sec / 60)
   return m < 60 ? `${m}m ago` : `${Math.round(m / 60)}h ago`
@@ -50,30 +53,45 @@ export default function CountryPanel() {
     return () => clearInterval(t)
   }, [])
 
+  // Freshest strike for this country from the LIVE feed (not the 30s poll),
+  // so "last strike" matches the bolts the user sees flashing on the globe.
+  // Reading getState() inside the now-driven memo re-evaluates each second
+  // tick without subscribing the panel to every incoming strike.
+  const liveLastAgeSec = useMemo(() => {
+    const iso = country?.iso2
+    if (!iso) return null
+    const target = iso.toUpperCase()
+    const strikes = useGameStore.getState().strikes // newest-first
+    for (const s of strikes) {
+      if (s.country && s.country.toUpperCase() === target) {
+        return Math.max(0, Math.round((now - s.receivedAt) / 1000))
+      }
+    }
+    return null
+  }, [country, now])
+
   const stats = useMemo(() => {
     if (!rows.length) return null
     const t = (s: { received_at: string }) => Date.parse(s.received_at)
     const newest = t(rows[0]) // endpoint returns newest-first
     const oldest = t(rows[rows.length - 1])
     let lastHour = 0
-    const q = { good: 0, medium: 0, bad: 0 }
     for (const r of rows) {
       if (now - t(r) <= 3_600_000) lastHour++
-      if (r.quality === 'good') q.good++
-      else if (r.quality === 'medium') q.medium++
-      else q.bad++
     }
     const spanMin = Math.max(0, Math.round((newest - oldest) / 60000))
     const perMin = spanMin > 0 ? Math.round(rows.length / spanMin) : rows.length
+    const polledAgeSec = Math.max(0, Math.round((now - newest) / 1000))
     return {
       total: rows.length,
-      lastAgeSec: Math.max(0, Math.round((now - newest) / 1000)),
+      // prefer the live feed; fall back to the polled snapshot
+      lastAgeSec:
+        liveLastAgeSec != null ? Math.min(liveLastAgeSec, polledAgeSec) : polledAgeSec,
       spanMin,
       perMin,
       lastHour,
-      q,
     }
-  }, [rows, now])
+  }, [rows, now, liveLastAgeSec])
 
   if (!country) return null
 
@@ -172,22 +190,8 @@ export default function CountryPanel() {
             <Stat value={ago(stats.lastAgeSec)} label="last strike" />
           </div>
 
-          {/* signal quality */}
-          <div className="mt-4">
-            <div className="mb-1.5 text-[10px] uppercase tracking-wider text-white/40">
-              Signal quality
-            </div>
-            <div className="flex h-2 overflow-hidden rounded-full bg-white/10">
-              <span className="bg-emerald-400" style={{ width: `${pct(stats.q.good, stats.total)}%` }} />
-              <span className="bg-bolt" style={{ width: `${pct(stats.q.medium, stats.total)}%` }} />
-              <span className="bg-red-400" style={{ width: `${pct(stats.q.bad, stats.total)}%` }} />
-            </div>
-            <div className="mt-1 flex justify-between text-[10px] text-white/40">
-              <span className="text-emerald-400/80">good {pct(stats.q.good, stats.total)}%</span>
-              <span className="text-bolt/80">med {pct(stats.q.medium, stats.total)}%</span>
-              <span className="text-red-400/80">bad {pct(stats.q.bad, stats.total)}%</span>
-            </div>
-          </div>
+          {/* strike history chart (replaces signal quality) */}
+          <StrikeHistoryChart rows={rows} now={now} />
 
           <p className="mt-3 text-[10px] leading-relaxed text-white/30">
             Latest {stats.total.toLocaleString()} strikes · {span(stats.spanMin)} window
@@ -208,8 +212,4 @@ function Stat({ value, unit, label }: { value: string; unit?: string; label: str
       <div className="mt-1.5 text-[10px] uppercase tracking-wider text-white/40">{label}</div>
     </div>
   )
-}
-
-function pct(n: number, total: number): number {
-  return total ? Math.round((n / total) * 100) : 0
 }
