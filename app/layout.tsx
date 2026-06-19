@@ -4,7 +4,6 @@ import { Unbounded, Sora } from 'next/font/google';
 import './globals.css';
 import Nav from '@/components/Nav/Nav';
 import Toaster from '@/components/Toaster/Toaster';
-import BetModal from '@/components/BetModal/BetModal';
 import { site } from '@/lib/content/content';
 
 const unbounded = Unbounded({
@@ -76,7 +75,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Nav />
         {children}
         <Toaster />
-        <BetModal />
       </body>
     </html>
   );

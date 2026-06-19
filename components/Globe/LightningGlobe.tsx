@@ -20,14 +20,10 @@ import {
   setupWheelPassthrough,
   type InteractionState,
 } from '@/lib/globe/camera';
-import { attachBettingGrid } from '@/lib/globe/bettingGrid';
-import { attachGameZones } from '@/lib/globe/gameZones';
 import { GlobeTooltip, GlobeZoomButtons, TileLoadingPill } from './GlobeOverlays';
 import { attachAtmosphereGlow } from '@/lib/globe/atmosphereGlow';
 import { attachLayers } from '@/lib/globe/layerManager';
 import { attachCountryStrikes } from '@/lib/globe/countryStrikesLayer';
-import { attachBetZoneGrid } from '@/lib/globe/betZoneGrid';
-
 
 interface LightningGlobeProps {
   viewOnly?: boolean;
@@ -37,9 +33,6 @@ interface LightningGlobeProps {
   autoRotate?: boolean;
   initialBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number };
   onReady?: () => void;
-  gameMode?: boolean;
-  onPickZone?: (zoneId: string) => void;
-  lockedZoneId?: string | null;
   countryLinks?: CountryLink[];
   onPickCountry?: (slug: string) => void;
 }
@@ -52,8 +45,6 @@ export default function LightningGlobe({
   autoRotate,
   initialBounds,
   onReady,
-  gameMode = false,
-  onPickZone,
   countryLinks,
   onPickCountry,
 }: LightningGlobeProps) {
@@ -66,13 +57,17 @@ export default function LightningGlobe({
   const [tilesLoading, setTilesLoading] = useState(false);
 
   const onReadyRef = useRef(onReady);
-  useEffect(() => { onReadyRef.current = onReady; }, [onReady]);
-  const onPickRef = useRef(onPickZone);
-  useEffect(() => { onPickRef.current = onPickZone; }, [onPickZone]);
+  useEffect(() => {
+    onReadyRef.current = onReady;
+  }, [onReady]);
   const onPickCountryRef = useRef(onPickCountry);
-  useEffect(() => { onPickCountryRef.current = onPickCountry; }, [onPickCountry]);
+  useEffect(() => {
+    onPickCountryRef.current = onPickCountry;
+  }, [onPickCountry]);
   const linksRef = useRef(countryLinks);
-  useEffect(() => { linksRef.current = countryLinks; }, [countryLinks]);
+  useEffect(() => {
+    linksRef.current = countryLinks;
+  }, [countryLinks]);
 
   const boundsMinLon = initialBounds?.minLon;
   const boundsMinLat = initialBounds?.minLat;
@@ -123,7 +118,9 @@ export default function LightningGlobe({
     const onCameraMove = () => {
       if (viewer.resolutionScale !== 1) viewer.resolutionScale = 1;
       if (resTimer) clearTimeout(resTimer);
-      resTimer = setTimeout(() => { viewer.resolutionScale = highScale; }, 200);
+      resTimer = setTimeout(() => {
+        viewer.resolutionScale = highScale;
+      }, 200);
     };
     camera.changed.addEventListener(onCameraMove);
     disposers.push(() => {
@@ -173,21 +170,27 @@ export default function LightningGlobe({
     // base imagery + day/night sync
     disposers.push(setupImagery(viewer));
 
-    // crisp vector borders + labels; interactive (hover glow + click orbit +
-    // CountryPanel/strikes) on view-only globes that aren't the game.
+    // crisp vector borders + labels; interactive (hover + click) on view-only globes.
     const links = linksRef.current;
-    const countryInteractive =
-      viewOnly && !gameMode
-        ? {
-            scene,
-            links: links ?? [],
-            onPick: (slug: string) => onPickCountryRef.current?.(slug),
-            homeBounds:
-              boundsMinLon != null && boundsMinLat != null && boundsMaxLon != null && boundsMaxLat != null
-                ? { minLon: boundsMinLon, minLat: boundsMinLat, maxLon: boundsMaxLon, maxLat: boundsMaxLat }
-                : null,
-          }
-        : undefined;
+    const countryInteractive = viewOnly
+      ? {
+          scene,
+          links: links ?? [],
+          onPick: (slug: string) => onPickCountryRef.current?.(slug),
+          homeBounds:
+            boundsMinLon != null &&
+            boundsMinLat != null &&
+            boundsMaxLon != null &&
+            boundsMaxLat != null
+              ? {
+                  minLon: boundsMinLon,
+                  minLat: boundsMinLat,
+                  maxLon: boundsMaxLon,
+                  maxLat: boundsMaxLat,
+                }
+              : null,
+        }
+      : undefined;
     disposers.push(loadCountryBorders(viewer, countryInteractive));
 
     // dark "storm" look & feel + atmosphere
@@ -239,30 +242,10 @@ export default function LightningGlobe({
     // live lightning strikes
     disposers.push(attachLightningStrikes(scene));
 
-    // legacy multiplier betting grid (old play mode only)
-    if (!viewOnly && !gameMode) {
-      disposers.push(attachBettingGrid({ viewer, scene, tooltipEl: tooltipRef.current }));
-    }
-
-    // "orbit to" flights + per-country "latest 1000 strikes" layer (view-only)
     // "orbit to" flights + per-country "latest 1000 strikes" layer (view-only)
     if (viewOnly) {
       disposers.push(attachOrbitFlights({ camera, interaction }));
       disposers.push(attachCountryStrikes(scene));
-      // Game-mode betting grid (lazily built, shown only when mode === 'game').
-      disposers.push(attachBetZoneGrid({ viewer, scene, camera }));
-    }
-
-    // round-based game zones
-    if (gameMode) {
-      disposers.push(
-        attachGameZones({
-          viewer,
-          scene,
-          camera,
-          onPick: (z) => onPickRef.current?.(z),
-        }),
-      );
     }
 
     return () => {
@@ -274,7 +257,6 @@ export default function LightningGlobe({
     enableZoom,
     showZoomButtons,
     spin,
-    gameMode,
     boundsMinLon,
     boundsMinLat,
     boundsMaxLon,
@@ -287,10 +269,7 @@ export default function LightningGlobe({
       <GlobeTooltip ref={tooltipRef} />
       <TileLoadingPill visible={tilesLoading} />
       {showZoomButtons && (
-        <GlobeZoomButtons
-          onZoomIn={() => zoomInRef.current()}
-          onZoomOut={() => zoomOutRef.current()}
-        />
+        <GlobeZoomButtons onZoomIn={() => zoomInRef.current()} onZoomOut={() => zoomOutRef.current()} />
       )}
     </div>
   );

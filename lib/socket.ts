@@ -1,14 +1,12 @@
 'use client'
-// lib/socket.ts — single WebSocket to the backend.
-// Strikes -> globe store; game events (round_start / round_end / leaderboard) -> play store.
+// lib/socket.ts — single WebSocket to the backend. Strikes → globe store.
 
 import { useEffect, useRef } from 'react'
 import { useGameStore } from '@/store/gameStore'
-import { usePlayStore } from '@/store/playStore'
 import type { LightningStrike } from '@/types'
 
 function resolveWsUrl(): string {
-  if (process.env.NEXT_PUBLIC_WS_URL) return process.env.NEXT_PUBLIC_WS_URL // dev/local override
+  if (process.env.NEXT_PUBLIC_WS_URL) return process.env.NEXT_PUBLIC_WS_URL
   if (typeof window !== 'undefined') {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws'
     return `${proto}://${location.host}/ws/lightning/`
@@ -23,7 +21,6 @@ export function useLightningSocket() {
   useEffect(() => {
     let closed = false
     let retry: ReturnType<typeof setTimeout>
-    const play = usePlayStore.getState
 
     function connect() {
       const ws = new WebSocket(resolveWsUrl())
@@ -36,37 +33,21 @@ export function useLightningSocket() {
         } catch {
           return
         }
-
-        switch (msg.type) {
-          case 'strike': {
-            const ts =
-              typeof msg.timestamp === 'number'
-                ? msg.timestamp
-                : Date.parse(msg.timestamp) || Date.now()
-            const strike: LightningStrike = {
-              id: crypto.randomUUID(),
-              lat: msg.lat,
-              lon: msg.lon,
-              timestamp: ts,
-              receivedAt: Date.now(),
-              quality: msg.quality ?? 'good',
-              country: msg.country ?? null,
-            }
-            addStrike(strike)
-            break
+        if (msg.type === 'strike') {
+          const ts =
+            typeof msg.timestamp === 'number'
+              ? msg.timestamp
+              : Date.parse(msg.timestamp) || Date.now()
+          const strike: LightningStrike = {
+            id: crypto.randomUUID(),
+            lat: msg.lat,
+            lon: msg.lon,
+            timestamp: ts,
+            receivedAt: Date.now(),
+            quality: msg.quality ?? 'good',
+            country: msg.country ?? null,
           }
-          case 'round_start':
-            play().setRound(msg.round, msg.endsAt, msg.durationSeconds)
-            play().clearLock()
-            break
-          case 'round_end':
-            play().endRound(msg.round, msg.leaderboard ?? [], msg.nextRoundAt)
-            break
-          case 'leaderboard':
-            play().setBoard(msg.leaderboard ?? [])
-            break
-          default:
-            break
+          addStrike(strike)
         }
       }
 

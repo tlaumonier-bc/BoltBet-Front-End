@@ -423,10 +423,6 @@ export function loadCountryBorders(
 
       handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
       handler.setInputAction((m: Cesium.ScreenSpaceEventHandler.MotionEvent) => {
-        if (useLiveStore.getState().mode === 'game') {
-          if (hovered) { const old = hovered; hovered = null; refresh(old); scene.canvas.style.cursor = 'default'; }
-          return;
-        }
         const id = idAtScreen(m.endPosition);
         if (id !== hovered) {
           const old = hovered;
@@ -438,7 +434,6 @@ export function loadCountryBorders(
       }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
       handler.setInputAction((c: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
-        if (useLiveStore.getState().mode === 'game') return;
         const id = idAtScreen(c.position);
         if (!id) return;
 
