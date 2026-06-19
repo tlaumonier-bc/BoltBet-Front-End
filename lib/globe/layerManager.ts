@@ -3,7 +3,7 @@ import * as Cesium from 'cesium';
 import { useLiveStore } from '@/store/liveStore';
 import { ALL_LAYER_IDS, type GlobeLayerId } from './layers';
 import { makeRecentStrikesEffect } from './recentStrikesLayer';
-import { OWM_KEY, addOwmLayer } from './imagery';
+import { addOwmLayer } from './imagery';
 
 interface LayerEffect {
   enable: () => void;
@@ -11,24 +11,17 @@ interface LayerEffect {
 }
 
 export function attachLayers(viewer: Cesium.Viewer, scene: Cesium.Scene): () => void {
-  // ── storm-fog → cloud cover (OWM), haze fallback ──
-  const baseFogDensity = scene.fog.density;
+  // ── storm-fog → cloud cover (OWM, proxied via backend) ──
   let cloudsLayer: Cesium.ImageryLayer | null = null;
   const stormFog: LayerEffect = {
     enable: () => {
-      if (OWM_KEY) {
-        if (!cloudsLayer) cloudsLayer = addOwmLayer(viewer, 'clouds_new', 0.6, 'clouds');
-      } else {
-        scene.fog.enabled = true;
-        scene.fog.density = 0.0006;
-      }
+      if (!cloudsLayer) cloudsLayer = addOwmLayer(viewer, 'clouds_new', 0.6, 'clouds');
     },
     disable: () => {
       if (cloudsLayer && !viewer.isDestroyed()) {
         viewer.imageryLayers.remove(cloudsLayer);
         cloudsLayer = null;
       }
-      scene.fog.density = baseFogDensity;
     },
   };
 
@@ -36,7 +29,7 @@ export function attachLayers(viewer: Cesium.Viewer, scene: Cesium.Scene): () => 
   let rainLayer: Cesium.ImageryLayer | null = null;
   const precipitation: LayerEffect = {
     enable: () => {
-      if (!OWM_KEY || rainLayer) return;
+      if (rainLayer) return;
       rainLayer = addOwmLayer(viewer, 'precipitation_new', 1.0, 'precipitation');
       rainLayer.saturation = 2.2;
       rainLayer.contrast = 1.4;
@@ -54,7 +47,7 @@ export function attachLayers(viewer: Cesium.Viewer, scene: Cesium.Scene): () => 
   let tempLayer: Cesium.ImageryLayer | null = null;
   const temperature: LayerEffect = {
     enable: () => {
-      if (!OWM_KEY || tempLayer) return;
+      if (tempLayer) return;
       tempLayer = addOwmLayer(viewer, 'temp_new', 0.5, 'temperature');
     },
     disable: () => {
@@ -69,7 +62,7 @@ export function attachLayers(viewer: Cesium.Viewer, scene: Cesium.Scene): () => 
   let windLayer: Cesium.ImageryLayer | null = null;
   const wind: LayerEffect = {
     enable: () => {
-      if (!OWM_KEY || windLayer) return;
+      if (windLayer) return;
       windLayer = addOwmLayer(viewer, 'wind_new', 0.5, 'wind');
     },
     disable: () => {

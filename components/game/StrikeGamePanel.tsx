@@ -68,7 +68,7 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
   const countdown =
     vm.phase === 'betting'
       ? `${Math.ceil(vm.msUntilLock / 1000)}s to bet`
-      : `${Math.ceil(vm.msUntilResolve / 1000)}s to result`;
+      : `${Math.ceil(vm.msUntilResolve / 1000)}seconds to result`;
 
   return (
     <div className="glass panel-scroll pointer-events-auto min-h-0 w-full overflow-y-auto rounded-2xl p-4">

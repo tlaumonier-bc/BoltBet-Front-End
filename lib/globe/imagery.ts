@@ -1,13 +1,15 @@
 // lib/globe/imagery.ts
 // Night (Black Marble) + day (Blue Marble) base imagery, toggled via the /live
-// HUD store. Country names now come from crisp vector labels (countryBorders),
-// so the old blurry raster-label layer is gone.
+// HUD store. Country names now come from crisp vector labels (countryBorders).
+//
+// OWM weather tiles are now proxied through OUR backend
+// (/api/weather/tiles/<layer>/{z}/{x}/{y}.png) so the OpenWeatherMap key stays
+// server-side and is never shipped in the client bundle.
 
 import * as Cesium from 'cesium';
 import { useLiveStore } from '@/store/liveStore';
 
-export const OWM_KEY = process.env.NEXT_PUBLIC_OWM_API_KEY;
-
+const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 
 export function addOwmLayer(
   viewer: Cesium.Viewer,
@@ -17,7 +19,8 @@ export function addOwmLayer(
 ): Cesium.ImageryLayer {
   const imageryLayer = viewer.imageryLayers.addImageryProvider(
     new Cesium.UrlTemplateImageryProvider({
-      url: `https://tile.openweathermap.org/map/${layer}/{z}/{x}/{y}.png?appid=${OWM_KEY}`,
+      // No appid here — the backend appends the key.
+      url: `${API}/api/weather/tiles/${layer}/{z}/{x}/{y}.png`,
       maximumLevel: 8,
       credit: `OpenWeatherMap — ${label}`,
     }),
@@ -41,10 +44,6 @@ export function setupImagery(viewer: Cesium.Viewer): () => void {
       credit: 'NASA EOSDIS GIBS — Blue Marble',
     }),
   );
-
-  if (!OWM_KEY && typeof window !== 'undefined') {
-    console.warn('[imagery] NEXT_PUBLIC_OWM_API_KEY not set — Clouds/Rain layers disabled.');
-  }
 
   const applyMapStyle = (style: 'night' | 'day') => {
     nightLayer.show = style === 'night';
