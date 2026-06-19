@@ -26,6 +26,7 @@ import { GlobeTooltip, GlobeZoomButtons, TileLoadingPill } from './GlobeOverlays
 import { attachAtmosphereGlow } from '@/lib/globe/atmosphereGlow';
 import { attachLayers } from '@/lib/globe/layerManager';
 import { attachCountryStrikes } from '@/lib/globe/countryStrikesLayer';
+import { attachBetZoneGrid } from '@/lib/globe/betZoneGrid';
 
 
 interface LightningGlobeProps {
@@ -244,9 +245,12 @@ export default function LightningGlobe({
     }
 
     // "orbit to" flights + per-country "latest 1000 strikes" layer (view-only)
+    // "orbit to" flights + per-country "latest 1000 strikes" layer (view-only)
     if (viewOnly) {
       disposers.push(attachOrbitFlights({ camera, interaction }));
       disposers.push(attachCountryStrikes(scene));
+      // Game-mode betting grid (lazily built, shown only when mode === 'game').
+      disposers.push(attachBetZoneGrid({ viewer, scene, camera }));
     }
 
     // round-based game zones

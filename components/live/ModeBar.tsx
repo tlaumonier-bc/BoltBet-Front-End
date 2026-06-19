@@ -1,11 +1,12 @@
 'use client'
-// components/live/ModeBar.tsx — Day/Night imagery toggle + Free/Beginner/Pro switch.
+// components/live/ModeBar.tsx — Day/Night imagery toggle + Free/Beginner/Pro/Game switch.
 import { useLiveStore, type LiveViewMode, type GlobeMapStyle } from '@/store/liveStore'
 
 const MODES: { id: LiveViewMode; label: string }[] = [
   { id: 'free', label: 'Free' },
   { id: 'beginner', label: 'Beginner' },
   { id: 'pro', label: 'Pro' },
+  { id: 'game', label: 'Game' },
 ]
 
 const MAP_STYLES: { id: GlobeMapStyle; label: string }[] = [
@@ -38,7 +39,7 @@ export default function ModeBar() {
         ))}
       </div>
 
-      {/* Free / Beginner / Pro */}
+      {/* Free / Beginner / Pro / Game */}
       <div className="glass pointer-events-auto flex shrink-0 self-start rounded-full p-1 text-xs font-semibold">
         {MODES.map((m) => (
           <button

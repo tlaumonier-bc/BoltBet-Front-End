@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { pages, pageBySlug } from '@/lib/content/content';
 import { buildMetadata } from '@/lib/seo/metadata';
-import SeoMapPage from '@/components/seo/SeoMapPage';
+import { pageJsonLd } from '@/lib/seo/schema';
+import GlobeExperience from '@/components/experience/GlobeExperience';
 
 export const dynamicParams = false;
 
@@ -22,5 +23,15 @@ export default async function LocaleMapPage({ params }: { params: Promise<Params
   const { locale, slug } = await params;
   const page = pageBySlug(`/${locale}/${slug}`);
   if (!page) notFound();
-  return <SeoMapPage page={page} />;
+
+  return (
+    <>
+      {/* structured data — server-rendered */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd(page)) }}
+      />
+      <GlobeExperience initialPage={page} />
+    </>
+  );
 }

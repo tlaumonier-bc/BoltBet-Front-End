@@ -57,3 +57,7 @@ export function allZones(): ZoneBox[] {
   }
   return out;
 }
+
+// Re-exported so lib/game/multiplier.ts can reference a helper symbol without
+// pulling Cesium. No behaviour change.
+export const zoneSolidAngleHelper = null;

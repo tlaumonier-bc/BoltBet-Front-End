@@ -423,6 +423,10 @@ export function loadCountryBorders(
 
       handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
       handler.setInputAction((m: Cesium.ScreenSpaceEventHandler.MotionEvent) => {
+        if (useLiveStore.getState().mode === 'game') {
+          if (hovered) { const old = hovered; hovered = null; refresh(old); scene.canvas.style.cursor = 'default'; }
+          return;
+        }
         const id = idAtScreen(m.endPosition);
         if (id !== hovered) {
           const old = hovered;
@@ -434,8 +438,8 @@ export function loadCountryBorders(
       }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
       handler.setInputAction((c: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
+        if (useLiveStore.getState().mode === 'game') return;
         const id = idAtScreen(c.position);
-        console.log('[country click] id =', id);
         if (!id) return;
 
         // Click the already-selected country → deselect + zoom back out.
@@ -499,17 +503,56 @@ export function loadCountryBorders(
         }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-      // Panel ✕ (or anything clearing the store selection) → unlight + zoom out.
-      let lastSelName = useLiveStore.getState().selectedCountry?.name ?? null;
+      // ── External selection sync (deep landing on an SEO page, browser
+      //    back/forward, or any programmatic store change) ───────────────────
+      const idForIso = (iso2: string | null | undefined): string | null => {
+        if (!iso2) return null;
+        const want = iso2.toUpperCase();
+        for (const [cid, meta] of metaById) if (meta.iso2 === want) return cid;
+        return null;
+      };
+
+      // If a country is already selected when the borders finish loading
+      // (e.g. /fi/ukkostutka deep link), light it up now. Camera framing is
+      // handled by initialBounds on cold-land, so we only apply the highlight.
+      const initialSel = useLiveStore.getState().selectedCountry;
+      let lastSelName = initialSel?.name ?? null;
+      if (initialSel?.iso2) {
+        const id0 = idForIso(initialSel.iso2);
+        if (id0) {
+          selected = id0;
+          applyMode(id0, 'selected');
+          startPulse();
+        }
+      }
+
       unsubStore = useLiveStore.subscribe((state) => {
-        const cur = state.selectedCountry?.name ?? null;
-        if (cur === lastSelName) return;
-        lastSelName = cur;
-        if (cur === null && selected) {
+        const cur = state.selectedCountry;
+        const curName = cur?.name ?? null;
+        if (curName === lastSelName) return;
+        lastSelName = curName;
+
+        // Cleared (panel ✕, deselect, back to '/') → unlight + zoom out.
+        if (curName === null) {
+          if (selected) {
+            const prev = selected;
+            selected = null;
+            refresh(prev);
+            flyOut();
+          }
+          return;
+        }
+
+        // Selected via the store rather than a direct click. The click handler
+        // already lights up + flies and sets `selected`, so this is a no-op for
+        // clicks; here we light up the new country without flying.
+        const id = idForIso(cur?.iso2);
+        if (id && id !== selected) {
           const prev = selected;
-          selected = null;
-          refresh(prev);
-          flyOut();
+          selected = id;
+          if (prev) refresh(prev);
+          applyMode(id, 'selected');
+          startPulse();
         }
       });
     })

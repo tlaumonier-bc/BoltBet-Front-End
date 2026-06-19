@@ -1,13 +1,14 @@
 'use client'
 // components/live/CountryPanel.tsx
-// Right-side panel shown when the user clicks a country on the globe. Renders
-// country info + the "Latest 1000 strikes in <country>" layer switch (yes/no).
-// Selecting a country (in countryBorders) turns the switch on by default; the
-// strikes themselves are fetched/rendered by lib/globe/countryStrikesLayer.ts,
-// which also feeds liveStore.countryStrikes that this panel reads for stats.
+// Right-side panel shown when the user clicks a country on the globe. Country
+// header (with a live/idle pulse), a "Learn more" CTA into the SEO copy, and a
+// compact readout derived from the per-country strikes layer (auto-enabled on
+// selection by liveStore.setSelectedCountry; fetched/rendered by
+// lib/globe/countryStrikesLayer.ts, which feeds liveStore.countryStrikes).
 
 import { useMemo, useState, useEffect } from 'react'
 import { useLiveStore } from '@/store/liveStore'
+import { primaryPageForLocale } from '@/lib/content/content'
 
 function flagEmoji(iso2: string | null): string {
   if (!iso2 || !/^[A-Za-z]{2}$/.test(iso2)) return '🏳️'
@@ -16,14 +17,34 @@ function flagEmoji(iso2: string | null): string {
   return String.fromCodePoint(A + cc.charCodeAt(0) - 65, A + cc.charCodeAt(1) - 65)
 }
 
+// Average strikes/min over the loaded window → a human "how busy is it" label.
+function intensityFor(perMin: number): { label: string; color: string } {
+  if (perMin >= 60) return { label: 'Intense', color: 'text-red-400' }
+  if (perMin >= 20) return { label: 'Active', color: 'text-orange-300' }
+  if (perMin >= 5) return { label: 'Moderate', color: 'text-bolt' }
+  if (perMin >= 1) return { label: 'Light', color: 'text-electric' }
+  return { label: 'Calm', color: 'text-white/50' }
+}
+
+function ago(sec: number): string {
+  if (sec < 90) return `${sec}s ago`
+  const m = Math.round(sec / 60)
+  return m < 60 ? `${m}m ago` : `${Math.round(m / 60)}h ago`
+}
+
+function span(min: number): string {
+  if (min >= 1440) return `${Math.round(min / 1440)}d`
+  if (min >= 60) return `${Math.round(min / 60)}h`
+  return `${min}m`
+}
+
 export default function CountryPanel() {
   const country = useLiveStore((s) => s.selectedCountry)
-  const on = useLiveStore((s) => s.countryStrikesOn)
-  const setOn = useLiveStore((s) => s.setCountryStrikesOn)
   const setSelected = useLiveStore((s) => s.setSelectedCountry)
+  const setSeoContentOpen = useLiveStore((s) => s.setSeoContentOpen)
   const rows = useLiveStore((s) => s.countryStrikes)
 
-const [now, setNow] = useState(() => Date.now())
+  const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(t)
@@ -42,10 +63,13 @@ const [now, setNow] = useState(() => Date.now())
       else if (r.quality === 'medium') q.medium++
       else q.bad++
     }
+    const spanMin = Math.max(0, Math.round((newest - oldest) / 60000))
+    const perMin = spanMin > 0 ? Math.round(rows.length / spanMin) : rows.length
     return {
-      count: rows.length,
+      total: rows.length,
       lastAgeSec: Math.max(0, Math.round((now - newest) / 1000)),
-      spanMin: Math.max(0, Math.round((newest - oldest) / 60000)),
+      spanMin,
+      perMin,
       lastHour,
       q,
     }
@@ -54,17 +78,37 @@ const [now, setNow] = useState(() => Date.now())
   if (!country) return null
 
   const hasData = !!country.iso2
+  const learnMore = country.iso2 ? primaryPageForLocale(country.iso2.toLowerCase()) : undefined
+  const live = stats != null && stats.lastAgeSec < 120
+  const tone = stats ? intensityFor(stats.perMin) : null
 
   return (
     <div className="glass panel-scroll pointer-events-auto min-h-0 w-full overflow-y-auto rounded-2xl p-4">
       {/* header */}
       <div className="flex items-start justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl leading-none">{flagEmoji(country.iso2)}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-3xl leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.4)]">
+            {flagEmoji(country.iso2)}
+          </span>
           <div>
             <div className="font-display text-base font-bold leading-tight">{country.name}</div>
-            <div className="text-[11px] uppercase tracking-wider text-white/45">
-              {country.iso2 ?? '—'}
+            <div className="mt-1 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-white/45">
+              {hasData ? (
+                <>
+                  <span
+                    className={`inline-block h-1.5 w-1.5 rounded-full ${
+                      live ? 'live-dot bg-emerald-400' : 'bg-white/30'
+                    }`}
+                  />
+                  <span className={live ? 'text-emerald-400' : 'text-white/45'}>
+                    {live ? 'Live' : 'Idle'}
+                  </span>
+                  <span className="text-white/25">·</span>
+                  <span>{country.iso2}</span>
+                </>
+              ) : (
+                <span>No strike data</span>
+              )}
             </div>
           </div>
         </div>
@@ -78,80 +122,90 @@ const [now, setNow] = useState(() => Date.now())
         </button>
       </div>
 
-      {/* layer switch */}
-      <div className="mt-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/4 px-4 py-3">
-        <div className="pr-3">
-          <div className="text-sm font-medium text-white/90">
-            Latest 1000 strikes in {country.name}
-          </div>
-          <div className="text-[11px] text-white/45">
-            Shows the most recent strikes regardless of age.
-          </div>
-        </div>
+      {/* learn more → slides up to the localized SEO copy */}
+      {learnMore && (
         <button
           type="button"
-          role="switch"
-          aria-checked={on}
-          disabled={!hasData}
-          onClick={() => setOn(!on)}
-          className={`relative h-6 w-11 shrink-0 rounded-full transition disabled:opacity-30 ${
-            on ? 'bg-electric' : 'bg-white/15'
-          }`}
+          onClick={() => setSeoContentOpen(true)}
+          className="btn-glow mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold"
         >
-          <span
-            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
-              on ? 'left-5.5' : 'left-0.5'
-            }`}
-          />
+          Learn more about {country.name}
+          <span aria-hidden>↓</span>
         </button>
-      </div>
-
-      {!hasData && (
-        <p className="mt-3 text-xs text-white/45">
-          Strike data isn’t available for this territory (no ISO country code).
-        </p>
       )}
 
-      {/* stats */}
-      {hasData && (
-        <div className="mt-4 space-y-2 text-sm">
-          {!on ? (
-            <p className="text-white/45">Turn the layer on to load strikes.</p>
-          ) : !stats ? (
-            <p className="text-white/45">Loading strikes…</p>
-          ) : (
-            <>
-              <Row label="Loaded strikes" value={stats.count.toLocaleString()} />
-              <Row label="In the last hour" value={String(stats.lastHour)} />
-              <Row
-                label="Most recent"
-                value={stats.lastAgeSec < 90 ? `${stats.lastAgeSec}s ago` : `${Math.round(stats.lastAgeSec / 60)}m ago`}
-              />
-              <Row
-                label="Window span"
-                value={stats.spanMin >= 1440 ? `${Math.round(stats.spanMin / 1440)}d` : stats.spanMin >= 60 ? `${Math.round(stats.spanMin / 60)}h` : `${stats.spanMin}m`}
-              />
-              <div className="pt-1">
-                <div className="mb-1 text-[11px] uppercase tracking-wider text-white/40">Signal quality</div>
-                <div className="flex h-2 overflow-hidden rounded-full bg-white/10">
-                  <span className="bg-green-500" style={{ width: `${pct(stats.q.good, stats.count)}%` }} />
-                  <span className="bg-amber-400" style={{ width: `${pct(stats.q.medium, stats.count)}%` }} />
-                  <span className="bg-red-500" style={{ width: `${pct(stats.q.bad, stats.count)}%` }} />
+      {!hasData ? (
+        <p className="mt-4 text-xs leading-relaxed text-white/45">
+          Strike data isn’t available for this territory — it has no ISO country code.
+        </p>
+      ) : !stats ? (
+        <div className="mt-4 flex items-center gap-2 text-sm text-white/45">
+          <span className="globe-loading-spinner" />
+          Loading recent strikes…
+        </div>
+      ) : (
+        <>
+          {/* hero: last-hour count + intensity */}
+          <div className="mt-4 rounded-xl border border-white/10 bg-linear-to-br from-white/8 to-transparent px-4 py-3">
+            <div className="flex items-end justify-between">
+              <div>
+                <div className="font-display text-4xl font-extrabold tabular-nums leading-none text-bolt">
+                  {stats.lastHour}
+                </div>
+                <div className="mt-1.5 text-[10px] uppercase tracking-wider text-white/40">
+                  strikes · last hour
                 </div>
               </div>
-            </>
-          )}
-        </div>
+              {tone && (
+                <span
+                  className={`rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${tone.color}`}
+                >
+                  {tone.label}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* supporting stats */}
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <Stat value={`~${stats.perMin}`} unit="/min" label="recent rate" />
+            <Stat value={ago(stats.lastAgeSec)} label="last strike" />
+          </div>
+
+          {/* signal quality */}
+          <div className="mt-4">
+            <div className="mb-1.5 text-[10px] uppercase tracking-wider text-white/40">
+              Signal quality
+            </div>
+            <div className="flex h-2 overflow-hidden rounded-full bg-white/10">
+              <span className="bg-emerald-400" style={{ width: `${pct(stats.q.good, stats.total)}%` }} />
+              <span className="bg-bolt" style={{ width: `${pct(stats.q.medium, stats.total)}%` }} />
+              <span className="bg-red-400" style={{ width: `${pct(stats.q.bad, stats.total)}%` }} />
+            </div>
+            <div className="mt-1 flex justify-between text-[10px] text-white/40">
+              <span className="text-emerald-400/80">good {pct(stats.q.good, stats.total)}%</span>
+              <span className="text-bolt/80">med {pct(stats.q.medium, stats.total)}%</span>
+              <span className="text-red-400/80">bad {pct(stats.q.bad, stats.total)}%</span>
+            </div>
+          </div>
+
+          <p className="mt-3 text-[10px] leading-relaxed text-white/30">
+            Latest {stats.total.toLocaleString()} strikes · {span(stats.spanMin)} window
+          </p>
+        </>
       )}
     </div>
   )
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Stat({ value, unit, label }: { value: string; unit?: string; label: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-white/55">{label}</span>
-      <span className="font-display font-bold tabular-nums text-white/90">{value}</span>
+    <div className="rounded-xl bg-white/4 px-3 py-2.5">
+      <div className="font-display text-xl font-bold tabular-nums leading-none text-white/90">
+        {value}
+        {unit && <span className="ml-0.5 text-xs font-medium text-white/40">{unit}</span>}
+      </div>
+      <div className="mt-1.5 text-[10px] uppercase tracking-wider text-white/40">{label}</div>
     </div>
   )
 }

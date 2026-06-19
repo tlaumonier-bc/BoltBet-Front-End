@@ -4,7 +4,7 @@ import { DEFAULT_QUALITY, type GlobeQuality } from '@/lib/globe/quality'
 import { defaultLayerState, type GlobeLayerId } from '@/lib/globe/layers'
 import type { CountryStrike } from '@/lib/api'
 
-export type LiveViewMode = 'free' | 'beginner' | 'pro'
+export type LiveViewMode = 'free' | 'beginner' | 'pro' | 'game'
 export type GlobeMapStyle = 'night' | 'day'
 export type { GlobeQuality }
 
@@ -49,6 +49,10 @@ interface LiveStore {
   setCountryStrikesOn: (on: boolean) => void
   countryStrikes: CountryStrike[]
   setCountryStrikes: (rows: CountryStrike[]) => void
+
+  // ── SEO text pane (slides up over the globe on a selected country) ──
+  seoContentOpen: boolean
+  setSeoContentOpen: (open: boolean) => void
 }
 
 export const useLiveStore = create<LiveStore>((set) => ({
@@ -83,4 +87,7 @@ export const useLiveStore = create<LiveStore>((set) => ({
   setCountryStrikesOn: (countryStrikesOn) => set({ countryStrikesOn }),
   countryStrikes: [],
   setCountryStrikes: (countryStrikes) => set({ countryStrikes }),
+
+  seoContentOpen: false,
+  setSeoContentOpen: (seoContentOpen) => set({ seoContentOpen }),
 }))
