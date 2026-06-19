@@ -49,14 +49,14 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
           onClick={() => {
             if (!vm.findPlayableCountry()) vm.playGlobe();
           }}
-          className="btn-glow mt-5 w-full rounded-xl px-4 py-3 text-sm font-bold"
+          className="btn-glow mt-5 w-full cursor-pointer rounded-xl px-4 py-3 text-sm font-bold"
         >
           ⚡ Find a playable country
         </button>
         <div className="my-3 text-center text-[11px] uppercase tracking-wider text-white/30">— or —</div>
         <button
           onClick={vm.playGlobe}
-          className="w-full rounded-xl border border-electric/40 bg-electric/10 px-4 py-3 text-sm font-bold text-electric transition hover:bg-electric/20"
+          className="w-full cursor-pointer rounded-xl border border-electric/40 bg-electric/10 px-4 py-3 text-sm font-bold text-electric transition hover:bg-electric/20"
         >
           🌍 Play the whole globe
         </button>
@@ -64,14 +64,14 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
     );
   }
 
-  const phaseLabel = vm.phase === 'betting' ? 'Betting open' : vm.pending ? 'In play' : 'Locked';
+  const phaseLabel = vm.phase === 'betting' ? 'Open' : vm.pending ? 'In play' : 'Locked';
   const countdown =
     vm.phase === 'betting'
       ? `${Math.ceil(vm.msUntilLock / 1000)}s to bet`
       : `${Math.ceil(vm.msUntilResolve / 1000)}s to result`;
 
   return (
-    <div className="glass panel-scroll pointer-events-auto min-h-0 w-full flex-1 overflow-y-auto rounded-2xl p-4">
+    <div className="glass panel-scroll pointer-events-auto min-h-0 w-full overflow-y-auto rounded-2xl p-4">
       {/* header */}
       <div className="flex items-center justify-between">
         <span className="font-display text-[11px] font-bold uppercase tracking-[0.25em] text-white/80">
@@ -87,7 +87,7 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
         {isCountry && (
           <button
             onClick={vm.playGlobe}
-            className="rounded-md bg-white/8 px-2 py-0.5 text-[11px] font-medium text-white/60 transition hover:bg-white/15 hover:text-white"
+            className="cursor-pointer rounded-md bg-white/8 px-2 py-0.5 text-[11px] font-medium text-white/60 transition hover:bg-white/15 hover:text-white"
           >
             🌍 Globe
           </button>
@@ -162,11 +162,11 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
         </Section>
       )}
 
-      {/* recent results */}
+      {/* last 3 games */}
       {history.length > 0 && (
-        <Section title="Recent games">
+        <Section title="Last 3 games">
           <div className="space-y-1">
-            {history.slice(0, 8).map((h) => (
+            {history.slice(0, 3).map((h) => (
               <div key={h.id} className="flex items-center justify-between text-xs">
                 <span className="text-white/65">
                   {h.side === 'up' ? '↑' : '↓'} {h.scopeLabel} · {h.prevCount}→{h.finalCount}

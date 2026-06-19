@@ -15,6 +15,7 @@ export interface PendingBet {
   scopeLabel: string;
   prevCount: number;      // previous-30s count, snapshotted at bet time
   placedAt: number;
+  betId?: string;         // server bet id, set once the backend accepts the bet
 }
 
 export interface GameResult {
@@ -39,7 +40,8 @@ interface StrikeGameStore {
   setUsername: (u: string) => void;
   setTokens: (n: number) => void;
   placeBet: (bet: PendingBet) => void;
-  resolveBet: (result: GameResult) => void;
+  attachBetId: (betId: string) => void;
+  resolveBet: (result: GameResult, tokensOverride?: number) => void;
   refundPending: () => void;
   claimTokens: (n?: number) => void;
   hydrate: (
@@ -60,10 +62,16 @@ export const useStrikeGameStore = create<StrikeGameStore>((set) => ({
   placeBet: (bet) =>
     set((s) => (s.pending ? {} : { pending: bet, tokens: s.tokens - bet.amount })),
 
-  resolveBet: (result) =>
+  // Record the server-issued id on the in-flight bet (server mode).
+  attachBetId: (betId) =>
+    set((s) => (s.pending ? { pending: { ...s.pending, betId } } : {})),
+
+  // Local play credits `payout`; server play passes the authoritative balance
+  // via tokensOverride so the client mirrors the server instead of re-computing.
+  resolveBet: (result, tokensOverride) =>
     set((s) => ({
       pending: null,
-      tokens: s.tokens + result.payout,
+      tokens: tokensOverride != null ? tokensOverride : s.tokens + result.payout,
       history: [result, ...s.history].slice(0, 100),
     })),
 
@@ -78,8 +86,7 @@ export const useStrikeGameStore = create<StrikeGameStore>((set) => ({
 // ── localStorage persistence (client only) ──────────────────────────────────
 const PERSIST_KEY = 'strike_game_v1';
 
-export function loadPersisted(): Partial<Pick<StrikeGameStore, 'username' | 'tokens' | 'pending' | 'history'>> | null 
-{
+export function loadPersisted(): Partial<Pick<StrikeGameStore, 'username' | 'tokens' | 'pending' | 'history'>> | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(PERSIST_KEY);

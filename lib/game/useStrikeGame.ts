@@ -5,8 +5,12 @@
 //   cycle c: [c*40s, c*40s+30s] = GAME window (strikes counted, betting locked)
 //            [c*40s+30s, c*40s+40s] = BUFFER (10s, betting open, strikes IGNORED)
 // During the buffer of cycle c you bet on game c+1 vs game c. Buffer strikes
-// count for neither game. Resolves locally; swap in a backend by replacing the
-// counting + resolution block — the view-model stays the same.
+// count for neither game.
+//
+// Settlement is server-authoritative when NEXT_PUBLIC_GAME_SERVER=1: bets are
+// POSTed, the backend counts the window and credits tokens, and the client
+// mirrors the returned balance. With the flag off (or the backend offline) the
+// client settles locally so the game stays playable.
 
 import { useCallback, useEffect, useState } from 'react';
 import { useLiveStore } from '@/store/liveStore';
@@ -22,7 +26,17 @@ import {
   type PendingBet,
 } from '@/store/strikeGameStore';
 import { countryName } from '@/lib/live/owm';
+import {
+  GAME_SERVER_ENABLED,
+  getProfile,
+  placeBet as placeBetApi,
+  getBetResolution,
+  claimTokens as claimTokensApi,
+  getRecentStrikes,
+  getCountryStrikes,
+} from '@/lib/api';
 import type { LightningStrike } from '@/types';
+import { useSessionStore } from '@/store/sessionStore'
 
 export const GAME_MS = 30_000;
 export const BUFFER_MS = 10_000;
@@ -37,7 +51,6 @@ export const SERIES_LEN = PREV_BARS + BUFFER_BARS + CUR_BARS; // 70
 export const SERIES_BUFFER_START = PREV_BARS;        // 30
 export const SERIES_CURRENT_START = PREV_BARS + BUFFER_BARS; // 40
 
-const IDENTITY_KEY = 'strike_game_identity';
 
 export type GamePhase = 'betting' | 'locked';
 
@@ -160,54 +173,159 @@ export function useStrikeGame(): StrikeGameVM {
 
   const [derived, setDerived] = useState<Derived>(emptyDerived);
 
-  // ── identity + hydrate persisted state (once) ─────────────────────────────
+  const sessionUsername = useSessionStore((s) => s.username);
+
+  // ── hydrate persisted game state (tokens/history/pending) once ─────────────
   useEffect(() => {
-    const st = useStrikeGameStore.getState();
-    if (!st.username) {
-      let id = '';
-      try {
-        id = localStorage.getItem(IDENTITY_KEY) ?? '';
-      } catch {
-        /* private mode */
+    const saved = loadPersisted();
+    if (saved) {
+      const curCycle = Math.floor(Date.now() / CYCLE_MS);
+      let pend = saved.pending ?? null;
+      let tok = typeof saved.tokens === 'number' ? saved.tokens : START_TOKENS;
+      // Bet whose game already ended while away can't be fairly resolved — refund.
+      if (pend && pend.roundId < curCycle) {
+        tok += pend.amount;
+        pend = null;
       }
-      if (!id) {
-        id = 'guest-' + Math.random().toString(36).slice(2, 7);
-        try {
-          localStorage.setItem(IDENTITY_KEY, id);
-        } catch {
-          /* ignore */
-        }
-      }
-
-      const saved = loadPersisted();
-      if (saved) {
-        const curCycle = Math.floor(Date.now() / CYCLE_MS);
-        let pend = saved.pending ?? null;
-        let tok = typeof saved.tokens === 'number' ? saved.tokens : START_TOKENS;
-        // Bet whose game already ended while away can't be fairly resolved — refund.
-        if (pend && pend.roundId < curCycle) {
-          tok += pend.amount;
-          pend = null;
-        }
-        useStrikeGameStore.getState().hydrate({
-          username: saved.username || id,
-          tokens: tok,
-          pending: pend,
-          history: Array.isArray(saved.history) ? saved.history : [],
-        });
-      } else {
-        useStrikeGameStore.getState().setUsername(id);
-      }
+      useStrikeGameStore.getState().hydrate({
+        tokens: tok,
+        pending: pend,
+        history: Array.isArray(saved.history) ? saved.history : [],
+      });
     }
-
     const unsub = useStrikeGameStore.subscribe((s) =>
       persist({ username: s.username, tokens: s.tokens, pending: s.pending, history: s.history }),
     );
     return () => unsub();
   }, []);
 
+  // ── follow the chosen identity: mirror the username into the game store and,
+  //    in server mode, pull the authoritative balance for that account ────────
+  useEffect(() => {
+    if (!sessionUsername) return;
+    useStrikeGameStore.getState().setUsername(sessionUsername);
+    if (GAME_SERVER_ENABLED) {
+      getProfile()
+        .then((p) => useStrikeGameStore.getState().hydrate({ tokens: p.tokens }))
+        .catch(() => {
+          /* backend offline — keep the local balance */
+        });
+    }
+  }, [sessionUsername]);
+
+  // ── Backfill recent strikes from the DB so the "previous 30s" window is
+  //    populated on load (the live WS only delivers strikes from now on). ─────
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const { strikes } = await getRecentStrikes(3); // last 3 min, global
+        if (!alive || !strikes.length) return;
+        useGameStore.getState().seedStrikes(
+          strikes.map((s) => ({
+            id: crypto.randomUUID(),
+            lat: s.lat,
+            lon: s.lon,
+            timestamp: Date.parse(s.timestamp) || Date.parse(s.received_at) || Date.now(),
+            receivedAt: Date.parse(s.received_at) || Date.now(),
+            quality: s.quality ?? 'good',
+            country: s.country ?? null,
+          })),
+        );
+      } catch {
+        /* backend offline — prev window fills once live strikes arrive */
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  // When a country is selected, backfill ITS recent strikes (tagged with the
+  // ISO code) so country-mode's previous-30s count isn't empty on load.
+  useEffect(() => {
+    const iso = selectedCountry?.iso2;
+    if (!iso) return;
+    let alive = true;
+    (async () => {
+      try {
+        const rows = await getCountryStrikes(iso, 1000);
+        if (!alive || !rows.length) return;
+        useGameStore.getState().seedStrikes(
+          rows.map((s) => ({
+            id: crypto.randomUUID(),
+            lat: s.lat,
+            lon: s.lon,
+            timestamp: Date.parse(s.timestamp) || Date.parse(s.received_at) || Date.now(),
+            receivedAt: Date.parse(s.received_at) || Date.now(),
+            quality: s.quality ?? 'good',
+            country: iso,
+          })),
+        );
+      } catch {
+        /* backend offline */
+      }
+    })();
+    return () => { alive = false; };
+  }, [selectedCountry?.iso2]);
+
   // ── round clock + counting + resolution (single timer) ────────────────────
   useEffect(() => {
+    let resolvingRound: number | null = null; // guard for an in-flight server settle
+
+    const buildResult = (
+      pend: PendingBet,
+      finalCount: number,
+      outcome: Outcome,
+      payout: number,
+      at: number,
+    ): GameResult => ({
+      id: crypto.randomUUID(),
+      roundId: pend.roundId,
+      side: pend.side,
+      amount: pend.amount,
+      scopeLabel: pend.scopeLabel,
+      prevCount: pend.prevCount,
+      finalCount,
+      outcome,
+      payout,
+      at,
+    });
+
+    const settleLocally = (pend: PendingBet, finalCount: number, at: number) => {
+      let outcome: Outcome;
+      if (finalCount > pend.prevCount) outcome = pend.side === 'up' ? 'won' : 'lost';
+      else if (finalCount < pend.prevCount) outcome = pend.side === 'down' ? 'won' : 'lost';
+      else outcome = 'push';
+      const payout =
+        outcome === 'won' ? pend.amount * PAYOUT_MULTIPLIER : outcome === 'push' ? pend.amount : 0;
+      useStrikeGameStore.getState().resolveBet(buildResult(pend, finalCount, outcome, payout, at));
+    };
+
+    const settleFromServer = (pend: PendingBet) => {
+      if (!pend.betId || resolvingRound === pend.roundId) return;
+      resolvingRound = pend.roundId;
+      getBetResolution(pend.betId)
+        .then((res) => {
+          if (!res) {
+            resolvingRound = null; // not settled yet — retry next tick
+            return;
+          }
+          const cur = useStrikeGameStore.getState();
+          if (cur.pending && cur.pending.betId === pend.betId) {
+            cur.resolveBet(
+              buildResult(pend, res.finalCount, res.outcome, res.payout, Date.now()),
+              res.tokens, // authoritative balance
+            );
+          }
+          resolvingRound = null;
+        })
+        .catch(() => {
+          // backend offline → settle locally so the round still closes
+          const s = useGameStore.getState().strikes;
+          settleLocally(pend, gameCount(s, pend.scopeKind, pend.scopeId, pend.roundId), Date.now());
+          resolvingRound = null;
+        });
+    };
+
     const tick = () => {
       const now = Date.now();
       const cycle = Math.floor(now / CYCLE_MS);
@@ -246,38 +364,10 @@ export function useStrikeGame(): StrikeGameVM {
       if (pend) {
         pendingCurrentCount = gameCount(strikes, pend.scopeKind, pend.scopeId, pend.roundId);
         if (now >= pend.roundId * CYCLE_MS + GAME_MS) {
-          const finalCount = pendingCurrentCount;
-          let outcome: Outcome;
-          if (finalCount > pend.prevCount) outcome = pend.side === 'up' ? 'won' : 'lost';
-          else if (finalCount < pend.prevCount) outcome = pend.side === 'down' ? 'won' : 'lost';
-          else outcome = 'push';
-          const payout =
-            outcome === 'won'
-              ? pend.amount * PAYOUT_MULTIPLIER
-              : outcome === 'push'
-              ? pend.amount
-              : 0;
-
-          const result: GameResult = {
-            id: crypto.randomUUID(),
-            roundId: pend.roundId,
-            side: pend.side,
-            amount: pend.amount,
-            scopeLabel: pend.scopeLabel,
-            prevCount: pend.prevCount,
-            finalCount,
-            outcome,
-            payout,
-            at: now,
-          };
-          useStrikeGameStore.getState().resolveBet(result);
-
-          const notify = useGameStore.getState().pushNotification;
-          if (outcome === 'won')
-            notify({ type: 'win', message: `⚡ +${pend.amount} tokens — ${pend.scopeLabel}` });
-          else if (outcome === 'lost')
-            notify({ type: 'loss', message: `Missed it — ${pend.amount} tokens lost` });
-          else notify({ type: 'info', message: 'Push — bet refunded' });
+          // Server settles when it accepted the bet; otherwise (local mode, or a
+          // POST that never landed) settle locally so the round always closes.
+          if (GAME_SERVER_ENABLED && pend.betId) settleFromServer(pend);
+          else settleLocally(pend, pendingCurrentCount, now);
         }
       }
 
@@ -326,8 +416,10 @@ export function useStrikeGame(): StrikeGameVM {
     const amt = Math.max(1, Math.min(Math.floor(amount), st.tokens));
     if (amt <= 0) return;
 
-    const roundId = cycle + 1; // betting on next game
+    const roundId = cycle + 1; // betting on the next game
     const prevCount = gameCount(strikes, sc.kind, sc.id, cycle); // just-finished game
+
+    // Optimistic local debit so the UI reacts instantly.
     st.placeBet({
       roundId,
       side,
@@ -338,6 +430,27 @@ export function useStrikeGame(): StrikeGameVM {
       prevCount,
       placedAt: now,
     });
+
+    if (GAME_SERVER_ENABLED) {
+      placeBetApi({
+        roundId,
+        side,
+        amount: amt,
+        scopeKind: sc.kind,
+        scopeId: sc.id,
+        prevCount,
+      })
+        .then((res) => {
+          const cur = useStrikeGameStore.getState();
+          if (cur.pending && cur.pending.roundId === roundId && !cur.pending.betId) {
+            cur.attachBetId(res.betId);
+            cur.setTokens(res.tokens); // reconcile to the server balance
+          }
+        })
+        .catch(() => {
+          /* backend offline/rejected — keep the optimistic local bet */
+        });
+    }
   }, []);
 
   const findPlayableCountry = useCallback((): boolean => {
@@ -364,7 +477,16 @@ export function useStrikeGame(): StrikeGameVM {
   }, [setSelectedCountry]);
 
   const playGlobe = useCallback(() => setSelectedCountry(null), [setSelectedCountry]);
-  const claimTokens = useCallback(() => useStrikeGameStore.getState().claimTokens(), []);
+
+  const claimTokens = useCallback(() => {
+    if (GAME_SERVER_ENABLED) {
+      claimTokensApi()
+        .then((p) => useStrikeGameStore.getState().setTokens(p.tokens))
+        .catch(() => useStrikeGameStore.getState().claimTokens());
+    } else {
+      useStrikeGameStore.getState().claimTokens();
+    }
+  }, []);
 
   return {
     scope,

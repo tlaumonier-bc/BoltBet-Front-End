@@ -421,6 +421,38 @@ export function loadCountryBorders(
         });
       };
 
+      // Adaptive fly-in for a country, reused by direct clicks AND programmatic
+      // selection (e.g. game-mode "Find a playable country", back/forward).
+      const flyToMeta = (meta: CountryMeta) => {
+        // Curated mainland box wins over geometry framing for countries whose
+        // map parts span overseas territories (France→Guiana, etc.).
+        const mainland = framingBoundsForIso(meta.iso2);
+        if (mainland) {
+          const lonPad = ((mainland.maxLon - mainland.minLon) * (COUNTRY_FLY_PADDING - 1)) / 2;
+          const latPad = ((mainland.maxLat - mainland.minLat) * (COUNTRY_FLY_PADDING - 1)) / 2;
+          camera.flyTo({
+            destination: Cesium.Rectangle.fromDegrees(
+              mainland.minLon - lonPad,
+              mainland.minLat - latPad,
+              mainland.maxLon + lonPad,
+              mainland.maxLat + latPad,
+            ),
+            duration: 1.4,
+          });
+          return;
+        }
+        if (rectUntrustworthy(meta.rect, meta.mainCenter)) {
+          const spanDeg = Cesium.Math.toDegrees(Math.max(meta.rect.width, meta.rect.height));
+          const heightM = Cesium.Math.clamp(spanDeg * 110_000, 2_000_000, 16_000_000);
+          camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(meta.mainCenter.lon, meta.mainCenter.lat, heightM),
+            duration: 1.4,
+          });
+        } else {
+          camera.flyTo({ destination: expandRect(meta.rect, COUNTRY_FLY_PADDING), duration: 1.4 });
+        }
+      };
+
       handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
       handler.setInputAction((m: Cesium.ScreenSpaceEventHandler.MotionEvent) => {
         const id = idAtScreen(m.endPosition);
@@ -455,44 +487,7 @@ export function loadCountryBorders(
 
         const meta = metaById.get(id);
         if (meta) {
-          // Curated mainland box wins over geometry framing for countries whose
-          // map parts span overseas territories (France→Guiana, etc.), which
-          // otherwise union into an ocean-centered rect.
-          const mainland = framingBoundsForIso(meta.iso2);
-          if (mainland) {
-            const lonPad = ((mainland.maxLon - mainland.minLon) * (COUNTRY_FLY_PADDING - 1)) / 2;
-            const latPad = ((mainland.maxLat - mainland.minLat) * (COUNTRY_FLY_PADDING - 1)) / 2;
-            camera.flyTo({
-              destination: Cesium.Rectangle.fromDegrees(
-                mainland.minLon - lonPad,
-                mainland.minLat - latPad,
-                mainland.maxLon + lonPad,
-                mainland.maxLat + latPad,
-              ),
-              duration: 1.4,
-            });
-            useLiveStore.getState().setSelectedCountry({ name: meta.label, iso2: meta.iso2 });
-            if (meta.slug) interactive.onPick?.(meta.slug);
-            return;
-          }
-          if (rectUntrustworthy(meta.rect, meta.mainCenter)) {
-            const spanDeg = Cesium.Math.toDegrees(Math.max(meta.rect.width, meta.rect.height));
-            const heightM = Cesium.Math.clamp(spanDeg * 110_000, 2_000_000, 16_000_000);
-            console.log('[fly WRAPPED]', meta.label, meta.mainCenter.lon.toFixed(1), meta.mainCenter.lat.toFixed(1), heightM);
-            camera.flyTo({
-              destination: Cesium.Cartesian3.fromDegrees(meta.mainCenter.lon, meta.mainCenter.lat, heightM),
-              duration: 1.4,
-            });
-          } else {
-            const dest = expandRect(meta.rect, COUNTRY_FLY_PADDING);
-            console.log('[fly RECT]', meta.label,
-              'W', Cesium.Math.toDegrees(dest.west).toFixed(1),
-              'S', Cesium.Math.toDegrees(dest.south).toFixed(1),
-              'E', Cesium.Math.toDegrees(dest.east).toFixed(1),
-              'N', Cesium.Math.toDegrees(dest.north).toFixed(1));
-            camera.flyTo({ destination: dest, duration: 1.4 });
-          }
-          if (meta.slug) console.log('[onPick]', meta.slug);
+          flyToMeta(meta);
           useLiveStore.getState().setSelectedCountry({ name: meta.label, iso2: meta.iso2 });
           if (meta.slug) interactive.onPick?.(meta.slug); // navigation hook (page countries only)
         }
@@ -538,9 +533,10 @@ export function loadCountryBorders(
           return;
         }
 
-        // Selected via the store rather than a direct click. The click handler
-        // already lights up + flies and sets `selected`, so this is a no-op for
-        // clicks; here we light up the new country without flying.
+        // Selected via the store rather than a direct click. On a click the
+        // handler already flew + set `selected`, so the id===selected guard
+        // makes this a no-op there; on a programmatic selection (e.g. game-mode
+        // "Find a playable country") we light up AND fly to it.
         const id = idForIso(cur?.iso2);
         if (id && id !== selected) {
           const prev = selected;
@@ -548,6 +544,8 @@ export function loadCountryBorders(
           if (prev) refresh(prev);
           applyMode(id, 'selected');
           startPulse();
+          const meta = metaById.get(id);
+          if (meta) flyToMeta(meta);
         }
       });
     })

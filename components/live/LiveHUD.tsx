@@ -1,8 +1,5 @@
 'use client'
 // components/live/LiveHUD.tsx — shell of the globe console.
-// Left column: map-style + mode bar + console (Orbit + Layers).
-// Right column: Game mode → StrikeGamePanel; else country panel or globe stats.
-// Game mode also mounts the bottom-centre BetBar.
 import { useLiveStore } from '@/store/liveStore'
 import ModeBar from './ModeBar'
 import LeftPanel from './LeftPanel'
@@ -10,6 +7,7 @@ import CountryPanel from './CountryPanel'
 import GlobeInfoPanel from './GlobeInfoPanel'
 import StrikeGamePanel from '@/components/game/StrikeGamePanel'
 import BetBar from '@/components/game/BetBar'
+import GameAccount from '@/components/game/GameAccount'
 import { useStrikeGame } from '@/lib/game/useStrikeGame'
 
 export default function LiveHUD() {
@@ -24,6 +22,7 @@ export default function LiveHUD() {
     <>
       {/* Left column */}
       <div className="pointer-events-none fixed bottom-4 left-4 right-4 top-20 z-40 flex flex-col gap-3 md:right-auto md:w-75">
+        {isGame && <GameAccount />}
         <ModeBar />
         {mode !== 'free' && <LeftPanel pro={mode === 'pro' || isGame} />}
       </div>

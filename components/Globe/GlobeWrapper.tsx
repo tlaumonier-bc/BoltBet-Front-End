@@ -13,10 +13,6 @@ interface LightningGlobeProps {
   initialBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number };
   /** Fired once the globe's first tiles are in. Supplied by GlobeWrapper. */
   onReady?: () => void;
-  /** Round-based game: click a zone to pick it; locked zone is highlighted. */
-  gameMode?: boolean;
-  onPickZone?: (zoneId: string) => void;
-  lockedZoneId?: string | null;
   countryLinks?: CountryLink[];
   onPickCountry?: (slug: string) => void;
 }

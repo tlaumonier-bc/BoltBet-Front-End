@@ -1,45 +1,46 @@
-// lib/api.ts — REST client for the BoltBet game backend.
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
+// lib/api.ts — REST client for the BoltBet strike-prediction game backend.
+import { sessionToken } from '@/store/sessionStore';
+
+const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+
+/**
+ * Server-authoritative game is OFF until the backend ships. While off, the
+ * client runs the Up/Down game locally and these endpoints are never called.
+ * Set NEXT_PUBLIC_GAME_SERVER=1 to route identity, bets, balances, resolution
+ * and the leaderboard onto the backend.
+ */
+export const GAME_SERVER_ENABLED = process.env.NEXT_PUBLIC_GAME_SERVER === '1';
 
 function csrf(): string {
-  if (typeof document === 'undefined') return ''
-  return document.cookie.split('; ').find((c) => c.startsWith('csrftoken='))?.split('=')[1] ?? ''
+  if (typeof document === 'undefined') return '';
+  return document.cookie.split('; ').find((c) => c.startsWith('csrftoken='))?.split('=')[1] ?? '';
 }
 
-export interface GameState {
-  active: boolean;
-  round_number?: number;
-  ends_at?: string;
-  server_time: string;
-  duration_seconds?: number;
-  lock_seconds?: number;
-  intermission?: boolean;
-  next_round_at?: string;
+/** Identity header: the session token is the authoritative identity. */
+function authHeaders(): Record<string, string> {
+  const t = sessionToken();
+  return t ? { Authorization: `Bearer ${t}` } : {};
 }
 
-export interface PickResult {
-  id: number;
-  zone_id: string;
-  locked_at: string;
-  expires_at: string;
+async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf(), ...authHeaders() },
+    credentials: 'same-origin',
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`${path} ${res.status}`);
+  return res.json() as Promise<T>;
 }
 
-export interface LeaderboardRow {
-  username: string;
-  country: string;
-  points?: number;
-  games_won?: number;
-  avg_strikes?: number;
-  games_played?: number;
-}
-
-// ── NEW: raw recent strikes (/api/strikes/recent/) ──────────────────────────
+// ── strike feeds (public, no auth) ───────────────────────────────────────────
 export interface RecentStrike {
   lat: number;
   lon: number;
   quality: string;
   timestamp: string;
   received_at: string;
+  country?: string | null;
 }
 
 export interface RecentStrikesResponse {
@@ -49,19 +50,16 @@ export interface RecentStrikesResponse {
   strikes: RecentStrike[];
 }
 
-
-// ── NEW: per-minute series (/api/strikes/per-minute/) ───────────────────────
 export interface MinuteBucket {
-  minute: string;       // ISO, start of the minute
+  minute: string;
   count: number;
 }
 
 export interface StrikesPerMinuteResponse {
   minutes: number;
-  series: MinuteBucket[]; // oldest → newest, zero-filled
+  series: MinuteBucket[];
 }
 
-// ── NEW: per-country strikes (/api/strikes/by-country/) ─────────────────────
 export interface CountryStrike {
   lat: number;
   lon: number;
@@ -70,44 +68,6 @@ export interface CountryStrike {
   received_at: string;
 }
 
-export type LeaderboardKind = 'current' | 'wins' | 'average';
-
-export class PickError extends Error {
-  code: string;
-  constructor(code: string) {
-    super(code);
-    this.code = code;
-    this.name = 'PickError';
-  }
-}
-
-export async function getGameState(): Promise<GameState> {
-  const res = await fetch(`${API}/api/game/state/`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`game state ${res.status}`);
-  return res.json();
-}
-
-export async function placePick(zoneId: string, username: string, country: string): Promise<PickResult> {
-  const res = await fetch(`${API}/api/game/pick/`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
-    credentials: 'same-origin',
-    body: JSON.stringify({ zone_id: zoneId, username, country }),
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new PickError((body as { error?: string }).error ?? `pick ${res.status}`);
-  }
-  return res.json();
-}
-
-export async function getLeaderboard(kind: LeaderboardKind): Promise<LeaderboardRow[]> {
-  const res = await fetch(`${API}/api/game/leaderboard/${kind}/`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`leaderboard ${res.status}`);
-  return res.json();
-}
-
-/** Raw strike positions over a recent window (or age band via olderThan). */
 export async function getRecentStrikes(
   minutes: number,
   limit = 5000,
@@ -126,7 +86,6 @@ export async function getRecentStrikes(
   return res.json();
 }
 
-/** Global strike count per minute — drives the "Activity" sparkline. */
 export async function getStrikesPerMinute(minutes = 15): Promise<StrikesPerMinuteResponse> {
   const q = new URLSearchParams({ minutes: String(minutes) });
   const res = await fetch(`${API}/api/strikes/per-minute/?${q}`, { cache: 'no-store' });
@@ -134,11 +93,121 @@ export async function getStrikesPerMinute(minutes = 15): Promise<StrikesPerMinut
   return res.json();
 }
 
-/** Newest N strikes for a single country (e.g. 'FR'). */
 export async function getCountryStrikes(country: string, limit = 1000): Promise<CountryStrike[]> {
   const q = new URLSearchParams({ country, limit: String(limit) });
   const res = await fetch(`${API}/api/strikes/by-country/?${q}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`country strikes ${res.status}`);
   const data = (await res.json()) as Record<string, CountryStrike[]>;
   return data[country.toUpperCase()] ?? [];
+}
+
+// ── identity / auth ───────────────────────────────────────────────────────
+export interface UsernameCheck {
+  available: boolean;
+}
+
+export interface Session {
+  username: string;
+  token: string;
+  tokens: number; // starting balance
+}
+
+/** Is this username free? (debounced by the UI) */
+export async function checkUsername(username: string): Promise<UsernameCheck> {
+  const q = new URLSearchParams({ username });
+  const res = await fetch(`${API}/api/game/username/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`username check ${res.status}`);
+  return res.json();
+}
+
+/** Claim a chosen guest username → server account + session token. */
+export async function registerUsername(username: string): Promise<Session> {
+  return postJson<Session>('/api/game/register/', { username });
+}
+
+/**
+ * URL to begin an OAuth flow. `linkToken` (the current guest token) lets the
+ * backend merge the guest's tokens into the signed-in account. The backend
+ * should redirect back to `next` with `#auth_token=…&auth_user=…`.
+ */
+export function oauthStartUrl(
+  provider: 'google' | 'apple' | 'github',
+  linkToken?: string | null,
+): string {
+  const q = new URLSearchParams();
+  if (typeof window !== 'undefined') q.set('next', window.location.origin + window.location.pathname);
+  if (linkToken) q.set('link', linkToken);
+  return `${API}/api/auth/${provider}/start/?${q}`;
+}
+
+// ── Up/Down game (server-authoritative; identity comes from the Bearer token) ─
+export type BetSide = 'up' | 'down';
+export type Outcome = 'won' | 'lost' | 'push';
+export type ScopeKind = 'globe' | 'country';
+
+export interface PlayerProfile {
+  username: string;
+  tokens: number;
+}
+
+export interface BetPayload {
+  roundId: number;
+  side: BetSide;
+  amount: number;
+  scopeKind: ScopeKind;
+  scopeId: string;
+  prevCount: number; // for audit only — server recomputes
+}
+
+export interface PlacedBet {
+  betId: string;
+  roundId: number;
+  tokens: number;
+}
+
+export interface BetResolution {
+  betId: string;
+  outcome: Outcome;
+  finalCount: number;
+  payout: number;
+  tokens: number;
+}
+
+export interface LeaderboardEntry {
+  username: string;
+  tokens: number;
+  wins: number;
+  gamesPlayed: number;
+}
+
+/** Current player's profile + balance (identity from the token). */
+export async function getProfile(): Promise<PlayerProfile> {
+  const res = await fetch(`${API}/api/game/profile/`, { cache: 'no-store', headers: authHeaders() });
+  if (!res.ok) throw new Error(`profile ${res.status}`);
+  return res.json();
+}
+
+export async function placeBet(payload: BetPayload): Promise<PlacedBet> {
+  return postJson<PlacedBet>('/api/game/bet/', payload);
+}
+
+export async function getBetResolution(betId: string): Promise<BetResolution | null> {
+  const res = await fetch(`${API}/api/game/bet/${betId}/result/`, {
+    cache: 'no-store',
+    headers: authHeaders(),
+  });
+  if (res.status === 202 || res.status === 204) return null;
+  if (!res.ok) throw new Error(`bet result ${res.status}`);
+  return res.json();
+}
+
+export async function claimTokens(): Promise<PlayerProfile> {
+  return postJson<PlayerProfile>('/api/game/claim/', {});
+}
+
+export async function getLeaderboard(limit = 50): Promise<LeaderboardEntry[]> {
+  const q = new URLSearchParams({ limit: String(limit) });
+  const res = await fetch(`${API}/api/game/leaderboard/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`leaderboard ${res.status}`);
+  return res.json();
 }
