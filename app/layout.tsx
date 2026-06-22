@@ -26,14 +26,8 @@ export const metadata: Metadata = {
   description:
     'Watch real-time lightning strikes worldwide on a live map, then guess whether more or fewer bolts hit in the next 60 seconds. Free to play, no real money.',
   keywords: [
-    'lightning map',
-    'lightning map live',
-    'lightning tracker',
-    'lightning strike map',
-    'real-time lightning',
-    'storm tracker',
-    'blitzortung',
-    'weather game online',
+    'lightning map', 'lightning map live', 'lightning tracker', 'lightning strike map',
+    'real-time lightning', 'storm tracker', 'blitzortung', 'weather game online',
   ],
   openGraph: {
     type: 'website',
@@ -42,7 +36,6 @@ export const metadata: Metadata = {
   },
   twitter: { card: 'summary_large_image' },
   robots: { index: true, follow: true },
-  alternates: { canonical: site.baseUrl },
 };
 
 const structuredData = {

@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: 'Leaderboard — Top Lightning Predictors',
   description:
     'See the top players ranked by tokens won predicting real-time lightning strikes.',
+  alternates: { canonical: '/leaderboard' },
 }
 
 type LoadResult =

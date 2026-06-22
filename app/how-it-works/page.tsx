@@ -8,13 +8,10 @@ export const metadata: Metadata = {
   description:
     'How the live lightning globe works: real-time strikes from the Blitzortung network, view modes and weather layers, clicking any country, and the Higher/Lower 30-second prediction game played with free virtual tokens.',
   keywords: [
-    'how the lightning map works',
-    'real-time lightning globe',
-    'lightning prediction game',
-    'blitzortung',
-    'lightning strike map',
-    'where is lightning striking now',
+    'how the lightning map works', 'real-time lightning globe', 'lightning prediction game',
+    'blitzortung', 'lightning strike map', 'where is lightning striking now',
   ],
+  alternates: { canonical: '/how-it-works' },
 }
 
 const MODES = [
