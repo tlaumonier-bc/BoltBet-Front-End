@@ -9,7 +9,7 @@ import { regionName } from '@/lib/grid'
 import { Section } from './hudShared'
 import type { LightningStrike } from '@/types'
 
-const MAX = 60
+const MAX = 10
 
 function ago(ms: number): string {
   const s = Math.max(0, Math.round(ms / 1000))

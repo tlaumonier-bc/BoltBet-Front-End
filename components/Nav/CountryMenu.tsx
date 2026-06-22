@@ -59,7 +59,7 @@ export default function CountryMenu({ countries }: { countries: Item[] }) {
             : 'invisible -translate-y-1 opacity-0'
         }`}
       >
-        <div className="glass max-h-[60vh] w-[min(520px,86vw)] overflow-y-auto rounded-2xl p-2">
+        <div className="glass-opaque max-h-[60vh] w-[min(520px,86vw)] overflow-y-auto rounded-2xl p-2">
           <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
             {countries.map((c) => (
               <Link

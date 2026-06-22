@@ -44,6 +44,13 @@ body {
   -webkit-backdrop-filter: blur(14px);
 }
 
+.glass-opaque {
+  background: rgba(12, 18, 32, 1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
 /* glowing primary button */
 .btn-glow {
   background: linear-gradient(180deg, #fde047, #facc15);

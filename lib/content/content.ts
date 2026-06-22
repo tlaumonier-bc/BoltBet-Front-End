@@ -57,3 +57,39 @@ export const canonicalFor = (page: LocalePage): string =>
 /** The funnel destination for a locale, e.g. '/fi/play'. */
 export const playHrefFor = (page: LocalePage): string =>
   funnel.slug.replace('{locale}', page.locale);
+
+/** One entry per language in this page's hreflang cluster, resolved to its
+ *  LocalePage so the UI has flag/country/language without extra lookups.
+ *  Excludes x-default. Used by the language switcher + suggestion banner. */
+export interface LanguageAlternate {
+  hreflang: string; // 'fi-FI'
+  lang: string;     // 'fi' (subtag)
+  locale: string;   // 'fi' (also the ISO-2 country code here → flag)
+  country: string;  // 'Finland'
+  language: string; // 'Finnish'
+  slug: string;     // '/fi/ukkostutka'
+  url: string;      // absolute
+  isCurrent: boolean;
+}
+
+export const languageAlternatesFor = (page: LocalePage): LanguageAlternate[] => {
+  const base = site.baseUrl;
+  const out: LanguageAlternate[] = [];
+  for (const a of alternatesFor(page)) {
+    if (a.hreflang === 'x-default') continue;
+    const slug = a.url.startsWith(base) ? a.url.slice(base.length) : a.url;
+    const p = pageBySlug(slug);
+    if (!p) continue; // cluster entry with no matching page — skip defensively
+    out.push({
+      hreflang: a.hreflang,
+      lang: a.hreflang.split('-')[0].toLowerCase(),
+      locale: p.locale,
+      country: p.country,
+      language: p.language,
+      slug: p.slug,
+      url: a.url,
+      isCurrent: p.slug === page.slug,
+    });
+  }
+  return out;
+};

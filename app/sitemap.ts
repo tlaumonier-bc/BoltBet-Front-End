@@ -2,7 +2,6 @@
 // Driven by the content config. Lists only INDEXABLE URLs:
 //  - static pages (home, live, how-it-works, leaderboard)
 //  - localized map pages that are translated (launchable)
-// Deliberately excludes: /play funnels and the 162 /zone/[cellId] pages (noindex).
 // Untranslated localized pages appear automatically once authored (Phase 6).
 
 import type { MetadataRoute } from 'next';

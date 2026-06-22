@@ -88,6 +88,12 @@ export default function LightningGlobe({
     const removeWheel = setupWheelPassthrough(el, enableZoom);
     if (removeWheel) disposers.push(removeWheel);
 
+    // Render Cesium's attribution/credit UI into detached elements so its empty
+    // <a> controls (expand link + lightbox close) never enter the page DOM —
+    // keeps Lighthouse's "links are crawlable" audit clean.
+    const creditContainer = document.createElement('div');
+    const creditViewport = document.createElement('div');
+
     const viewer = new Cesium.Viewer(el, {
       baseLayer: false,
       baseLayerPicker: false,
@@ -100,6 +106,8 @@ export default function LightningGlobe({
       fullscreenButton: false,
       infoBox: false,
       selectionIndicator: false,
+      creditContainer,
+      creditViewport,
     });
 
     const { scene, camera } = viewer;

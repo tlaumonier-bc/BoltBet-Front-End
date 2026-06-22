@@ -14,8 +14,8 @@ export default function GlobeInfoPanel({ pro }: { pro: boolean }) {
 
   return (
     <div
-      className={`glass pointer-events-auto flex min-h-0 w-full flex-col overflow-hidden rounded-2xl p-4 ${
-        pro ? '' : 'flex-1'
+      className={`glass shrink-0 pointer-events-auto flex w-full flex-col overflow-hidden rounded-2xl p-4${
+        pro ? '' : ''
       }`}
     >
       <span className="shrink-0 font-display text-[11px] font-bold uppercase tracking-[0.25em] text-white/80">
@@ -29,7 +29,7 @@ export default function GlobeInfoPanel({ pro }: { pro: boolean }) {
       {pro ? (
         <TelemetrySection stats={stats} />
       ) : (
-        <div className="panel-scroll min-h-0 flex-1 overflow-y-auto">
+        <div className="panel-scroll min-h-0 overflow-y-auto">
           <RecentStrikesSection />
         </div>
       )}

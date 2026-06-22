@@ -14,8 +14,9 @@ import SeoContent from '@/components/seo/SeoContent';
 import { useLiveStore } from '@/store/liveStore';
 import { buildCountryLinks } from '@/lib/globe/countryLinks';
 import { boundsForLocale } from '@/lib/map/countryBounds';
-import { primaryPageForLocale, pageBySlug } from '@/lib/content/content';
+import { primaryPageForLocale, pageBySlug, languageAlternatesFor } from '@/lib/content/content';
 import type { LocalePage } from '@/lib/content/content-types';
+import LanguageSuggestionBanner from '@/components/i18n/LanguageSuggestionBanner';
 
 const COUNTRY_LINKS = buildCountryLinks();
 
@@ -139,6 +140,12 @@ export default function GlobeExperience({ initialPage }: { initialPage?: LocaleP
           reading the text. */}
       <div className={seoContentOpen ? 'hidden' : undefined}>
         <LiveHUD />
+        {activePage && (
+          <LanguageSuggestionBanner
+            currentHreflang={activePage.hreflang}
+            alternates={languageAlternatesFor(activePage)}
+          />
+        )}
       </div>
 
       {/* Mobile affordance to reach the text — CountryPanel's button is lg+ only. */}

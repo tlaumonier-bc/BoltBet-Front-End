@@ -73,7 +73,7 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
 
   return (
     <div className="pointer-events-none fixed bottom-24 left-1/2 z-50 w-[min(640px,94vw)] -translate-x-1/2">
-      <div className="glass pointer-events-auto relative rounded-2xl border border-white/10 p-4 shadow-2xl">
+      <div className="glass-opaque pointer-events-auto relative rounded-2xl border border-white/10 p-4 shadow-2xl">
         {/* result float */}
         {floatResult && (
           <span

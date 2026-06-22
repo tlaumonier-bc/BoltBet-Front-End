@@ -1,14 +1,13 @@
 // components/seo/SeoContent.tsx
-// The localized, keyword-rich copy for one country page. Pure presentational,
-// no client hooks — so it server-renders (crawlable HTML) when used inside the
-// SEO route, and also renders fine client-side on the homepage click path.
+// The localized, keyword-rich copy for one country page. Pure presentational
+// except for the Play CTAs, which are a small client component (PlayCta) that
+// switches the globe into Game mode — there is no /play route anymore.
 import Link from 'next/link';
 import type { LocalePage } from '@/lib/content/content-types';
-import { playHrefFor } from '@/lib/content/content';
+import PlayCta from './PlayCta';
 
 export default function SeoContent({ page }: { page: LocalePage }) {
   const c = page.content;
-  const play = playHrefFor(page);
   const funnelSection = c.sections.find((s) => s.isFunnel);
 
   return (
@@ -39,15 +38,12 @@ export default function SeoContent({ page }: { page: LocalePage }) {
 
       {/* inline funnel prompt */}
       {funnelSection?.ctaPrompt && (
-        <Link
-          href={play}
-          className="mt-5 flex items-center justify-between gap-4 rounded-xl border border-bolt/20 bg-bolt/5 px-5 py-3 text-sm transition hover:bg-bolt/10"
-        >
+        <PlayCta className="mt-5 flex w-full cursor-pointer items-center justify-between gap-4 rounded-xl border border-bolt/20 bg-bolt/5 px-5 py-3 text-left text-sm transition hover:bg-bolt/10">
           <span className="text-white/80">{funnelSection.ctaPrompt}</span>
           <span className="shrink-0 font-semibold text-bolt">
             {funnelSection.ctaText ?? 'Play'} →
           </span>
-        </Link>
+        </PlayCta>
       )}
 
       {/* localized content sections */}
@@ -57,12 +53,9 @@ export default function SeoContent({ page }: { page: LocalePage }) {
             <section key={i} className="glass rounded-2xl border border-bolt/20 p-6">
               <h2 className="font-display text-xl font-bold">{s.h2}</h2>
               <p className="mt-3 text-white/70">{s.body}</p>
-              <Link
-                href={play}
-                className="btn-glow mt-5 inline-block rounded-full px-7 py-3 text-sm font-bold"
-              >
+              <PlayCta className="btn-glow mt-5 inline-block cursor-pointer rounded-full px-7 py-3 text-sm font-bold">
                 {s.ctaText ?? 'Play'}
-              </Link>
+              </PlayCta>
             </section>
           ) : (
             <section key={i}>

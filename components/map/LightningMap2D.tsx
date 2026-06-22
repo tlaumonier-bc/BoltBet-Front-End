@@ -3,7 +3,6 @@
 // The fast, mobile-first map for SEO pages and the view-only /live page.
 // Deliberately NOT the 3D globe: one image + a canvas overlay keeps LCP low and
 // matches "radar near me" search intent. Consumes the same store + socket the
-// globe uses, so no new data path. Heavy 3D stays on /play and /live (globe).
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';

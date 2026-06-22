@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import CountryMenu from './CountryMenu';
+import PlayButton from './PlayButton';
 import { pages, launchablePages } from '@/lib/content/content';
 
 // Targeted countries: the live (authored) pages, falling back to all configured
@@ -26,12 +27,7 @@ export default function Nav() {
           <Link href="/leaderboard" className="rounded-lg px-3 py-1.5 transition hover:bg-white/10 hover:text-white">
             Leaderboard
           </Link>
-          <Link
-            href="/play"
-            className="btn-glow ml-2 rounded-lg px-4 py-1.5 text-sm font-semibold"
-          >
-            Play
-          </Link>
+          <PlayButton />
         </div>
       </div>
     </nav>
