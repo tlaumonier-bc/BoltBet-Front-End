@@ -2,17 +2,6 @@
 // components/Globe/GlobeOverlays.tsx
 // DOM overlays for the globe: hover tooltip, "loading detail" pill, zoom buttons.
 
-import { forwardRef } from 'react';
-
-export const GlobeTooltip = forwardRef<HTMLDivElement>(function GlobeTooltip(_props, ref) {
-  return (
-    <div
-      ref={ref}
-      className="pointer-events-none absolute z-20 hidden -translate-x-1/2 translate-y-[-115%] whitespace-nowrap rounded-md border border-white/15 bg-black/80 px-3 py-2 text-xs text-white shadow-lg backdrop-blur"
-      style={{ display: 'none' }}
-    />
-  );
-});
 
 export function TileLoadingPill({ visible }: { visible: boolean }) {
   return (

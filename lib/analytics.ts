@@ -16,12 +16,6 @@ function g(...args: unknown[]) {
   }
 }
 
-// ── Page view (called automatically by GA4 on hard nav; call manually for
-//    client-side pushState navigations if needed) ──────────────────────────
-export function trackPageView(url: string) {
-  g('event', 'page_view', { page_location: url });
-}
-
 // ── Game events ─────────────────────────────────────────────────────────────
 export function trackBetPlaced(params: {
   side: 'up' | 'down';

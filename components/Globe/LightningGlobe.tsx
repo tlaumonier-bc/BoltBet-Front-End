@@ -20,7 +20,7 @@ import {
   setupWheelPassthrough,
   type InteractionState,
 } from '@/lib/globe/camera';
-import { GlobeTooltip, GlobeZoomButtons, TileLoadingPill } from './GlobeOverlays';
+import { GlobeZoomButtons, TileLoadingPill } from './GlobeOverlays';
 import { attachAtmosphereGlow } from '@/lib/globe/atmosphereGlow';
 import { attachLayers } from '@/lib/globe/layerManager';
 import { attachCountryStrikes } from '@/lib/globe/countryStrikesLayer';
@@ -51,7 +51,6 @@ export default function LightningGlobe({
   useLightningSocket();
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
   const zoomInRef = useRef<() => void>(() => {});
   const zoomOutRef = useRef<() => void>(() => {});
   const [tilesLoading, setTilesLoading] = useState(false);
@@ -274,7 +273,6 @@ export default function LightningGlobe({
   return (
     <div className={fill ? 'absolute inset-0' : 'fixed inset-0 bg-black'}>
       <div ref={containerRef} className="cesium-globe h-full w-full" />
-      <GlobeTooltip ref={tooltipRef} />
       <TileLoadingPill visible={tilesLoading} />
       {showZoomButtons && (
         <GlobeZoomButtons onZoomIn={() => zoomInRef.current()} onZoomOut={() => zoomOutRef.current()} />

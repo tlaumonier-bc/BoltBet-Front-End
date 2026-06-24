@@ -8,7 +8,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
 import { regionName } from '@/lib/grid'
-import type { LightningStrike } from '@/types'
 
 const SPARK_BUCKETS = 15 // 15 × 1-min bars for the activity sparkline
 const MINUTE = 60_000
@@ -110,37 +109,4 @@ export function useLiveStats(): LiveStats {
       now,
     }
   }, [now])
-}
-
-// ---------- proximity helper (real data, used by the pro card) --------------
-
-const EARTH_R_KM = 6371
-const DEG2RAD = Math.PI / 180
-
-function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const dLat = (lat2 - lat1) * DEG2RAD
-  const dLon = (lon2 - lon1) * DEG2RAD
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1 * DEG2RAD) * Math.cos(lat2 * DEG2RAD) * Math.sin(dLon / 2) ** 2
-  return 2 * EARTH_R_KM * Math.asin(Math.sqrt(a))
-}
-
-/** Nearest strike to (lat, lon) within the time window (default 10 min). */
-export function nearestStrike(
-  strikes: LightningStrike[],
-  lat: number,
-  lon: number,
-  now: number,
-  windowMs = 600_000
-): { km: number; ageSec: number } | null {
-  let best: { km: number; ageSec: number } | null = null
-  for (const s of strikes) {
-    if (now - s.receivedAt > windowMs) continue
-    const km = haversineKm(lat, lon, s.lat, s.lon)
-    if (!best || km < best.km) {
-      best = { km, ageSec: Math.max(0, Math.round((now - s.receivedAt) / 1000)) }
-    }
-  }
-  return best
 }

@@ -204,10 +204,3 @@ export async function getBetResolution(betId: string): Promise<BetResolution | n
 export async function claimTokens(): Promise<PlayerProfile> {
   return postJson<PlayerProfile>('/api/game/claim/', {});
 }
-
-export async function getLeaderboard(limit = 50): Promise<LeaderboardEntry[]> {
-  const q = new URLSearchParams({ limit: String(limit) });
-  const res = await fetch(`${API}/api/game/leaderboard/?${q}`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`leaderboard ${res.status}`);
-  return res.json();
-}

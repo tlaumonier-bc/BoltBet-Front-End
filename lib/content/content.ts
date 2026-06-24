@@ -19,10 +19,6 @@ export const pages: LocalePage[] = config.pages;
 export const launchablePages = (): LocalePage[] =>
   pages.filter((p) => p.content.translated);
  
-/** Look up a page by its locale segment, e.g. 'fi'. */
-export const pageByLocale = (locale: string): LocalePage | undefined =>
-  pages.find((p) => p.locale === locale.toLowerCase());
- 
 /** Look up a page by full slug, e.g. '/fi/ukkostutka'. */
 export const pageBySlug = (slug: string): LocalePage | undefined =>
   pages.find((p) => p.slug === slug);
@@ -53,10 +49,6 @@ export const alternatesFor = (page: LocalePage): HreflangEntry[] =>
 /** Absolute canonical URL for a page. */
 export const canonicalFor = (page: LocalePage): string =>
   site.baseUrl + page.slug;
- 
-/** The funnel destination for a locale, e.g. '/fi/play'. */
-export const playHrefFor = (page: LocalePage): string =>
-  funnel.slug.replace('{locale}', page.locale);
 
 /** One entry per language in this page's hreflang cluster, resolved to its
  *  LocalePage so the UI has flag/country/language without extra lookups.

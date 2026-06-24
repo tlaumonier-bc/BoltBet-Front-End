@@ -1,6 +1,5 @@
 // components/live/hudShared.tsx
 // Stateless presentational pieces shared across the /live console panels.
-import type { AlertSample, StormCellSample } from '@/lib/live/locations'
 
 export function Section({
   title,
@@ -42,18 +41,6 @@ export function BigStat({ value, label }: { value: number; label: string }) {
   )
 }
 
-export function SampleTag({ label = 'sample' }: { label?: string }) {
-  return (
-    <span className="rounded-md border border-white/10 bg-white/4 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-white/35">
-      {label}
-    </span>
-  )
-}
-
-export function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs text-white/40">{children}</p>
-}
-
 export function QualityBar({ pct }: { pct: { good: number; medium: number; bad: number } }) {
   return (
     <div className="mt-2">
@@ -71,20 +58,6 @@ export function QualityBar({ pct }: { pct: { good: number; medium: number; bad: 
   )
 }
 
-export function PulseBar({ cgShare }: { cgShare: number }) {
-  return (
-    <div>
-      <div className="flex h-1.5 overflow-hidden rounded-full bg-white/10">
-        <div className="bg-bolt" style={{ width: `${cgShare}%` }} />
-        <div className="bg-electric/70" style={{ width: `${100 - cgShare}%` }} />
-      </div>
-      <div className="mt-1 flex justify-between text-[10px] text-white/40">
-        <span className="text-bolt/80">CG {cgShare}%</span>
-        <span className="text-electric/80">IC {100 - cgShare}%</span>
-      </div>
-    </div>
-  )
-}
 
 export function RateSparkline({ buckets }: { buckets: number[] }) {
   const max = Math.max(1, ...buckets)
@@ -113,42 +86,6 @@ export function RateSparkline({ buckets }: { buckets: number[] }) {
         )
       })}
     </svg>
-  )
-}
-
-const ALERT_STYLE: Record<AlertSample['severity'], string> = {
-  warning: 'border-red-400/30 bg-red-400/10 text-red-300',
-  watch: 'border-bolt/30 bg-bolt/10 text-bolt',
-  advisory: 'border-electric/30 bg-electric/10 text-electric',
-}
-
-export function AlertRow({ alert }: { alert: AlertSample }) {
-  return (
-    <div
-      className={`flex items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-[11px] ${ALERT_STYLE[alert.severity]}`}
-    >
-      <span className="font-medium">{alert.event}</span>
-      <span className="shrink-0 opacity-70">{alert.expires}</span>
-    </div>
-  )
-}
-
-export function StormCellRow({ cell }: { cell: StormCellSample }) {
-  return (
-    <div className="flex items-center justify-between gap-2 rounded-lg bg-white/4 px-2.5 py-1.5 text-[11px]">
-      <span className="font-mono text-white/70">{cell.id}</span>
-      <span className="text-white/50">
-        {cell.bearing} · {cell.speedKph} km/h
-      </span>
-      <span className="text-white/50">hail {cell.hailProb}%</span>
-      {cell.tag ? (
-        <span className="rounded bg-red-400/15 px-1 py-0.5 text-[9px] font-bold text-red-300">
-          {cell.tag}
-        </span>
-      ) : (
-        <span className="text-white/25">—</span>
-      )}
-    </div>
   )
 }
 
