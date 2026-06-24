@@ -3,6 +3,12 @@ import { create } from 'zustand'
 import { DEFAULT_QUALITY, type GlobeQuality } from '@/lib/globe/quality'
 import { defaultLayerState, type GlobeLayerId } from '@/lib/globe/layers'
 import type { CountryStrike } from '@/lib/api'
+import {
+  trackModeChange,
+  trackCountrySelected,
+  trackSeoContentOpened,
+  trackLayerToggled,
+} from '@/lib/analytics'
 
 export type LiveViewMode = 'free' | 'beginner' | 'pro' | 'game'
 export type GlobeMapStyle = 'night' | 'day'
@@ -57,7 +63,10 @@ interface LiveStore {
 
 export const useLiveStore = create<LiveStore>((set) => ({
   mode: 'beginner',
-  setMode: (mode) => set({ mode }),
+  setMode: (mode) => {
+    trackModeChange(mode)
+    set({ mode })
+  },
   orbitTarget: null,
   orbitTo: (target) => set({ orbitTarget: { ...target, requestedAt: Date.now() } }),
   clearOrbit: () => set({ orbitTarget: null }),
@@ -69,25 +78,39 @@ export const useLiveStore = create<LiveStore>((set) => ({
   setQuality: (quality) => set({ quality }),
 
   activeLayers: defaultLayerState(),
-  toggleLayer: (id) =>
-    set((s) => ({ activeLayers: { ...s.activeLayers, [id]: !s.activeLayers[id] } })),
+  toggleLayer: (id) => {
+    set((s) => {
+      const next = !s.activeLayers[id]
+      trackLayerToggled(id, next)
+      return { activeLayers: { ...s.activeLayers, [id]: next } }
+    })
+  },
   setLayer: (id, on) =>
     set((s) => ({ activeLayers: { ...s.activeLayers, [id]: on } })),
 
   selectedCountry: null,
   // Selecting a country turns the strikes layer ON by default and clears stale
   // points/stats; deselecting (null) turns it off.
-  setSelectedCountry: (selectedCountry) =>
+  setSelectedCountry: (selectedCountry) => {
+    trackCountrySelected(selectedCountry?.iso2 ?? null, selectedCountry?.name ?? '')
     set({
       selectedCountry,
       countryStrikesOn: !!selectedCountry,
       countryStrikes: [],
-    }),
+    })
+  },
   countryStrikesOn: false,
   setCountryStrikesOn: (countryStrikesOn) => set({ countryStrikesOn }),
   countryStrikes: [],
   setCountryStrikes: (countryStrikes) => set({ countryStrikes }),
 
   seoContentOpen: false,
-  setSeoContentOpen: (seoContentOpen) => set({ seoContentOpen }),
+  setSeoContentOpen: (seoContentOpen) => {
+    if (seoContentOpen) {
+      // track which slug was opened
+      const country = useLiveStore.getState().selectedCountry
+      if (country?.iso2) trackSeoContentOpened(`/${country.iso2.toLowerCase()}`)
+    }
+    set({ seoContentOpen })
+  },
 }))

@@ -1,10 +1,13 @@
-// the shared site config so the brand/URL live in one place.
+// app/layout.tsx
 import type { Metadata } from 'next';
 import { Unbounded, Sora } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import Nav from '@/components/Nav/Nav';
 import Toaster from '@/components/Toaster/Toaster';
-import { site } from '@/lib/content/content';
+import { site, hreflangClusters } from '@/lib/content/content';
+
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 const unbounded = Unbounded({
   subsets: ['latin'],
@@ -16,6 +19,12 @@ const sora = Sora({
   variable: '--font-sora',
   weight: ['300', '400', '500', '600'],
 });
+
+// hreflang alternates for the root page (x-default + every seo_map locale).
+const rootLanguages: Record<string, string> = {};
+for (const a of hreflangClusters['seo_map'] ?? []) {
+  if (a.hreflang !== 'x-default') rootLanguages[a.hreflang] = a.url;
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.baseUrl),
@@ -29,6 +38,10 @@ export const metadata: Metadata = {
     'lightning map', 'lightning map live', 'lightning tracker', 'lightning strike map',
     'real-time lightning', 'storm tracker', 'blitzortung', 'weather game online',
   ],
+  alternates: {
+    canonical: '/',
+    languages: rootLanguages,
+  },
   openGraph: {
     type: 'website',
     siteName: site.brand,
@@ -68,6 +81,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Nav />
         {children}
         <Toaster />
+
+        {/* ── Google Analytics 4 ─────────────────────────────────────────────
+            Only injected when NEXT_PUBLIC_GA_ID is set at build time.
+            strategy="afterInteractive" means it loads after hydration and
+            never blocks the critical rendering path.
+        ──────────────────────────────────────────────────────────────────── */}
+        {GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_ID}', {
+                  page_path: window.location.pathname,
+                  send_page_view: true
+                });
+              `}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   );

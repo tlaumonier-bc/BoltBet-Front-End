@@ -36,7 +36,12 @@ import {
   getCountryStrikes,
 } from '@/lib/api';
 import type { LightningStrike } from '@/types';
-import { useSessionStore } from '@/store/sessionStore'
+import { useSessionStore } from '@/store/sessionStore';
+import {
+  trackBetPlaced,
+  trackBetResolved,
+  trackTokensClaimed,
+} from '@/lib/analytics';
 
 export const GAME_MS = 30_000;
 export const BUFFER_MS = 10_000;
@@ -297,7 +302,10 @@ export function useStrikeGame(): StrikeGameVM {
       else outcome = 'push';
       const payout =
         outcome === 'won' ? pend.amount * PAYOUT_MULTIPLIER : outcome === 'push' ? pend.amount : 0;
-      useStrikeGameStore.getState().resolveBet(buildResult(pend, finalCount, outcome, payout, at));
+      const result = buildResult(pend, finalCount, outcome, payout, at);
+      useStrikeGameStore.getState().resolveBet(result);
+      // ── analytics ──
+      trackBetResolved({ outcome, amount: pend.amount, payout, scope: pend.scopeKind });
     };
 
     const settleFromServer = (pend: PendingBet) => {
@@ -315,6 +323,13 @@ export function useStrikeGame(): StrikeGameVM {
               buildResult(pend, res.finalCount, res.outcome, res.payout, Date.now()),
               res.tokens, // authoritative balance
             );
+            // ── analytics ──
+            trackBetResolved({
+              outcome: res.outcome,
+              amount: pend.amount,
+              payout: res.payout,
+              scope: pend.scopeKind,
+            });
           }
           resolvingRound = null;
         })
@@ -431,6 +446,9 @@ export function useStrikeGame(): StrikeGameVM {
       placedAt: now,
     });
 
+    // ── analytics ──
+    trackBetPlaced({ side, amount: amt, scope: sc.kind, scopeId: sc.id });
+
     if (GAME_SERVER_ENABLED) {
       placeBetApi({
         roundId,
@@ -479,6 +497,7 @@ export function useStrikeGame(): StrikeGameVM {
   const playGlobe = useCallback(() => setSelectedCountry(null), [setSelectedCountry]);
 
   const claimTokens = useCallback(() => {
+    trackTokensClaimed();
     if (GAME_SERVER_ENABLED) {
       claimTokensApi()
         .then((p) => useStrikeGameStore.getState().setTokens(p.tokens))
