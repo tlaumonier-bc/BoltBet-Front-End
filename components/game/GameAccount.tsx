@@ -1,7 +1,7 @@
 'use client';
 // components/game/GameAccount.tsx — identity onboarding + account chip.
 // Shows a username modal on first entry into game mode; afterwards a small chip
-// lets a guest link an OAuth account (so tokens follow them across devices).
+// lets a guest link an OAuth account (so points follow them across devices).
 import { useEffect, useState } from 'react';
 import { useSessionStore } from '@/store/sessionStore';
 import {
@@ -115,7 +115,7 @@ function PickModal() {
     <Overlay>
       <h2 className="font-display text-xl font-bold">Pick a username</h2>
       <p className="mt-1.5 text-sm text-white/55">
-        Play instantly as a guest, or sign in to save your tokens across devices.
+        Play instantly as a guest, or sign in to save your points across devices.
       </p>
 
       <label className="mt-5 block">
@@ -172,7 +172,7 @@ function LinkModal({ onClose }: { onClose: () => void }) {
       </div>
       <p className="mt-1.5 text-sm text-white/55">
         You&rsquo;re playing as <span className="font-semibold text-white/85">{username}</span>. Sign in to
-        keep your tokens and play from any device.
+        keep your points and play from any device.
       </p>
       <div className="mt-5">
         <OAuthButtons linkToken={token} />

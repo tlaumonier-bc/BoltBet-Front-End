@@ -7,7 +7,7 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 export const metadata: Metadata = {
   title: 'Leaderboard — Top Lightning Predictors',
   description:
-    'See the top players ranked by tokens won predicting real-time lightning strikes.',
+    'See the top players ranked by points won predicting real-time lightning strikes.',
   alternates: { canonical: '/leaderboard' },
 }
 
@@ -47,7 +47,7 @@ export default async function LeaderboardPage() {
       <div className="mx-auto max-w-2xl px-6 pb-24 pt-32">
         <p className="text-xs uppercase tracking-[0.3em] text-electric/70">Rankings</p>
         <h1 className="font-display mt-3 text-4xl font-extrabold sm:text-5xl">Leaderboard</h1>
-        <p className="mt-2 text-white/55">Top lightning predictors by tokens won.</p>
+        <p className="mt-2 text-white/55">Top lightning predictors by points won.</p>
 
         {result.state === 'disabled' && (
           <EmptyCard>The leaderboard goes live once the game backend is connected.</EmptyCard>

@@ -101,11 +101,11 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
         </span>
       </div>
 
-      {/* tokens */}
+      {/* points */}
       <div className="mt-3 rounded-xl border border-white/10 bg-linear-to-br from-white/8 to-transparent px-4 py-3">
         <div className="flex items-end justify-between">
           <div>
-            <div className="text-[10px] uppercase tracking-wider text-white/40">Tokens</div>
+            <div className="text-[10px] uppercase tracking-wider text-white/40">Points</div>
             <div className="font-display text-4xl font-extrabold tabular-nums text-bolt">
               {Math.round(vm.tokens)}
             </div>

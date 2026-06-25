@@ -85,14 +85,14 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
           </span>
         )}
 
-        {/* header: scope + tokens */}
+        {/* header: scope + points */}
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-2">
             <span className="text-base leading-none">{isCountry ? flagEmoji(vm.scope.id || null) : '🌍'}</span>
             <span className="font-medium text-white/85">{vm.scope.label}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] uppercase tracking-wider text-white/40">Tokens</span>
+            <span className="text-[11px] uppercase tracking-wider text-white/40">Points</span>
             <span className="font-display font-bold tabular-nums text-bolt">{Math.round(vm.tokens)}</span>
           </div>
         </div>
@@ -112,10 +112,10 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
           <div className="mt-3 flex items-center justify-between gap-4">
             <div>
               <div className={`font-display text-lg font-bold ${vm.pending.side === 'up' ? 'text-emerald-300' : 'text-rose-300'}`}>
-                {vm.pending.side === 'up' ? '↑ HIGHER' : '↓ LOWER'} · {vm.pending.amount} tokens
+                {vm.pending.side === 'up' ? '↑ HIGHER' : '↓ LOWER'} · {vm.pending.amount} points
               </div>
               <div className="mt-0.5 text-xs text-white/55">
-                win <span className="font-semibold text-bolt">{vm.pending.amount * PAYOUT_MULTIPLIER}</span> tokens
+                win <span className="font-semibold text-bolt">{vm.pending.amount * PAYOUT_MULTIPLIER}</span> points
               </div>
             </div>
             <div className="text-right">
@@ -144,9 +144,9 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
           </div>
         ) : vm.tokens <= 0 ? (
           <div className="mt-3 flex items-center justify-between gap-3">
-            <p className="text-sm text-white/65">You&rsquo;re out of tokens.</p>
+            <p className="text-sm text-white/65">You&rsquo;re out of points.</p>
             <button onClick={vm.claimTokens} className="btn-glow cursor-pointer rounded-xl px-4 py-2.5 text-sm font-bold">
-              Claim 100 free tokens
+              Claim 100 free points
             </button>
           </div>
         ) : vm.canBet ? (
