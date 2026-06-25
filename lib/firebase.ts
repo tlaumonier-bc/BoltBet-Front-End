@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -27,9 +27,7 @@ function auth() {
   return getAuth(app);
 }
 
-export async function signInWithGoogle(): Promise<string> {
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
-  const result = await signInWithPopup(auth(), provider);
+export async function signInAnonymous(): Promise<string> {
+  const result = await signInAnonymously(auth());
   return result.user.getIdToken();
 }

@@ -10,7 +10,7 @@ import {
   exchangeFirebaseToken,
   registerUsername,
 } from '@/lib/api';
-import { firebaseAuthConfigured, signInWithGoogle } from '@/lib/firebase';
+import { firebaseAuthConfigured, signInAnonymous } from '@/lib/firebase';
 
 const NAME_RE = /^[a-zA-Z0-9_-]{3,20}$/;
 type Avail = 'idle' | 'checking' | 'ok' | 'taken' | 'invalid' | 'error';
@@ -27,7 +27,7 @@ function FirebaseAuthButtons({ linkToken }: { linkToken: string | null }) {
     setBusy(true);
     setError(null);
     try {
-      const idToken = await signInWithGoogle();
+      const idToken = await signInAnonymous();
       const session = await exchangeFirebaseToken(idToken, linkToken);
       setAuthed(session.username, session.token);
     } catch {
@@ -45,16 +45,16 @@ function FirebaseAuthButtons({ linkToken }: { linkToken: string | null }) {
         className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
       >
         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-slate-800" aria-hidden>
-          G
+          A
         </span>
-        {busy ? 'Signing in…' : 'Continue with Google'}
+        {busy ? 'Saving…' : 'Continue anonymously'}
       </button>
       {(!GAME_SERVER_ENABLED || !configured) && (
         <p className="text-center text-[11px] text-white/40">
-          {configured ? 'Sign-in unlocks once the game backend is connected.' : 'Firebase config is needed to enable sign-in.'}
+          {configured ? 'Anonymous save unlocks once the game backend is connected.' : 'Firebase config is needed to enable anonymous save.'}
         </p>
       )}
-      {error && <p className="text-center text-[11px] text-rose-300">{error}</p>}
+      {error && <p className="text-center text-[11px] text-rose-300">Anonymous sign-in failed. Please try again.</p>}
     </div>
   );
 }
