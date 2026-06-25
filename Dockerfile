@@ -1,8 +1,5 @@
 # ===== build stage =====
-FROM eu.gcr.io/blockchain-devel/v1/blockchain_node_20:latest AS builder
-
-# Default user is non-root and can't write /app — root for this throwaway stage.
-USER root
+FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
 COPY package*.json ./
@@ -23,15 +20,15 @@ ENV NEXT_PUBLIC_OWM_API_KEY=$NEXT_PUBLIC_OWM_API_KEY
 RUN npm run build
 
 # ===== runtime stage =====
-FROM eu.gcr.io/blockchain-devel/v1/blockchain_node_20:latest
+FROM node:20-bookworm-slim
 
 WORKDIR /app
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder --chown=node:node /app/.next ./.next
+COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/package.json ./package.json
 
-USER blockchain
+USER node
 
 EXPOSE 3000
 CMD ["npm", "run", "start", "--", "-p", "3000"]
