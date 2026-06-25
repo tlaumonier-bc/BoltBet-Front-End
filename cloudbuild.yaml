@@ -4,14 +4,23 @@ substitutions:
   _SERVICE: boltbet-frontend-web
   _IMAGE: boltbet-frontend
   _RUNTIME_SA: vibe-app-runtime@blockchain-gemini.iam.gserviceaccount.com
-  # ── Next.js public env, BAKED IN at build time (next build), not read at runtime ──
-  # _NEXT_PUBLIC_API_URL must be the deployed backend Cloud Run URL.
-  # _NEXT_PUBLIC_WS_URL is the FULL ws endpoint (lib/socket.ts uses it verbatim).
-  _NEXT_PUBLIC_API_URL: https://boltbet-backend-web-CHANGE_ME.europe-west2.run.app
-  _NEXT_PUBLIC_WS_URL: wss://boltbet-backend-web-CHANGE_ME.europe-west2.run.app/ws/lightning/
+  # Next.js public env is baked in at build time. Override these with the
+  # deployed backend Cloud Run URL, for example:
+  # --substitutions=_NEXT_PUBLIC_API_URL=https://...,\
+  # _NEXT_PUBLIC_WS_URL=wss://.../ws/lightning/
+  _NEXT_PUBLIC_API_URL: ""
+  _NEXT_PUBLIC_WS_URL: ""
   _NEXT_PUBLIC_OWM_API_KEY: ""
 
 steps:
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    args:
+      - -ceu
+      - |
+        test -n "${_NEXT_PUBLIC_API_URL}" || { echo "_NEXT_PUBLIC_API_URL is required"; exit 1; }
+        test -n "${_NEXT_PUBLIC_WS_URL}" || { echo "_NEXT_PUBLIC_WS_URL is required"; exit 1; }
+
   - name: gcr.io/cloud-builders/docker
     args:
       - build
