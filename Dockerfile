@@ -1,5 +1,5 @@
 # ===== build stage =====
-FROM eu.gcr.io/blockchain-internal/v1/blockchain_node_20:latest AS builder
+FROM eu.gcr.io/blockchain-devel/v1/blockchain_node_20:latest AS builder
 
 # Default user is non-root and can't write /app — root for this throwaway stage.
 USER root
@@ -23,7 +23,7 @@ ENV NEXT_PUBLIC_OWM_API_KEY=$NEXT_PUBLIC_OWM_API_KEY
 RUN npm run build
 
 # ===== runtime stage =====
-FROM eu.gcr.io/blockchain-internal/v1/blockchain_node_20:latest
+FROM eu.gcr.io/blockchain-devel/v1/blockchain_node_20:latest
 
 WORKDIR /app
 COPY --from=builder /app/.next ./.next
