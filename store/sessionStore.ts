@@ -47,21 +47,6 @@ function save(s: Persisted): void {
   }
 }
 
-// OAuth round-trip: the backend redirects back with the session in the URL
-// fragment (#auth_token=…&auth_user=…), which we consume and then strip.
-function consumeOAuthFragment(): { token: string; username: string } | null {
-  if (typeof window === 'undefined') return null;
-  const hash = window.location.hash.replace(/^#/, '');
-  if (!hash) return null;
-  const p = new URLSearchParams(hash);
-  const token = p.get('auth_token');
-  const username = p.get('auth_user');
-  if (!token || !username) return null;
-  // strip the fragment so the token doesn't linger in the URL / history
-  history.replaceState(null, '', window.location.pathname + window.location.search);
-  return { token, username };
-}
-
 export const useSessionStore = create<SessionStore>((set) => ({
   status: 'loading',
   username: '',
@@ -69,15 +54,7 @@ export const useSessionStore = create<SessionStore>((set) => ({
   suggestedName: randomName(),
 
   init: () => {
-    // 1) returning from an OAuth redirect?
-    const oauth = consumeOAuthFragment();
-    if (oauth) {
-      const next: Persisted = { status: 'authed', username: oauth.username, token: oauth.token };
-      save(next);
-      set({ ...next, suggestedName: randomName() });
-      return;
-    }
-    // 2) existing session?
+    // 1) existing session?
     const saved = load();
     if (saved && saved.username) {
       set({
@@ -87,7 +64,7 @@ export const useSessionStore = create<SessionStore>((set) => ({
       });
       return;
     }
-    // 3) fresh visitor — prefill with the legacy guest id if any, else random
+    // 2) fresh visitor — prefill with the legacy guest id if any, else random
     let suggested = randomName();
     try {
       const legacy = localStorage.getItem(LEGACY_ID_KEY);

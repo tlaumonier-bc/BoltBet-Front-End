@@ -1,42 +1,60 @@
 'use client';
 // components/game/GameAccount.tsx — identity onboarding + account chip.
 // Shows a username modal on first entry into game mode; afterwards a small chip
-// lets a guest link an OAuth account (so points follow them across devices).
+// lets a guest link a Firebase account (so points follow them across devices).
 import { useEffect, useState } from 'react';
 import { useSessionStore } from '@/store/sessionStore';
 import {
   GAME_SERVER_ENABLED,
   checkUsername,
+  exchangeFirebaseToken,
   registerUsername,
-  oauthStartUrl,
 } from '@/lib/api';
+import { firebaseAuthConfigured, signInWithGoogle } from '@/lib/firebase';
 
 const NAME_RE = /^[a-zA-Z0-9_-]{3,20}$/;
 type Avail = 'idle' | 'checking' | 'ok' | 'taken' | 'invalid' | 'error';
 
-function OAuthButtons({ linkToken }: { linkToken: string | null }) {
-  const disabled = !GAME_SERVER_ENABLED;
-  const go = (p: 'google') => {
-    window.location.href = oauthStartUrl(p, linkToken);
+function FirebaseAuthButtons({ linkToken }: { linkToken: string | null }) {
+  const setAuthed = useSessionStore((s) => s.setAuthed);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const configured = firebaseAuthConfigured();
+  const disabled = !GAME_SERVER_ENABLED || !configured || busy;
+
+  const go = async () => {
+    if (disabled) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const idToken = await signInWithGoogle();
+      const session = await exchangeFirebaseToken(idToken, linkToken);
+      setAuthed(session.username, session.token);
+    } catch {
+      setError('Sign-in failed. Please try again.');
+      setBusy(false);
+    }
   };
+
   return (
     <div className="space-y-2">
       <button
         type="button"
         disabled={disabled}
-        onClick={() => go('google')}
+        onClick={go}
         className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
       >
         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-slate-800" aria-hidden>
           G
         </span>
-        Continue with Google
+        {busy ? 'Signing in…' : 'Continue with Google'}
       </button>
-      {disabled && (
+      {(!GAME_SERVER_ENABLED || !configured) && (
         <p className="text-center text-[11px] text-white/40">
-          Sign-in unlocks once the game backend is connected.
+          {configured ? 'Sign-in unlocks once the game backend is connected.' : 'Firebase config is needed to enable sign-in.'}
         </p>
       )}
+      {error && <p className="text-center text-[11px] text-rose-300">{error}</p>}
     </div>
   );
 }
@@ -150,7 +168,7 @@ function PickModal() {
         <span className="h-px flex-1 bg-white/10" /> or <span className="h-px flex-1 bg-white/10" />
       </div>
 
-      <OAuthButtons linkToken={null} />
+      <FirebaseAuthButtons linkToken={null} />
     </Overlay>
   );
 }
@@ -175,7 +193,7 @@ function LinkModal({ onClose }: { onClose: () => void }) {
         keep your points and play from any device.
       </p>
       <div className="mt-5">
-        <OAuthButtons linkToken={token} />
+        <FirebaseAuthButtons linkToken={token} />
       </div>
     </Overlay>
   );

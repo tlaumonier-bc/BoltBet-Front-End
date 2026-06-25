@@ -126,18 +126,14 @@ export async function registerUsername(username: string): Promise<Session> {
 }
 
 /**
- * URL to begin an OAuth flow. `linkToken` (the current guest token) lets the
- * backend merge the guest's tokens into the signed-in account. The backend
- * should redirect back to `next` with `#auth_token=…&auth_user=…`.
+ * Exchange a Firebase ID token for the backend's opaque game session token.
+ * `linkToken` lets the backend merge a guest's points into the Firebase account.
  */
-export function oauthStartUrl(
-  provider: 'google' | 'apple' | 'github',
+export async function exchangeFirebaseToken(
+  idToken: string,
   linkToken?: string | null,
-): string {
-  const q = new URLSearchParams();
-  if (typeof window !== 'undefined') q.set('next', window.location.origin + window.location.pathname);
-  if (linkToken) q.set('link', linkToken);
-  return `${API}/api/auth/${provider}/start/?${q}`;
+): Promise<Session> {
+  return postJson<Session>('/api/auth/firebase/', { idToken, linkToken: linkToken ?? '' });
 }
 
 // ── Up/Down game (server-authoritative; identity comes from the Bearer token) ─
