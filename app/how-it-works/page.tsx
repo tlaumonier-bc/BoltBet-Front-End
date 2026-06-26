@@ -46,7 +46,7 @@ const faq = {
       name: 'How does the prediction game work?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Time runs in 40-second cycles: a 30-second game where strikes are counted, then a 10-second window to bet. In that window you call whether the next 30 seconds will bring more (Higher) or fewer (Lower) strikes than the 30 seconds that just ended. A correct call pays 2x your stake, a tie returns your stake, and a wrong call loses it. You can play the whole globe or a single country.',
+        text: 'You can place one active bet at a time whenever you want. When you bet, the game snapshots the previous 30 seconds for your chosen scope, then counts the next 30 seconds. You call whether the next window will bring more (Higher) or fewer (Lower) strikes than the previous one. A correct call pays 2x your stake, a tie returns your stake, and a wrong call loses it. You can play the whole globe or a single country.',
       },
     },
     {
@@ -68,25 +68,21 @@ const faq = {
   ],
 }
 
-function CycleTimeline() {
+function BetTimeline() {
   return (
     <div className="mt-5">
       <div className="flex overflow-hidden rounded-xl border border-white/10 text-center text-[11px] font-semibold">
-        <div className="bg-electric/15 px-3 py-3 text-electric" style={{ flex: 3 }}>
-          Previous game · 30s
+        <div className="bg-electric/15 px-3 py-3 text-electric" style={{ flex: 1 }}>
+          Previous 30s
           <span className="mt-1 block text-[10px] font-normal text-white/50">strikes counted</span>
         </div>
-        <div className="bg-white/5 px-3 py-3 text-white/60" style={{ flex: 1 }}>
-          Buffer · 10s
-          <span className="mt-1 block text-[10px] font-normal text-white/40">bet now</span>
-        </div>
-        <div className="bg-bolt/15 px-3 py-3 text-bolt" style={{ flex: 3 }}>
-          Next game · 30s
+        <div className="bg-bolt/15 px-3 py-3 text-bolt" style={{ flex: 1 }}>
+          Your bet · next 30s
           <span className="mt-1 block text-[10px] font-normal text-white/50">strikes counted</span>
         </div>
       </div>
       <p className="mt-2 text-xs text-white/40">
-        One full cycle is 40 seconds: a 30-second game, a 10-second window to place your bet, then the next 30-second game.
+        There is no shared round timer. Your 30-second window starts the moment your bet is accepted.
       </p>
     </div>
   )
@@ -148,17 +144,17 @@ export default function HowItWorksPage() {
         <div className="glass mt-10 rounded-2xl p-6">
           <h2 className="font-display text-xl font-bold">Play: Higher or Lower</h2>
           <p className="mt-3 text-white/65">
-            Game mode turns the globe into a fast prediction game. Strikes are counted during each 30-second game; then a
-            10-second window opens for you to bet. In that window you call whether the next 30 seconds will bring{' '}
+            Game mode turns the globe into a fast prediction game. Place a bet whenever you want, as long as you do not already
+            have one in progress. The game snapshots the last 30 seconds, then you call whether the next 30 seconds will bring{' '}
             <span className="font-semibold text-emerald-300">Higher</span> (more) or{' '}
-            <span className="font-semibold text-rose-300">Lower</span> (fewer) strikes than the 30 seconds that just finished.
+            <span className="font-semibold text-rose-300">Lower</span> (fewer) strikes.
           </p>
           <p className="mt-3 text-white/65">
             Get it right and you win <span className="font-semibold text-bolt">2×</span> your stake. A tie returns your stake (a
             push); a wrong call loses it.
           </p>
 
-          <CycleTimeline />
+          <BetTimeline />
 
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl bg-white/4 p-4">

@@ -7,7 +7,6 @@ import { flagEmoji } from '@/lib/live/owm';
 import {
   PAYOUT_MULTIPLIER,
   GAME_MS,
-  BUFFER_MS,
   type StrikeGameVM,
 } from '@/lib/game/useStrikeGame';
 
@@ -17,16 +16,11 @@ const FLOAT_MS = 1600;
 export default function BetBar({ vm }: { vm: StrikeGameVM }) {
   const [amount, setAmount] = useState(10);
   const isCountry = vm.scope.kind === 'country';
-  const betting = vm.phase === 'betting';
 
   const clampAmt = Math.max(1, Math.min(amount, Math.max(1, Math.floor(vm.tokens))));
   const toWin = clampAmt * PAYOUT_MULTIPLIER;
 
-  // One progress bar, scoped to the active phase:
-  //  • locked (game running)  → fill over the 30s game window
-  //  • betting (buffer)       → fill over the 10s betting window
-  const gamePct = Math.min(100, (vm.elapsedMs / GAME_MS) * 100);
-  const bufferPct = Math.min(100, Math.max(0, ((vm.elapsedMs - GAME_MS) / BUFFER_MS) * 100));
+  const gamePct = vm.pending ? Math.min(100, (vm.elapsedMs / GAME_MS) * 100) : 0;
 
   // ── result float: rises out of the top of the bar when a bet resolves ──────
   const lastResult = useStrikeGameStore((s) => s.history[0]);
@@ -97,13 +91,11 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
           </div>
         </div>
 
-        {/* single phase-scoped progress bar */}
+        {/* per-bet progress bar */}
         <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
           <div
-            className={`absolute inset-y-0 left-0 transition-[width] duration-200 ease-linear ${
-              betting ? 'bg-emerald-400/80' : 'bg-bolt/80'
-            }`}
-            style={{ width: `${betting ? bufferPct : gamePct}%` }}
+            className="absolute inset-y-0 left-0 bg-bolt/80 transition-[width] duration-200 ease-linear"
+            style={{ width: `${gamePct}%` }}
           />
         </div>
 
@@ -193,18 +185,18 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
                 </button>
               </div>
               <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300">
-                {Math.ceil(vm.msUntilLock / 1000)}s to bet
+                Bet anytime
               </span>
             </div>
           </div>
         ) : (
           <div className="mt-3 flex items-center justify-between gap-4">
-            <p className="text-sm font-medium text-white/75">Game in play — betting locked.</p>
+            <p className="text-sm font-medium text-white/75">Waiting for this bet to settle.</p>
             <div className="text-right">
               <div className="font-display text-2xl font-extrabold tabular-nums text-electric">
                 {Math.ceil(vm.msUntilResolve / 1000)}
               </div>
-              <div className="text-[10px] uppercase tracking-wider text-white/40">seconds to next bet</div>
+              <div className="text-[10px] uppercase tracking-wider text-white/40">seconds to result</div>
             </div>
           </div>
         )}

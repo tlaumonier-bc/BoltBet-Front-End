@@ -64,11 +64,10 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
     );
   }
 
-  const phaseLabel = vm.phase === 'betting' ? 'Open' : vm.pending ? 'In play' : 'Locked';
-  const countdown =
-    vm.phase === 'betting'
-      ? `${Math.ceil(vm.msUntilLock / 1000)}s to bet`
-      : `${Math.ceil(vm.msUntilResolve / 1000)}seconds to result`;
+  const phaseLabel = vm.pending ? 'In play' : 'Ready';
+  const countdown = vm.pending
+    ? `${Math.ceil(vm.msUntilResolve / 1000)}s to result`
+    : 'bet anytime';
 
   return (
     <div className="glass panel-scroll pointer-events-auto min-h-0 w-full overflow-y-auto rounded-2xl p-4">
@@ -94,7 +93,7 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
         )}
         <span
           className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-            vm.phase === 'betting' ? 'bg-emerald-400/15 text-emerald-300' : 'bg-white/8 text-white/55'
+            !vm.pending ? 'bg-emerald-400/15 text-emerald-300' : 'bg-white/8 text-white/55'
           }`}
         >
           {phaseLabel}
