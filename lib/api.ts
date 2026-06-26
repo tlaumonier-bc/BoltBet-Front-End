@@ -68,6 +68,31 @@ export interface CountryStrike {
   received_at: string;
 }
 
+export interface WeatherNow {
+  tempC: number;
+  clouds: number;
+  windKph: number;
+  humidity: number;
+  main: string;
+  icon: string;
+  country?: string;
+}
+
+export interface CountryNewsArticle {
+  title: string;
+  url: string;
+  source: string;
+  publishedAt: string;
+}
+
+export interface CountryNewsResponse {
+  country: string;
+  lang: string;
+  query: string;
+  fetchedAt: string;
+  articles: CountryNewsArticle[];
+}
+
 export async function getRecentStrikes(
   minutes: number,
   limit = 5000,
@@ -101,6 +126,30 @@ export async function getCountryStrikes(country: string, limit = 1000): Promise<
   return data[country.toUpperCase()] ?? [];
 }
 
+export async function getWeatherNow(lat: number, lon: number): Promise<WeatherNow> {
+  const q = new URLSearchParams({ lat: String(lat), lon: String(lon) });
+  const res = await fetch(`${API}/api/weather/now/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`weather ${res.status}`);
+  return res.json();
+}
+
+export async function getCountryNews(params: {
+  country: string;
+  lang: string;
+  query: string;
+  limit?: number;
+}): Promise<CountryNewsResponse> {
+  const q = new URLSearchParams({
+    country: params.country,
+    lang: params.lang,
+    q: params.query,
+    limit: String(params.limit ?? 5),
+  });
+  const res = await fetch(`${API}/api/news/country/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`country news ${res.status}`);
+  return res.json();
+}
+
 // ── identity / auth ───────────────────────────────────────────────────────
 export interface UsernameCheck {
   available: boolean;
@@ -126,18 +175,14 @@ export async function registerUsername(username: string): Promise<Session> {
 }
 
 /**
- * URL to begin an OAuth flow. `linkToken` (the current guest token) lets the
- * backend merge the guest's tokens into the signed-in account. The backend
- * should redirect back to `next` with `#auth_token=…&auth_user=…`.
+ * Exchange a Firebase ID token for the backend's opaque game session token.
+ * `linkToken` lets the backend merge a guest's points into the Firebase account.
  */
-export function oauthStartUrl(
-  provider: 'google' | 'apple' | 'github',
+export async function exchangeFirebaseToken(
+  idToken: string,
   linkToken?: string | null,
-): string {
-  const q = new URLSearchParams();
-  if (typeof window !== 'undefined') q.set('next', window.location.origin + window.location.pathname);
-  if (linkToken) q.set('link', linkToken);
-  return `${API}/api/auth/${provider}/start/?${q}`;
+): Promise<Session> {
+  return postJson<Session>('/api/auth/firebase/', { idToken, linkToken: linkToken ?? '' });
 }
 
 // ── Up/Down game (server-authoritative; identity comes from the Bearer token) ─

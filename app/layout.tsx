@@ -5,7 +5,7 @@ import Script from 'next/script';
 import './globals.css';
 import Nav from '@/components/Nav/Nav';
 import Toaster from '@/components/Toaster/Toaster';
-import { site, hreflangClusters } from '@/lib/content/content';
+import { site } from '@/lib/content/content';
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
@@ -19,12 +19,6 @@ const sora = Sora({
   variable: '--font-sora',
   weight: ['300', '400', '500', '600'],
 });
-
-// hreflang alternates for the root page (x-default + every seo_map locale).
-const rootLanguages: Record<string, string> = {};
-for (const a of hreflangClusters['seo_map'] ?? []) {
-  if (a.hreflang !== 'x-default') rootLanguages[a.hreflang] = a.url;
-}
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.baseUrl),
@@ -40,7 +34,6 @@ export const metadata: Metadata = {
   ],
   alternates: {
     canonical: '/',
-    languages: rootLanguages,
   },
   openGraph: {
     type: 'website',

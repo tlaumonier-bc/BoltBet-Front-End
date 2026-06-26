@@ -6,7 +6,7 @@ import { site } from '@/lib/content/content'
 export const metadata: Metadata = {
   title: 'How It Works — Live Lightning Globe & Prediction Game',
   description:
-    'How the live lightning globe works: real-time strikes from the Blitzortung network, view modes and weather layers, clicking any country, and the Higher/Lower 30-second prediction game played with free virtual tokens.',
+    'How the live lightning globe works: real-time strikes from the Blitzortung network, view modes and weather layers, clicking any country, and the Higher/Lower 30-second prediction game played with free virtual points.',
   keywords: [
     'how the lightning map works', 'real-time lightning globe', 'lightning prediction game',
     'blitzortung', 'lightning strike map', 'where is lightning striking now',
@@ -18,7 +18,7 @@ const MODES = [
   { name: 'Free', icon: '🌍', blurb: 'Just the globe — strikes flashing worldwide, nothing else on screen.' },
   { name: 'Beginner', icon: '⚡', blurb: 'Adds a live console: orbit shortcuts, strikes in the last hour, clouds and rain layers, and a running activity readout.' },
   { name: 'Pro', icon: '📡', blurb: 'Everything in Beginner plus 6h / 24h strike trails, temperature and wind layers, feed health, latency and signal-quality telemetry.' },
-  { name: 'Game', icon: '🎯', blurb: 'Predict whether the next 30 seconds bring more or fewer strikes than the last — for free virtual tokens.' },
+  { name: 'Game', icon: '🎯', blurb: 'Predict whether the next 30 seconds bring more or fewer strikes than the last — for free virtual points.' },
 ]
 
 const faq = {
@@ -54,7 +54,7 @@ const faq = {
       name: 'Is the game played with real money?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'No. The game uses free virtual tokens only. You start with 100 and can claim 100 more whenever you run out. There is no real-money wagering.',
+        text: 'No. The game uses free virtual points only. You start with 100 and can claim 100 more whenever you run out. There is no real-money wagering.',
       },
     },
     {
@@ -168,15 +168,15 @@ export default function HowItWorksPage() {
               </p>
             </div>
             <div className="rounded-xl bg-white/4 p-4">
-              <div className="text-[10px] uppercase tracking-wider text-electric/70">Tokens</div>
+              <div className="text-[10px] uppercase tracking-wider text-electric/70">Points</div>
               <p className="mt-1.5 text-sm text-white/65">
-                Start with 100 free virtual tokens and claim 100 more whenever you run out. There is no real money.
+                Start with 100 free virtual points and claim 100 more whenever you run out. There is no real money.
               </p>
             </div>
             <div className="rounded-xl bg-white/4 p-4">
               <div className="text-[10px] uppercase tracking-wider text-electric/70">Leaderboard</div>
               <p className="mt-1.5 text-sm text-white/65">
-                Sign in with Google to keep your tokens across devices and climb the leaderboard, ranked by tokens won.
+                Sign in with Google to keep your points across devices and climb the leaderboard, ranked by points won.
               </p>
             </div>
           </div>
