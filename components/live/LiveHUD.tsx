@@ -9,11 +9,15 @@ import StrikeGamePanel from '@/components/game/StrikeGamePanel'
 import BetBar from '@/components/game/BetBar'
 import GameAccount from '@/components/game/GameAccount'
 import { useStrikeGame } from '@/lib/game/useStrikeGame'
+import { useSessionStore } from '@/store/sessionStore'
 
 export default function LiveHUD() {
   const mode = useLiveStore((s) => s.mode)
   const selectedCountry = useLiveStore((s) => s.selectedCountry)
+  const sessionStatus = useSessionStore((s) => s.status)
   const isGame = mode === 'game'
+  const gameSessionReady = sessionStatus === 'guest' || sessionStatus === 'authed'
+  const showGamePanels = isGame && gameSessionReady
 
   // Always run the game clock so pending bets resolve even after switching modes.
   const vm = useStrikeGame()
@@ -24,7 +28,7 @@ export default function LiveHUD() {
       <div className="pointer-events-none fixed bottom-4 left-4 right-4 top-20 z-40 flex flex-col gap-3 md:right-auto md:w-75">
         {isGame && <GameAccount />}
         <ModeBar />
-        {mode !== 'free' && <LeftPanel pro={mode === 'pro' || isGame} />}
+        {mode !== 'free' && (!isGame || showGamePanels) && <LeftPanel pro={mode === 'pro' || isGame} />}
       </div>
 
       {/* Right column */}
@@ -33,17 +37,17 @@ export default function LiveHUD() {
           <ModeBar />
         </div>
 
-        {isGame ? (
+        {showGamePanels ? (
           <StrikeGamePanel vm={vm} />
         ) : selectedCountry ? (
           <CountryPanel />
         ) : (
-          mode !== 'free' && <GlobeInfoPanel pro={mode === 'pro'} />
+          !isGame && mode !== 'free' && <GlobeInfoPanel pro={mode === 'pro'} />
         )}
       </div>
 
       {/* Bottom-centre betting bar (Game mode only) */}
-      {isGame && <BetBar vm={vm} />}
+      {showGamePanels && <BetBar vm={vm} />}
     </>
   )
 }

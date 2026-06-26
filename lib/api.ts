@@ -68,6 +68,31 @@ export interface CountryStrike {
   received_at: string;
 }
 
+export interface WeatherNow {
+  tempC: number;
+  clouds: number;
+  windKph: number;
+  humidity: number;
+  main: string;
+  icon: string;
+  country?: string;
+}
+
+export interface CountryNewsArticle {
+  title: string;
+  url: string;
+  source: string;
+  publishedAt: string;
+}
+
+export interface CountryNewsResponse {
+  country: string;
+  lang: string;
+  query: string;
+  fetchedAt: string;
+  articles: CountryNewsArticle[];
+}
+
 export async function getRecentStrikes(
   minutes: number,
   limit = 5000,
@@ -99,6 +124,30 @@ export async function getCountryStrikes(country: string, limit = 1000): Promise<
   if (!res.ok) throw new Error(`country strikes ${res.status}`);
   const data = (await res.json()) as Record<string, CountryStrike[]>;
   return data[country.toUpperCase()] ?? [];
+}
+
+export async function getWeatherNow(lat: number, lon: number): Promise<WeatherNow> {
+  const q = new URLSearchParams({ lat: String(lat), lon: String(lon) });
+  const res = await fetch(`${API}/api/weather/now/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`weather ${res.status}`);
+  return res.json();
+}
+
+export async function getCountryNews(params: {
+  country: string;
+  lang: string;
+  query: string;
+  limit?: number;
+}): Promise<CountryNewsResponse> {
+  const q = new URLSearchParams({
+    country: params.country,
+    lang: params.lang,
+    q: params.query,
+    limit: String(params.limit ?? 5),
+  });
+  const res = await fetch(`${API}/api/news/country/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`country news ${res.status}`);
+  return res.json();
 }
 
 // ── identity / auth ───────────────────────────────────────────────────────

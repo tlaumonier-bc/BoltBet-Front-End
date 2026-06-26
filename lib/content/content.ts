@@ -85,3 +85,25 @@ export const languageAlternatesFor = (page: LocalePage): LanguageAlternate[] => 
   }
   return out;
 };
+
+/**
+ * Human-only display translation template for a country SEO page.
+ *
+ * The current content model has one country per language URL, so these are not
+ * true hreflang equivalents. Use this only for opt-in client-side reading help,
+ * never for canonical URLs, metadata alternates, or sitemap entries.
+ */
+export const englishTranslationTemplateFor = (page: LocalePage): LocalePage | undefined =>
+  pages.find(
+    (p) =>
+      p.pageType === page.pageType &&
+      p.language === 'English' &&
+      p.content.translated &&
+      p.locale === 'gb',
+  ) ??
+  pages.find(
+    (p) =>
+      p.pageType === page.pageType &&
+      p.language === 'English' &&
+      p.content.translated,
+  );

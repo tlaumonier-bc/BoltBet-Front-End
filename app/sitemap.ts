@@ -5,7 +5,7 @@
 // Untranslated localized pages appear automatically once authored (Phase 6).
 
 import type { MetadataRoute } from 'next';
-import { site, launchablePages, alternatesFor } from '@/lib/content/content';
+import { site, launchablePages } from '@/lib/content/content';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -17,21 +17,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/leaderboard`, lastModified: now, changeFrequency: 'daily', priority: 0.5 },
   ];
 
-  const localeRoutes: MetadataRoute.Sitemap = launchablePages().map((p) => {
-    // hreflang alternates for this page's cluster (excluding x-default, which
-    // sitemap `alternates.languages` doesn't model the same way).
-    const languages: Record<string, string> = {};
-    for (const a of alternatesFor(p)) {
-      if (a.hreflang !== 'x-default') languages[a.hreflang] = a.url;
-    }
-    return {
-      url: `${base}${p.slug}`,
-      lastModified: now,
-      changeFrequency: 'hourly' as const,
-      priority: 0.8,
-      alternates: { languages },
-    };
-  });
+  const localeRoutes: MetadataRoute.Sitemap = launchablePages().map((p) => ({
+    url: `${base}${p.slug}`,
+    lastModified: now,
+    changeFrequency: 'hourly' as const,
+    priority: 0.8,
+  }));
 
   return [...staticRoutes, ...localeRoutes];
 }
