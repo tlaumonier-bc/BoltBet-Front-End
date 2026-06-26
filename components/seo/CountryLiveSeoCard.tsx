@@ -10,6 +10,44 @@ import StrikeHistoryChart from '@/components/live/StrikeHistoryChart';
 
 type LoadState = 'loading' | 'ready' | 'empty';
 
+const NEWS_TERMS_BY_LANG: Record<string, string> = {
+  cs: 'bouřka blesky',
+  da: 'torden lyn',
+  de: 'gewitter blitz',
+  el: 'καταιγίδα κεραυνοί',
+  en: 'lightning thunderstorm',
+  es: 'rayos tormenta',
+  et: 'äike välk',
+  fi: 'ukkonen salama',
+  fr: 'orage foudre',
+  hr: 'nevrijeme munje',
+  it: 'temporali fulmini',
+  lt: 'audra žaibai',
+  lv: 'negaiss zibens',
+  nb: 'tordenvær lyn',
+  nl: 'onweer bliksem',
+  pl: 'burza pioruny',
+  ro: 'furtună fulgere',
+  sk: 'búrka blesky',
+  sr: 'oluja munje',
+  sv: 'åska blixt',
+};
+
+function localCountryName(page: LocalePage): string {
+  const lang = page.hreflang.split('-')[0].toLowerCase();
+  try {
+    return new Intl.DisplayNames([lang], { type: 'region' }).of(page.locale.toUpperCase()) ?? page.country;
+  } catch {
+    return page.country;
+  }
+}
+
+function newsQueryFor(page: LocalePage): string {
+  const lang = page.hreflang.split('-')[0].toLowerCase();
+  const terms = NEWS_TERMS_BY_LANG[lang] ?? page.leadSecondary?.term ?? page.primaryKeyword;
+  return `${terms} ${localCountryName(page)}`;
+}
+
 function ago(ms: number): string {
   const s = Math.max(0, Math.round(ms / 1000));
   if (s < 60) return `${s}s ago`;
@@ -63,7 +101,7 @@ export default function CountryLiveSeoCard({ page }: { page: LocalePage }) {
       getCountryNews({
         country: page.locale,
         lang: page.hreflang.toLowerCase(),
-        query: `${page.primaryKeyword} ${page.country}`,
+        query: newsQueryFor(page),
         limit: 5,
       }),
     ]).then(([strikeResult, weatherResult, newsResult]) => {

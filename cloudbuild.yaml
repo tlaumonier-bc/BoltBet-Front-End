@@ -8,8 +8,8 @@ substitutions:
   # deployed backend Cloud Run URL, for example:
   # --substitutions=_NEXT_PUBLIC_API_URL=https://...,\
   # _NEXT_PUBLIC_WS_URL=wss://.../ws/lightning/
-  _NEXT_PUBLIC_API_URL: https://boltbet-backend-web-2ulnbyw42a-nw.a.run.app
-  _NEXT_PUBLIC_WS_URL: wss://boltbet-backend-web-2ulnbyw42a-nw.a.run.app/ws/lightning/
+  _NEXT_PUBLIC_API_URL: https://api.lightningmapsgame.com
+  _NEXT_PUBLIC_WS_URL: wss://api.lightningmapsgame.com/ws/lightning/
   _NEXT_PUBLIC_GAME_SERVER: "1"
   _NEXT_PUBLIC_OWM_API_KEY: ""
   _NEXT_PUBLIC_FIREBASE_API_KEY: AIzaSyBnwj0QnamOhspYGG_4tUQRBOTD0mgMtCo
