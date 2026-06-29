@@ -3,9 +3,9 @@ import type { Metadata } from 'next';
 import GlobeExperience from '@/components/experience/GlobeExperience';
 
 export const metadata: Metadata = {
-  title: 'Live Lightning Globe — Real-Time Strikes Worldwide',
+  title: 'Lightning Map Game — Live Lightning Map & Real-Time Strikes Worldwide',
   description:
-    'Watch real-time lightning strikes worldwide on a live 3D globe. Click any country to zoom in and see its latest strikes. Powered by the Blitzortung community detection network.',
+    'Watch real-time lightning strikes worldwide on a live 3D globe. Click any country to zoom in and see its latest strikes. Learn everything about strikes on lightning map game.',
   alternates: { canonical: '/' },
   robots: { index: true, follow: true },
 };
