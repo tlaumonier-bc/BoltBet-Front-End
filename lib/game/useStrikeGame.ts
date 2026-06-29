@@ -1,11 +1,8 @@
 'use client';
 // lib/game/useStrikeGame.ts
-// Up/Down strike-prediction game. Round model (anchored to wall-clock so it's
-// deterministic across tabs):
-//   cycle c: [c*40s, c*40s+30s] = GAME window (strikes counted, betting locked)
-//            [c*40s+30s, c*40s+40s] = BUFFER (10s, betting open, strikes IGNORED)
-// During the buffer of cycle c you bet on game c+1 vs game c. Buffer strikes
-// count for neither game.
+// Up/Down strike-prediction game. Each user starts their own 30-second window
+// when they place a bet. They can place a new bet whenever no previous bet is
+// pending, for either the whole globe or one active country.
 //
 // Settlement is server-authoritative when NEXT_PUBLIC_GAME_SERVER=1: bets are
 // POSTed, the backend counts the window and credits tokens, and the client
@@ -44,17 +41,13 @@ import {
 } from '@/lib/analytics';
 
 export const GAME_MS = 30_000;
-export const BUFFER_MS = 10_000;
-export const CYCLE_MS = GAME_MS + BUFFER_MS; // 40_000
 export const PAYOUT_MULTIPLIER = 2;
 
 const TICK_MS = 250;
 const PREV_BARS = 30;
-const BUFFER_BARS = 10;
 const CUR_BARS = 30;
-export const SERIES_LEN = PREV_BARS + BUFFER_BARS + CUR_BARS; // 70
-export const SERIES_BUFFER_START = PREV_BARS;        // 30
-export const SERIES_CURRENT_START = PREV_BARS + BUFFER_BARS; // 40
+export const SERIES_LEN = PREV_BARS + CUR_BARS; // previous 30s + bet window
+export const SERIES_CURRENT_START = PREV_BARS;
 
 
 export type GamePhase = 'betting' | 'locked';
@@ -70,8 +63,7 @@ export interface StrikeGameVM {
   playable: boolean;
   phase: GamePhase;
   roundId: number;
-  elapsedMs: number; // offset within the 40s cycle
-  msUntilLock: number;
+  elapsedMs: number; // elapsed time within the pending bet window
   msUntilResolve: number;
   nowIndex: number;
   prevCount: number;
@@ -111,17 +103,6 @@ function countWindow(
   return c;
 }
 
-// Count strikes inside game window of `cycle` (buffer is naturally excluded).
-function gameCount(
-  strikes: LightningStrike[],
-  kind: 'globe' | 'country',
-  id: string,
-  cycle: number,
-): number {
-  const lo = cycle * CYCLE_MS;
-  return countWindow(strikes, kind, id, lo, lo + GAME_MS);
-}
-
 function currentScope(): GameScope {
   const sel = useLiveStore.getState().selectedCountry;
   return sel
@@ -132,8 +113,6 @@ function currentScope(): GameScope {
 interface Derived {
   roundId: number;
   elapsedMs: number;
-  inBuffer: boolean;
-  msUntilLock: number;
   msUntilResolve: number;
   nowIndex: number;
   prevCount: number;
@@ -146,12 +125,10 @@ interface Derived {
 
 function emptyDerived(): Derived {
   return {
-    roundId: Math.floor(Date.now() / CYCLE_MS),
+    roundId: Date.now(),
     elapsedMs: 0,
-    inBuffer: false,
-    msUntilLock: 0,
     msUntilResolve: GAME_MS,
-    nowIndex: SERIES_CURRENT_START,
+    nowIndex: PREV_BARS,
     prevCount: 0,
     currentCount: 0,
     rollingLast30: 0,
@@ -184,11 +161,11 @@ export function useStrikeGame(): StrikeGameVM {
   useEffect(() => {
     const saved = loadPersisted();
     if (saved) {
-      const curCycle = Math.floor(Date.now() / CYCLE_MS);
       let pend = saved.pending ?? null;
       let tok = typeof saved.tokens === 'number' ? saved.tokens : START_TOKENS;
-      // Bet whose game already ended while away can't be fairly resolved — refund.
-      if (pend && pend.roundId < curCycle) {
+      // A local-only bet whose window ended while away cannot be fairly
+      // resolved. Server bets keep their id and will settle when polled.
+      if (pend && !pend.betId && Date.now() >= pend.placedAt + GAME_MS) {
         tok += pend.amount;
         pend = null;
       }
@@ -336,29 +313,35 @@ export function useStrikeGame(): StrikeGameVM {
         .catch(() => {
           // backend offline → settle locally so the round still closes
           const s = useGameStore.getState().strikes;
-          settleLocally(pend, gameCount(s, pend.scopeKind, pend.scopeId, pend.roundId), Date.now());
+          settleLocally(
+            pend,
+            countWindow(s, pend.scopeKind, pend.scopeId, pend.placedAt, pend.placedAt + GAME_MS),
+            Date.now(),
+          );
           resolvingRound = null;
         });
     };
 
     const tick = () => {
       const now = Date.now();
-      const cycle = Math.floor(now / CYCLE_MS);
-      const cycleStart = cycle * CYCLE_MS;
-      const offset = now - cycleStart; // 0..40000
-      const inBuffer = offset >= GAME_MS; // last 10s → betting open for next game
-      const activeRound = inBuffer ? cycle + 1 : cycle;
-
       const strikes = useGameStore.getState().strikes;
       const { kind, id } = currentScope();
+      const pend = useStrikeGameStore.getState().pending;
 
-      const prevCount = gameCount(strikes, kind, id, activeRound - 1);
-      const currentCount = gameCount(strikes, kind, id, activeRound);
+      const windowStart = pend?.placedAt ?? now;
+      const windowEnd = windowStart + GAME_MS;
+      const baselineStart = windowStart - GAME_MS;
+
+      const prevCount = countWindow(strikes, kind, id, now - GAME_MS, now + 1);
+      const currentCount = pend
+        ? countWindow(strikes, pend.scopeKind, pend.scopeId, pend.placedAt, Math.min(now + 1, pend.placedAt + GAME_MS))
+        : 0;
       const rollingLast30 = countWindow(strikes, kind, id, now - GAME_MS, now + 1);
 
-      // series anchored to activeRound: prev game | buffer | current game (70s)
-      const base = (activeRound - 1) * CYCLE_MS;
-      const top = base + SERIES_LEN * 1000;
+      // series anchored to the active bet if present, otherwise to "now":
+      // previous 30s | current 30s bet window.
+      const base = baselineStart;
+      const top = windowEnd;
       const series = new Array(SERIES_LEN).fill(0);
       for (const s of strikes) {
         if (s.receivedAt < base) break;
@@ -370,15 +353,20 @@ export function useStrikeGame(): StrikeGameVM {
       const seriesMax = Math.max(1, ...series);
       const nowIndex = Math.max(0, Math.min(SERIES_LEN, Math.floor((now - base) / 1000)));
 
-      const msUntilLock = inBuffer ? Math.max(0, activeRound * CYCLE_MS - now) : 0;
-      const msUntilResolve = Math.max(0, activeRound * CYCLE_MS + GAME_MS - now);
+      const elapsedMs = pend ? Math.max(0, Math.min(GAME_MS, now - pend.placedAt)) : 0;
+      const msUntilResolve = pend ? Math.max(0, pend.placedAt + GAME_MS - now) : 0;
 
       // pending bet's live count + resolution
-      const pend = useStrikeGameStore.getState().pending;
       let pendingCurrentCount = 0;
       if (pend) {
-        pendingCurrentCount = gameCount(strikes, pend.scopeKind, pend.scopeId, pend.roundId);
-        if (now >= pend.roundId * CYCLE_MS + GAME_MS) {
+        pendingCurrentCount = countWindow(
+          strikes,
+          pend.scopeKind,
+          pend.scopeId,
+          pend.placedAt,
+          Math.min(now + 1, pend.placedAt + GAME_MS),
+        );
+        if (now >= pend.placedAt + GAME_MS) {
           // Server settles when it accepted the bet; otherwise (local mode, or a
           // POST that never landed) settle locally so the round always closes.
           if (GAME_SERVER_ENABLED && pend.betId) settleFromServer(pend);
@@ -387,10 +375,8 @@ export function useStrikeGame(): StrikeGameVM {
       }
 
       setDerived({
-        roundId: activeRound,
-        elapsedMs: offset,
-        inBuffer,
-        msUntilLock,
+        roundId: pend?.roundId ?? now,
+        elapsedMs,
         msUntilResolve,
         nowIndex,
         prevCount,
@@ -407,18 +393,15 @@ export function useStrikeGame(): StrikeGameVM {
     return () => clearInterval(t);
   }, []);
 
-  const phase: GamePhase = derived.inBuffer ? 'betting' : 'locked';
+  const phase: GamePhase = pending ? 'locked' : 'betting';
   const playable = scope.kind === 'globe' ? true : scope.id !== '' && derived.rollingLast30 > 0;
-  const canBet = phase === 'betting' && !pending && playable && tokens > 0;
+  const canBet = !pending && playable && tokens > 0;
 
   const placeBet = useCallback((side: BetSide, amount: number) => {
     const st = useStrikeGameStore.getState();
     if (st.pending) return;
 
     const now = Date.now();
-    const cycle = Math.floor(now / CYCLE_MS);
-    const offset = now - cycle * CYCLE_MS;
-    if (offset < GAME_MS) return; // betting only during the buffer
 
     const sc = currentScope();
     const strikes = useGameStore.getState().strikes;
@@ -431,8 +414,8 @@ export function useStrikeGame(): StrikeGameVM {
     const amt = Math.max(1, Math.min(Math.floor(amount), st.tokens));
     if (amt <= 0) return;
 
-    const roundId = cycle + 1; // betting on the next game
-    const prevCount = gameCount(strikes, sc.kind, sc.id, cycle); // just-finished game
+    const roundId = now; // legacy/audit id; the window starts at placedAt.
+    const prevCount = countWindow(strikes, sc.kind, sc.id, now - GAME_MS, now + 1);
 
     // Optimistic local debit so the UI reacts instantly.
     st.placeBet({
@@ -513,7 +496,6 @@ export function useStrikeGame(): StrikeGameVM {
     phase,
     roundId: derived.roundId,
     elapsedMs: derived.elapsedMs,
-    msUntilLock: derived.msUntilLock,
     msUntilResolve: derived.msUntilResolve,
     nowIndex: derived.nowIndex,
     prevCount: derived.prevCount,
