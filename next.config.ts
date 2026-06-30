@@ -10,6 +10,17 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.lightningmapgame.com" }],
+        destination: "https://lightningmapgame.com/:path*",
+        permanent: true, // 301
+      },
+    ];
+  },
 };
 
 export default nextConfig;
