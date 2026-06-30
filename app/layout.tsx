@@ -46,16 +46,27 @@ export const metadata: Metadata = {
 
 const structuredData = {
   '@context': 'https://schema.org',
-  '@type': 'WebApplication',
-  name: site.brand,
-  applicationCategory: 'GameApplication',
-  description: 'Real-time lightning map with a 60-second prediction game',
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-  featureList: [
-    'Real-time lightning map',
-    'Live 3D globe',
-    'Localized lightning maps',
-    '60-second prediction game',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${site.baseUrl}/#website`,
+      name: 'Lightning Map Game',
+      alternateName: 'LightningMapGame',
+      url: `${site.baseUrl}/`,
+    },
+    {
+      '@type': 'WebApplication',
+      name: site.brand,
+      applicationCategory: 'GameApplication',
+      description: 'Real-time lightning map with a 60-second prediction game',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      featureList: [
+        'Real-time lightning map',
+        'Live 3D globe',
+        'Localized lightning maps',
+        '60-second prediction game',
+      ],
+    },
   ],
 };
 
