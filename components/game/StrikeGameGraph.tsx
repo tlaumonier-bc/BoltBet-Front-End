@@ -1,6 +1,6 @@
 'use client';
 // components/game/StrikeGameGraph.tsx
-// previous 30s baseline (blue) · current bet window (yellow)
+// previous 30s baseline (blue) · current play window (yellow)
 import { SERIES_CURRENT_START, SERIES_LEN } from '@/lib/game/useStrikeGame';
 
 export default function StrikeGameGraph({
@@ -26,7 +26,7 @@ export default function StrikeGameGraph({
         <span style={{ width: `${(SERIES_CURRENT_START / N) * 100}%` }} className="text-electric/70">
           prev 30s
         </span>
-        <span className="flex-1 text-right text-bolt/70">bet window</span>
+        <span className="flex-1 text-right text-bolt/70">play window</span>
       </div>
 
       <div className="rounded-xl bg-white/4 p-3">
@@ -61,7 +61,7 @@ export default function StrikeGameGraph({
           <div className="font-display text-2xl font-bold tabular-nums text-electric">{prevCount}</div>
         </div>
         <div className="rounded-lg bg-white/4 px-3 py-2">
-          <div className="text-[10px] uppercase tracking-wider text-white/40">bet window</div>
+          <div className="text-[10px] uppercase tracking-wider text-white/40">play window</div>
           <div className="font-display text-2xl font-bold tabular-nums text-bolt">{currentCount}</div>
         </div>
       </div>

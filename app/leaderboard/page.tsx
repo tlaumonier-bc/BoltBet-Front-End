@@ -71,7 +71,14 @@ export default async function LeaderboardPage() {
                 <span className="font-display w-8 text-center text-lg">
                   {MEDAL[i] ?? <span className="text-white/40">{i + 1}</span>}
                 </span>
-                <span className="flex-1 font-medium">{e.username}</span>
+                <span className="flex flex-1 items-center gap-2 font-medium">
+                  {e.username}
+                  {e.verified && (
+                    <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-200">
+                      Verified
+                    </span>
+                  )}
+                </span>
                 <span className="text-sm text-white/50">{e.wins} wins</span>
                 <span className="font-display w-24 text-right font-bold text-bolt">
                   {e.tokens.toLocaleString()}

@@ -3,15 +3,25 @@ import { create } from 'zustand';
 
 export type SessionStatus = 'loading' | 'unset' | 'guest' | 'authed';
 
+export interface AccountMeta {
+  verified: boolean;
+  canChangeUsername: boolean;
+  usernameChangeAvailableAt: string | null;
+}
+
 interface SessionStore {
   status: SessionStatus;
   username: string;      // empty until chosen
   token: string | null;  // opaque server session token (sent as Bearer)
   suggestedName: string; // random default for the username field
+  verified: boolean;
+  canChangeUsername: boolean;
+  usernameChangeAvailableAt: string | null;
 
   init: () => void;
-  setGuest: (username: string, token: string | null) => void;
-  setAuthed: (username: string, token: string) => void;
+  setGuest: (username: string, token: string | null, meta?: Partial<AccountMeta>) => void;
+  setAuthed: (username: string, token: string, meta?: Partial<AccountMeta>) => void;
+  updateAccount: (username: string, meta?: Partial<AccountMeta>) => void;
   signOut: () => void;
 }
 
@@ -26,6 +36,9 @@ interface Persisted {
   status: SessionStatus;
   username: string;
   token: string | null;
+  verified?: boolean;
+  canChangeUsername?: boolean;
+  usernameChangeAvailableAt?: string | null;
 }
 
 function load(): Persisted | null {
@@ -52,6 +65,9 @@ export const useSessionStore = create<SessionStore>((set) => ({
   username: '',
   token: null,
   suggestedName: randomName(),
+  verified: false,
+  canChangeUsername: false,
+  usernameChangeAvailableAt: null,
 
   init: () => {
     // 1) existing session?
@@ -61,6 +77,9 @@ export const useSessionStore = create<SessionStore>((set) => ({
         status: saved.status === 'authed' ? 'authed' : 'guest',
         username: saved.username,
         token: saved.token ?? null,
+        verified: Boolean(saved.verified),
+        canChangeUsername: Boolean(saved.canChangeUsername),
+        usernameChangeAvailableAt: saved.usernameChangeAvailableAt ?? null,
       });
       return;
     }
@@ -72,23 +91,67 @@ export const useSessionStore = create<SessionStore>((set) => ({
     } catch {
       /* ignore */
     }
-    set({ status: 'unset', username: '', token: null, suggestedName: suggested });
+    set({
+      status: 'unset',
+      username: '',
+      token: null,
+      suggestedName: suggested,
+      verified: false,
+      canChangeUsername: false,
+      usernameChangeAvailableAt: null,
+    });
   },
 
-  setGuest: (username, token) => {
-    const next: Persisted = { status: 'guest', username, token: token ?? null };
+  setGuest: (username, token, meta = {}) => {
+    const next: Persisted = {
+      status: 'guest',
+      username,
+      token: token ?? null,
+      verified: Boolean(meta.verified),
+      canChangeUsername: Boolean(meta.canChangeUsername),
+      usernameChangeAvailableAt: meta.usernameChangeAvailableAt ?? null,
+    };
     save(next);
     set(next);
   },
 
-  setAuthed: (username, token) => {
-    const next: Persisted = { status: 'authed', username, token };
+  setAuthed: (username, token, meta = {}) => {
+    const next: Persisted = {
+      status: 'authed',
+      username,
+      token,
+      verified: Boolean(meta.verified),
+      canChangeUsername: Boolean(meta.canChangeUsername),
+      usernameChangeAvailableAt: meta.usernameChangeAvailableAt ?? null,
+    };
     save(next);
     set(next);
+  },
+
+  updateAccount: (username, meta = {}) => {
+    set((current) => {
+      const next: Persisted = {
+        status: current.status,
+        username,
+        token: current.token,
+        verified: meta.verified ?? current.verified,
+        canChangeUsername: meta.canChangeUsername ?? current.canChangeUsername,
+        usernameChangeAvailableAt: meta.usernameChangeAvailableAt ?? current.usernameChangeAvailableAt,
+      };
+      save(next);
+      return next;
+    });
   },
 
   signOut: () => {
-    const reset = { status: 'unset' as const, username: '', token: null };
+    const reset = {
+      status: 'unset' as const,
+      username: '',
+      token: null,
+      verified: false,
+      canChangeUsername: false,
+      usernameChangeAvailableAt: null,
+    };
     save(reset);
     set({ ...reset, suggestedName: randomName() });
   },

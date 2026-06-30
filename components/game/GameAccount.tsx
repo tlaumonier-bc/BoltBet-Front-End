@@ -6,11 +6,12 @@ import { useEffect, useState } from 'react';
 import { useSessionStore } from '@/store/sessionStore';
 import {
   GAME_SERVER_ENABLED,
+  changeUsername,
   checkUsername,
   exchangeFirebaseToken,
   registerUsername,
 } from '@/lib/api';
-import { firebaseAuthConfigured, signInAnonymous } from '@/lib/firebase';
+import { firebaseAuthConfigured, signInWithGoogle } from '@/lib/firebase';
 
 const NAME_RE = /^[a-zA-Z0-9_-]{3,20}$/;
 type Avail = 'idle' | 'checking' | 'ok' | 'taken' | 'invalid' | 'error';
@@ -27,9 +28,9 @@ function FirebaseAuthButtons({ linkToken }: { linkToken: string | null }) {
     setBusy(true);
     setError(null);
     try {
-      const idToken = await signInAnonymous();
+      const idToken = await signInWithGoogle();
       const session = await exchangeFirebaseToken(idToken, linkToken);
-      setAuthed(session.username, session.token);
+      setAuthed(session.username, session.token, session);
     } catch {
       setError('Sign-in failed. Please try again.');
       setBusy(false);
@@ -45,16 +46,16 @@ function FirebaseAuthButtons({ linkToken }: { linkToken: string | null }) {
         className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
       >
         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-slate-800" aria-hidden>
-          A
+          G
         </span>
-        {busy ? 'Saving…' : 'Continue anonymously'}
+        {busy ? 'Signing in…' : 'Continue with Google'}
       </button>
       {(!GAME_SERVER_ENABLED || !configured) && (
         <p className="text-center text-[11px] text-white/40">
-          {configured ? 'Anonymous save unlocks once the game backend is connected.' : 'Firebase config is needed to enable anonymous save.'}
+          {configured ? 'Google sign-in unlocks once the game backend is connected.' : 'Firebase config is needed to enable Google sign-in.'}
         </p>
       )}
-      {error && <p className="text-center text-[11px] text-rose-300">Anonymous sign-in failed. Please try again.</p>}
+      {error && <p className="text-center text-[11px] text-rose-300">Google sign-in failed. Please try again.</p>}
     </div>
   );
 }
@@ -81,59 +82,116 @@ function Overlay({ children }: { children: React.ReactNode }) {
 }
 
 
-function PickModal() {
-  const suggested = useSessionStore((s) => s.suggestedName);
+function AutoGuestSetup() {
   const setGuest = useSessionStore((s) => s.setGuest);
+  const suggested = useSessionStore((s) => s.suggestedName);
+  const [error, setError] = useState(false);
 
-  const [name, setName] = useState(suggested);
+  useEffect(() => {
+    let alive = true;
+    const setup = async () => {
+      try {
+        if (GAME_SERVER_ENABLED) {
+          const session = await registerUsername();
+          if (alive) setGuest(session.username, session.token, session);
+        } else if (alive) {
+          setGuest(suggested, null, { canChangeUsername: true });
+        }
+      } catch {
+        if (alive) setError(true);
+      }
+    };
+    setup();
+    return () => {
+      alive = false;
+    };
+  }, [setGuest, suggested]);
+
+  if (!error) {
+    return (
+      <div className="pointer-events-auto glass fixed left-1/2 top-24 z-80 w-[min(360px,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl border border-white/10 p-4 text-center shadow-2xl">
+        <p className="font-display text-sm font-bold text-white">Preparing your player profile</p>
+        <p className="mt-1 text-xs text-white/50">A unique username is being assigned automatically.</p>
+      </div>
+    );
+  }
+
+  return (
+    <Overlay>
+      <h2 className="font-display text-xl font-bold">Couldn&rsquo;t start the game</h2>
+      <p className="mt-1.5 text-sm text-white/55">
+        The game backend could not create your player profile. Please try again in a moment.
+      </p>
+    </Overlay>
+  );
+}
+
+function RenameModal({ onClose }: { onClose: () => void }) {
+  const username = useSessionStore((s) => s.username);
+  const canChangeUsername = useSessionStore((s) => s.canChangeUsername);
+  const availableAt = useSessionStore((s) => s.usernameChangeAvailableAt);
+  const updateAccount = useSessionStore((s) => s.updateAccount);
+
+  const [name, setName] = useState(username);
   const [avail, setAvail] = useState<Avail>('idle');
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const valid = NAME_RE.test(name);
+  const unchanged = name.toLowerCase() === username.toLowerCase();
 
   let displayAvail: Avail = avail;
   if (!valid) {
     displayAvail = 'invalid';
+  } else if (unchanged) {
+    displayAvail = 'ok';
   } else if (!GAME_SERVER_ENABLED) {
     displayAvail = 'ok';
   }
 
   useEffect(() => {
-    if (!valid || !GAME_SERVER_ENABLED) return;
+    if (!valid || unchanged || !GAME_SERVER_ENABLED) return;
 
     const t = setTimeout(() => {
-      // ✅ Moved inside the async callback to satisfy the linter
-      setAvail('checking'); 
+      setAvail('checking');
       checkUsername(name)
         .then((r) => setAvail(r.available ? 'ok' : 'taken'))
         .catch(() => setAvail('error'));
     }, 400);
-    
+
     return () => clearTimeout(t);
-  }, [name, valid]);
+  }, [name, valid, unchanged]);
 
-  const canStart = valid && !busy && displayAvail !== 'taken' && displayAvail !== 'checking';
+  const canSave = canChangeUsername && valid && !busy && !unchanged && displayAvail !== 'taken' && displayAvail !== 'checking';
+  const lockDate = availableAt ? new Date(availableAt) : null;
 
-  const start = async () => {
-    if (!canStart) return;
+  const save = async () => {
+    if (!canSave) return;
     setBusy(true);
+    setError(null);
     try {
-      if (GAME_SERVER_ENABLED) {
-        const s = await registerUsername(name);
-        setGuest(s.username, s.token);
-      } else {
-        setGuest(name, null);
-      }
+      const profile = await changeUsername(name);
+      updateAccount(profile.username, profile);
+      onClose();
     } catch {
-      setAvail('taken');
+      setError('This username is unavailable or your monthly change is still locked.');
       setBusy(false);
     }
   };
 
   return (
     <Overlay>
-      <h2 className="font-display text-xl font-bold">Pick a username</h2>
+      <div className="flex items-start justify-between">
+        <h2 className="font-display text-xl font-bold">Change username</h2>
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="cursor-pointer rounded-lg px-2 py-1 text-white/50 transition hover:bg-white/10 hover:text-white"
+        >
+          ✕
+        </button>
+      </div>
       <p className="mt-1.5 text-sm text-white/55">
-        Play instantly as a guest, or sign in to save your points across devices.
+        Choose carefully. You can change your username once every 30 days.
       </p>
 
       <label className="mt-5 block">
@@ -142,10 +200,10 @@ function PickModal() {
           value={name}
           onChange={(e) => {
             setName(e.target.value.replace(/\s/g, ''));
-            // ✅ Instantly clear the old validation result on keystroke
-            setAvail('idle'); 
+            setAvail('idle');
+            setError(null);
           }}
-          onKeyDown={(e) => e.key === 'Enter' && start()}
+          onKeyDown={(e) => e.key === 'Enter' && save()}
           autoFocus
           spellCheck={false}
           className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none focus:border-bolt"
@@ -156,19 +214,20 @@ function PickModal() {
         </span>
       </label>
 
+      {!canChangeUsername && (
+        <p className="mb-3 rounded-xl border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-xs text-amber-100/80">
+          Username changes unlock again{lockDate ? ` on ${lockDate.toLocaleDateString()}` : ' soon'}.
+        </p>
+      )}
+      {error && <p className="mb-3 text-xs text-rose-300">{error}</p>}
+
       <button
-        onClick={start}
-        disabled={!canStart}
+        onClick={save}
+        disabled={!canSave}
         className="btn-glow mt-2 w-full cursor-pointer rounded-xl py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {busy ? 'Starting…' : 'Start playing'}
+        {busy ? 'Saving…' : 'Save username'}
       </button>
-
-      <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-wider text-white/30">
-        <span className="h-px flex-1 bg-white/10" /> or <span className="h-px flex-1 bg-white/10" />
-      </div>
-
-      <FirebaseAuthButtons linkToken={null} />
     </Overlay>
   );
 }
@@ -189,8 +248,8 @@ function LinkModal({ onClose }: { onClose: () => void }) {
         </button>
       </div>
       <p className="mt-1.5 text-sm text-white/55">
-        You&rsquo;re playing as <span className="font-semibold text-white/85">{username}</span>. Sign in to
-        keep your points and play from any device.
+        You&rsquo;re playing as <span className="font-semibold text-white/85">{username}</span>. Sign in with Google
+        to keep your points and show as verified on the leaderboard.
       </p>
       <div className="mt-5">
         <FirebaseAuthButtons linkToken={token} />
@@ -202,8 +261,10 @@ function LinkModal({ onClose }: { onClose: () => void }) {
 export default function GameAccount() {
   const status = useSessionStore((s) => s.status);
   const username = useSessionStore((s) => s.username);
+  const verified = useSessionStore((s) => s.verified);
   const init = useSessionStore((s) => s.init);
   const [linking, setLinking] = useState(false);
+  const [renaming, setRenaming] = useState(false);
 
   useEffect(() => {
     if (status === 'loading') init();
@@ -217,7 +278,14 @@ export default function GameAccount() {
       {status !== 'unset' && (
         <div className="glass pointer-events-auto flex shrink-0 items-center gap-2 self-start rounded-full px-3 py-1.5 text-xs">
           <span className="text-bolt" aria-hidden>⚡</span>
-          <span className="font-semibold text-white/85">{username}</span>
+          <button
+            type="button"
+            onClick={() => setRenaming(true)}
+            className="cursor-pointer font-semibold text-white/85 underline-offset-3 transition hover:text-white hover:underline"
+            title="Change username"
+          >
+            {username}
+          </button>
           {status === 'guest' ? (
             <button
               onClick={() => setLinking(true)}
@@ -227,14 +295,15 @@ export default function GameAccount() {
             </button>
           ) : (
             <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-              Signed in
+              {verified ? 'Verified' : 'Signed in'}
             </span>
           )}
         </div>
       )}
 
-      {status === 'unset' && <PickModal />}
+      {status === 'unset' && <AutoGuestSetup />}
       {status === 'guest' && linking && <LinkModal onClose={() => setLinking(false)} />}
+      {(status === 'guest' || status === 'authed') && renaming && <RenameModal onClose={() => setRenaming(false)} />}
     </>
   );
 }

@@ -39,7 +39,7 @@ export const ALL_LAYER_IDS = GLOBE_LAYERS.map((l) => l.id);
 
 export function defaultLayerState(): Record<GlobeLayerId, boolean> {
   return {
-    'recent-strikes-1h': false,
+    'recent-strikes-1h': true,
     'storm-fog': false,
     'precipitation': false,
     'recent-strikes-6h': false,

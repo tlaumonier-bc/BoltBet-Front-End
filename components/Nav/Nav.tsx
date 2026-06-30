@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import BrandHomeLink from './BrandHomeLink';
 import CountryMenu from './CountryMenu';
+import GridGameButton from './GridGameButton';
 import PlayButton from './PlayButton';
 import { pages, launchablePages } from '@/lib/content/content';
 
@@ -26,6 +27,7 @@ export default function Nav() {
           <Link href="/leaderboard" className="rounded-lg px-3 py-1.5 transition hover:bg-white/10 hover:text-white">
             Leaderboard
           </Link>
+          <GridGameButton />
           <PlayButton />
         </div>
       </div>

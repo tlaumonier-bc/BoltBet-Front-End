@@ -28,7 +28,7 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
     else break;
   }
 
-  // not-playable country — but never hide a live bet behind it
+  // not-playable country — but never hide a live play behind it
   if (isCountry && !vm.playable && !vm.pending) {
     return (
       <div className="glass panel-scroll pointer-events-auto min-h-0 w-full flex-1 overflow-y-auto rounded-2xl p-4">
@@ -67,7 +67,7 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
   const phaseLabel = vm.pending ? 'In play' : 'Ready';
   const countdown = vm.pending
     ? `${Math.ceil(vm.msUntilResolve / 1000)}s to result`
-    : 'bet anytime';
+    : 'play anytime';
 
   return (
     <div className="glass panel-scroll pointer-events-auto min-h-0 w-full overflow-y-auto rounded-2xl p-4">
@@ -134,32 +134,6 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
           currentCount={vm.currentCount}
         />
       </Section>
-
-      {/* pending bet */}
-      {vm.pending && (
-        <Section title="Your bet">
-          <div
-            className={`rounded-xl border px-4 py-3 ${
-              vm.pending.side === 'up'
-                ? 'border-emerald-400/30 bg-emerald-400/10'
-                : 'border-rose-400/30 bg-rose-400/10'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className={`font-display text-lg font-bold ${vm.pending.side === 'up' ? 'text-emerald-300' : 'text-rose-300'}`}>
-                {vm.pending.side === 'up' ? '↑ Higher' : '↓ Lower'}
-              </span>
-              <span className="text-sm text-white/70">
-                {vm.pending.amount} → <span className="font-semibold text-bolt">{vm.pending.amount * 2}</span>
-              </span>
-            </div>
-            <div className="mt-1 text-xs text-white/50">
-              {vm.pending.scopeLabel} · beat <span className="font-semibold text-electric">{vm.pending.prevCount}</span> ·
-              now <span className="font-semibold text-bolt">{vm.pendingCurrentCount}</span>
-            </div>
-          </div>
-        </Section>
-      )}
 
       {/* last 3 games */}
       {history.length > 0 && (
