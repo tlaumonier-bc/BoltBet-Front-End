@@ -159,6 +159,9 @@ export interface Session {
   username: string;
   token: string;
   tokens: number; // starting balance
+  verified: boolean;
+  canChangeUsername: boolean;
+  usernameChangeAvailableAt: string | null;
 }
 
 /** Is this username free? (debounced by the UI) */
@@ -169,9 +172,9 @@ export async function checkUsername(username: string): Promise<UsernameCheck> {
   return res.json();
 }
 
-/** Claim a chosen guest username → server account + session token. */
-export async function registerUsername(username: string): Promise<Session> {
-  return postJson<Session>('/api/game/register/', { username });
+/** Create a guest account. If omitted, the backend assigns a unique random name. */
+export async function registerUsername(username?: string): Promise<Session> {
+  return postJson<Session>('/api/game/register/', username ? { username } : {});
 }
 
 /**
@@ -193,6 +196,9 @@ export type ScopeKind = 'globe' | 'country';
 export interface PlayerProfile {
   username: string;
   tokens: number;
+  verified: boolean;
+  canChangeUsername: boolean;
+  usernameChangeAvailableAt: string | null;
 }
 
 export interface BetPayload {
@@ -223,6 +229,7 @@ export interface LeaderboardEntry {
   tokens: number;
   wins: number;
   gamesPlayed: number;
+  verified: boolean;
 }
 
 /** Current player's profile + balance (identity from the token). */
@@ -248,4 +255,8 @@ export async function getBetResolution(betId: string): Promise<BetResolution | n
 
 export async function claimTokens(): Promise<PlayerProfile> {
   return postJson<PlayerProfile>('/api/game/claim/', {});
+}
+
+export async function changeUsername(username: string): Promise<PlayerProfile> {
+  return postJson<PlayerProfile>('/api/game/username/change/', { username });
 }

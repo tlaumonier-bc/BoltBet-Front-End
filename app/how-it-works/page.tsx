@@ -46,7 +46,7 @@ const faq = {
       name: 'How does the prediction game work?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'You can place one active bet at a time whenever you want. When you bet, the game snapshots the previous 30 seconds for your chosen scope, then counts the next 30 seconds. You call whether the next window will bring more (Higher) or fewer (Lower) strikes than the previous one. A correct call pays 2x your stake, a tie returns your stake, and a wrong call loses it. You can play the whole globe or a single country.',
+        text: 'You can start one active play at a time whenever you want. When you play, the game snapshots the previous 30 seconds for your chosen scope, then counts the next 30 seconds. You call whether the next window will bring more (Higher) or fewer (Lower) strikes than the previous one. A correct call pays 2x your points, a tie returns your points, and a wrong call loses them. You can play the whole globe or a single country.',
       },
     },
     {
@@ -68,7 +68,7 @@ const faq = {
   ],
 }
 
-function BetTimeline() {
+function PlayTimeline() {
   return (
     <div className="mt-5">
       <div className="flex overflow-hidden rounded-xl border border-white/10 text-center text-[11px] font-semibold">
@@ -77,12 +77,12 @@ function BetTimeline() {
           <span className="mt-1 block text-[10px] font-normal text-white/50">strikes counted</span>
         </div>
         <div className="bg-bolt/15 px-3 py-3 text-bolt" style={{ flex: 1 }}>
-          Your bet · next 30s
+          Your play · next 30s
           <span className="mt-1 block text-[10px] font-normal text-white/50">strikes counted</span>
         </div>
       </div>
       <p className="mt-2 text-xs text-white/40">
-        There is no shared round timer. Your 30-second window starts the moment your bet is accepted.
+        There is no shared round timer. Your 30-second window starts the moment your play is accepted.
       </p>
     </div>
   )
@@ -144,17 +144,17 @@ export default function HowItWorksPage() {
         <div className="glass mt-10 rounded-2xl p-6">
           <h2 className="font-display text-xl font-bold">Play: Higher or Lower</h2>
           <p className="mt-3 text-white/65">
-            Game mode turns the globe into a fast prediction game. Place a bet whenever you want, as long as you do not already
+            Game mode turns the globe into a fast prediction game. Play whenever you want, as long as you do not already
             have one in progress. The game snapshots the last 30 seconds, then you call whether the next 30 seconds will bring{' '}
             <span className="font-semibold text-emerald-300">Higher</span> (more) or{' '}
             <span className="font-semibold text-rose-300">Lower</span> (fewer) strikes.
           </p>
           <p className="mt-3 text-white/65">
-            Get it right and you win <span className="font-semibold text-bolt">2×</span> your stake. A tie returns your stake (a
+            Get it right and you win <span className="font-semibold text-bolt">2×</span> your points. A tie returns your points (a
             push); a wrong call loses it.
           </p>
 
-          <BetTimeline />
+          <PlayTimeline />
 
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl bg-white/4 p-4">
