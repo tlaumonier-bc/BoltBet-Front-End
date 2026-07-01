@@ -23,7 +23,7 @@ export default function PlayButton() {
     <button
       type="button"
       onClick={onPlay}
-      className="btn-glow ml-2 cursor-pointer rounded-lg px-4 py-1.5 text-sm font-semibold"
+      className="btn-glow ml-1 cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold sm:ml-2 sm:px-4 sm:text-sm"
     >
       Play
     </button>

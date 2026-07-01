@@ -16,15 +16,17 @@ const COUNTRIES = (live.length ? live : pages).map((p) => ({
 
 export default function Nav() {
   return (
-    <nav className="fixed left-1/2 top-4 z-50 w-[min(960px,92vw)] -translate-x-1/2">
-      <div className="glass flex items-center justify-between rounded-2xl px-5 py-3">
+    <nav className="fixed left-1/2 top-2 z-50 w-[min(960px,94vw)] -translate-x-1/2 sm:top-4 sm:w-[min(960px,92vw)]">
+      <div className="glass flex items-center justify-between gap-2 rounded-2xl px-3 py-2 sm:px-5 sm:py-3">
         <BrandHomeLink />
-        <div className="flex items-center gap-1 text-sm text-white/60">
-          <CountryMenu countries={COUNTRIES} />
-          <Link href="/how-it-works" className="rounded-lg px-3 py-1.5 transition hover:bg-white/10 hover:text-white">
+        <div className="flex min-w-0 items-center gap-1 text-xs text-white/60 sm:text-sm">
+          <div className="hidden md:block">
+            <CountryMenu countries={COUNTRIES} />
+          </div>
+          <Link href="/how-it-works" className="hidden rounded-lg px-3 py-1.5 transition hover:bg-white/10 hover:text-white sm:block">
             How it works
           </Link>
-          <Link href="/leaderboard" className="rounded-lg px-3 py-1.5 transition hover:bg-white/10 hover:text-white">
+          <Link href="/leaderboard" className="hidden rounded-lg px-3 py-1.5 transition hover:bg-white/10 hover:text-white sm:block">
             Leaderboard
           </Link>
           <GridGameButton />

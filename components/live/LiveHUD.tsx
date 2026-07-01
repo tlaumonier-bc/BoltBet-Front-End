@@ -27,7 +27,7 @@ function MobileActionButton({
     <button
       type="button"
       onClick={onClick}
-      className={`min-h-11 flex-1 rounded-2xl px-3 py-2 text-xs font-bold transition ${
+      className={`min-h-10 flex-1 rounded-xl px-2 py-1.5 text-[11px] font-bold transition ${
         active
           ? 'bg-bolt text-storm shadow-[0_0_18px_rgba(253,224,71,0.35)]'
           : 'bg-white/8 text-white/70 hover:bg-white/12 hover:text-white'
@@ -88,8 +88,8 @@ export default function LiveHUD() {
       {showGamePanels && <BetBar vm={vm} />}
 
       {/* Mobile-only action bar */}
-      <div className="pointer-events-auto fixed bottom-3 left-3 right-3 z-50 md:hidden">
-        <div className="glass flex gap-2 rounded-3xl border border-white/10 p-2 shadow-2xl">
+      <div className="pointer-events-auto fixed bottom-2 left-2 right-2 z-50 md:hidden">
+        <div className="glass flex gap-1.5 rounded-2xl border border-white/10 p-1.5 shadow-2xl">
           <MobileActionButton active={mobileSheet === 'console'} onClick={() => toggleSheet('console')}>
             Console
           </MobileActionButton>
@@ -104,22 +104,22 @@ export default function LiveHUD() {
 
       {/* Mobile-only one-at-a-time bottom sheet */}
       {mobileSheet && (
-        <div className="pointer-events-none fixed inset-x-3 bottom-20 z-50 md:hidden">
-          <div className="glass pointer-events-auto max-h-[68vh] overflow-hidden rounded-3xl border border-white/10 p-3 shadow-2xl">
-            <div className="mb-3 flex items-center justify-between px-1">
-              <span className="font-display text-[11px] font-bold uppercase tracking-[0.25em] text-white/70">
+        <div className="pointer-events-none fixed inset-x-2 bottom-17 z-50 md:hidden">
+          <div className="glass pointer-events-auto max-h-[58vh] overflow-hidden rounded-2xl border border-white/10 p-2 shadow-2xl">
+            <div className="mb-2 flex items-center justify-between px-1">
+              <span className="font-display text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">
                 {mobileSheet === 'console' ? 'Console' : mobileSheet === 'info' ? (selectedCountry ? selectedCountry.name : 'Globe') : 'Game'}
               </span>
               <button
                 type="button"
                 onClick={() => setMobileSheet(null)}
                 aria-label="Close panel"
-                className="rounded-full bg-white/8 px-3 py-1 text-xs font-bold text-white/60 transition hover:bg-white/15 hover:text-white"
+                className="rounded-full bg-white/8 px-2.5 py-1 text-[11px] font-bold text-white/60 transition hover:bg-white/15 hover:text-white"
               >
                 Close
               </button>
             </div>
-            <div className="panel-scroll max-h-[58vh] overflow-y-auto pr-1">
+            <div className="panel-scroll max-h-[50vh] overflow-y-auto pr-1 text-sm">
               {mobileSheet === 'console' && (
                 <div className="space-y-3">
                   <ModeBar />
@@ -136,15 +136,12 @@ export default function LiveHUD() {
               )}
 
               {mobileSheet === 'game' && (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <GameAccount />
                   {showGamePanels ? (
-                    <>
-                      <BetBar vm={vm} variant="embedded" />
-                      <StrikeGamePanel vm={vm} />
-                    </>
+                    <BetBar vm={vm} variant="compact" />
                   ) : (
-                    <div className="rounded-2xl bg-white/5 p-4 text-sm text-white/55">
+                    <div className="rounded-2xl bg-white/5 p-3 text-xs text-white/55">
                       Preparing your game profile…
                     </div>
                   )}

@@ -15,9 +15,11 @@ export default function BrandHomeLink() {
         event.preventDefault();
         setSeoContentOpen(false);
       }}
-      className="font-display text-base font-bold tracking-tight"
+      className="font-display min-w-0 text-sm font-bold tracking-tight sm:text-base"
     >
-      <span className="text-bolt">⚡</span> Lightning Map Game
+      <span className="text-bolt">⚡</span>
+      <span className="ml-1 sm:hidden">Lightning</span>
+      <span className="ml-1 hidden sm:inline">Lightning Map Game</span>
     </Link>
   );
 }
