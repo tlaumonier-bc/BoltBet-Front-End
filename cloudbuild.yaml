@@ -1,15 +1,15 @@
 substitutions:
   _REGION: europe-west2
   _REPO: vibe-apps
-  _SERVICE: boltbet-frontend-web
-  _IMAGE: boltbet-frontend
+  _SERVICE: boltbet-frontend-dev
+  _IMAGE: boltbet-frontend-dev
   _RUNTIME_SA: vibe-app-runtime@blockchain-gemini.iam.gserviceaccount.com
   # Next.js public env is baked in at build time. Override these with the
   # deployed backend Cloud Run URL, for example:
   # --substitutions=_NEXT_PUBLIC_API_URL=https://...,\
   # _NEXT_PUBLIC_WS_URL=wss://.../ws/lightning/
-  _NEXT_PUBLIC_API_URL: https://api.lightningmapgame.com
-  _NEXT_PUBLIC_WS_URL: wss://api.lightningmapgame.com/ws/lightning/
+  _NEXT_PUBLIC_API_URL: https://boltbet-backend-dev-2ulnbyw42a-nw.a.run.app
+  _NEXT_PUBLIC_WS_URL: wss://boltbet-backend-dev-2ulnbyw42a-nw.a.run.app/ws/lightning/
   _NEXT_PUBLIC_GAME_SERVER: "1"
   _NEXT_PUBLIC_GA_ID: G-XFKXHBBW89
   _NEXT_PUBLIC_OWM_API_KEY: ""
@@ -77,6 +77,7 @@ steps:
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: gcloud
     args:
+      - beta
       - run
       - deploy
       - ${_SERVICE}
@@ -84,7 +85,8 @@ steps:
       - --region=${_REGION}
       - --platform=managed
       - --service-account=${_RUNTIME_SA}
-      - --allow-unauthenticated
+      - --no-allow-unauthenticated
+      - --iap
       - --port=3000
       - --memory=1Gi
       - --cpu=1
