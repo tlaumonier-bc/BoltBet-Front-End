@@ -4,6 +4,7 @@
 // lets a guest link a Firebase account (so points follow them across devices).
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import posthog from 'posthog-js';
 import { useSessionStore } from '@/store/sessionStore';
 import {
   GAME_SERVER_ENABLED,
@@ -53,8 +54,11 @@ function FirebaseAuthButtons({ linkToken }: { linkToken: string | null }) {
       const idToken = await signInWithGoogle();
       const session = await exchangeFirebaseToken(idToken, linkToken);
       setAuthed(session.username, session.token, session);
+      posthog.identify(session.username, { verified: session.verified, country: session.country });
+      posthog.capture('user_signed_in', { method: 'google', verified: session.verified });
     } catch {
       setError('Sign-in failed. Please try again.');
+      posthog.captureException(new Error('Google sign-in failed'));
       setBusy(false);
     }
   };
@@ -117,12 +121,19 @@ function AutoGuestSetup() {
       try {
         if (GAME_SERVER_ENABLED) {
           const session = await registerUsername();
-          if (alive) setGuest(session.username, session.token, session);
+          if (alive) {
+            setGuest(session.username, session.token, session);
+            posthog.identify(session.username, { verified: session.verified, country: session.country });
+            posthog.capture('user_registered', { method: 'server', username: session.username });
+          }
         } else if (alive) {
           setGuest(suggested, null, { canChangeUsername: true });
+          posthog.identify(suggested);
+          posthog.capture('user_registered', { method: 'local', username: suggested });
         }
       } catch {
         if (alive) setError(true);
+        posthog.captureException(new Error('Guest registration failed'));
       }
     };
     setup();
@@ -195,6 +206,7 @@ function RenameModal({ onClose }: { onClose: () => void }) {
     try {
       const profile = await changeUsername(name);
       updateAccount(profile.username, profile);
+      posthog.capture('username_changed', { new_username: name });
       onClose();
     } catch {
       setError('This username is unavailable or your monthly change is still locked.');
@@ -322,6 +334,7 @@ function FlagModal({ onClose }: { onClose: () => void }) {
       } else {
         updateAccount(username, { country: countryCode });
       }
+      posthog.capture('flag_changed', { country_code: countryCode });
       onClose();
     } catch {
       setError('Could not save this flag. Please try again.');
@@ -393,6 +406,13 @@ export default function GameAccount() {
   useEffect(() => {
     if (status === 'loading') init();
   }, [status, init]);
+
+  // Identify returning user from persisted session
+  useEffect(() => {
+    if (username && (status === 'guest' || status === 'authed')) {
+      posthog.identify(username, { verified, country });
+    }
+  }, [username, status, verified, country]);
 
   if (status === 'loading') return null;
 

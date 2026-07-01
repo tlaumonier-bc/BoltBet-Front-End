@@ -4,6 +4,7 @@
 // home first, then the GlobeExperience picks up the game mode from the store.
 import { useRouter, usePathname } from 'next/navigation'
 import { useLiveStore } from '@/store/liveStore'
+import posthog from 'posthog-js'
 
 export default function PlayButton() {
   const router = useRouter()
@@ -15,6 +16,7 @@ export default function PlayButton() {
     setMode('game')
     setSeoContentOpen(false) // in case the SEO text pane is open over the globe
     if (pathname !== '/') router.push('/')
+    posthog.capture('game_entered', { from_path: pathname })
   }
 
   return (
