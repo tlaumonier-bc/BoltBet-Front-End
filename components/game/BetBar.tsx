@@ -13,7 +13,7 @@ import {
 const CHIPS = [10, 25, 50];
 const FLOAT_MS = 1600;
 
-export default function BetBar({ vm }: { vm: StrikeGameVM }) {
+export default function BetBar({ vm, variant = 'fixed' }: { vm: StrikeGameVM; variant?: 'fixed' | 'embedded' }) {
   const [amount, setAmount] = useState(10);
   const isCountry = vm.scope.kind === 'country';
 
@@ -65,9 +65,8 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
     }
   };
 
-  return (
-    <div className="pointer-events-none fixed bottom-24 left-1/2 z-50 w-[min(640px,94vw)] -translate-x-1/2">
-      <div className="glass-opaque pointer-events-auto relative rounded-2xl border border-white/10 p-4 shadow-2xl">
+  const content = (
+    <div className="glass-opaque pointer-events-auto relative rounded-2xl border border-white/10 p-4 shadow-2xl">
         {/* result float */}
         {floatResult && (
           <span
@@ -236,7 +235,14 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
             </div>
           </div>
         )}
-      </div>
+    </div>
+  );
+
+  if (variant === 'embedded') return content;
+
+  return (
+    <div className="pointer-events-none fixed bottom-24 left-1/2 z-50 w-[min(640px,94vw)] -translate-x-1/2 max-md:hidden">
+      {content}
     </div>
   );
 }
