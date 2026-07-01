@@ -81,9 +81,18 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
 
         {/* header: scope + points */}
         <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <span className="text-base leading-none">{isCountry ? flagEmoji(vm.scope.id || null) : '🌍'}</span>
-            <span className="font-medium text-white/85">{vm.scope.label}</span>
+            <span className="truncate font-medium text-white/85">{vm.scope.label}</span>
+            {isCountry && (
+              <button
+                type="button"
+                onClick={vm.playGlobe}
+                className="shrink-0 cursor-pointer rounded-md border border-electric/30 bg-electric/10 px-2 py-0.5 text-[11px] font-bold text-electric transition hover:bg-electric/20"
+              >
+                Play whole globe
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] uppercase tracking-wider text-white/40">Points</span>
@@ -157,7 +166,7 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
                 onClick={vm.playGlobe}
                 className="flex-1 cursor-pointer rounded-xl border border-electric/40 bg-electric/10 py-2.5 text-sm font-bold text-electric transition hover:bg-electric/20"
               >
-                🌍 Play the globe
+                🌍 Play whole globe
               </button>
             </div>
           </div>

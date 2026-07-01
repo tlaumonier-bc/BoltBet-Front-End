@@ -94,7 +94,7 @@ export default function HowItWorksPage() {
       <Backdrop />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faq) }} />
 
-      <div className="mx-auto w-[80vw] pb-24 pt-32">
+      <div className="mx-auto w-[70vw] pb-24 pt-32">
         <p className="text-xs uppercase tracking-[0.3em] text-electric/70">How it works</p>
         <h1 className="font-display mt-3 text-4xl font-extrabold leading-tight sm:text-5xl">
           Watch real <span className="text-gradient">lightning</span>. Then predict it.

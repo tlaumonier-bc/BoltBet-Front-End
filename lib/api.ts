@@ -31,16 +31,6 @@ function authHeaders(): Record<string, string> {
   return t ? { Authorization: `Bearer ${t}` } : {};
 }
 
-function clientCountryCode(): string {
-  if (typeof navigator === 'undefined') return '';
-  const locales = [...navigator.languages, navigator.language].filter(Boolean);
-  for (const locale of locales) {
-    const match = locale.match(/[-_]([A-Za-z]{2})$/);
-    if (match) return match[1].toUpperCase();
-  }
-  return '';
-}
-
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${API}${path}`, {
     method: 'POST',
@@ -216,7 +206,7 @@ export async function checkUsername(username: string): Promise<UsernameCheck> {
 
 /** Create a guest account. If omitted, the backend assigns a unique random name. */
 export async function registerUsername(username?: string): Promise<Session> {
-  return postJson<Session>('/api/game/register/', { ...(username ? { username } : {}), countryCode: clientCountryCode() });
+  return postJson<Session>('/api/game/register/', username ? { username } : {});
 }
 
 /**
@@ -230,7 +220,6 @@ export async function exchangeFirebaseToken(
   return postJson<Session>('/api/auth/firebase/', {
     idToken,
     linkToken: linkToken ?? '',
-    countryCode: clientCountryCode(),
   });
 }
 
@@ -393,4 +382,8 @@ export async function claimTokens(): Promise<PlayerProfile> {
 
 export async function changeUsername(username: string): Promise<PlayerProfile> {
   return postJson<PlayerProfile>('/api/game/username/change/', { username });
+}
+
+export async function changeCountry(countryCode: string): Promise<PlayerProfile> {
+  return postJson<PlayerProfile>('/api/game/country/change/', { countryCode });
 }

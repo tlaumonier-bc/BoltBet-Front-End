@@ -176,7 +176,6 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
     );
   }
 
-  const phaseLabel = vm.pending ? 'In play' : 'Ready';
   const countdown = vm.pending
     ? `${Math.ceil(vm.msUntilResolve / 1000)}s to result`
     : 'play anytime';
@@ -184,42 +183,24 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
   return (
     <div className="glass panel-scroll pointer-events-auto min-h-0 w-full overflow-y-auto rounded-2xl p-4">
       {/* header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <span className="font-display text-[11px] font-bold uppercase tracking-[0.25em] text-white/80">
           Strike game
         </span>
-        <span className="text-[11px] text-white/45">{username}</span>
-      </div>
-
-      {/* scope + deselect */}
-      <div className="mt-2 flex items-center gap-2 text-sm">
-        <span className="text-lg leading-none">{isCountry ? flagEmoji(iso2) : '🌍'}</span>
-        <span className="font-medium text-white/85">{vm.scope.label}</span>
-        {isCountry && (
-          <button
-            onClick={vm.playGlobe}
-            className="cursor-pointer rounded-md bg-white/8 px-2 py-0.5 text-[11px] font-medium text-white/60 transition hover:bg-white/15 hover:text-white"
-          >
-            🌍 Globe
-          </button>
-        )}
-        <span
-          className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-            !vm.pending ? 'bg-emerald-400/15 text-emerald-300' : 'bg-white/8 text-white/55'
-          }`}
-        >
-          {phaseLabel}
+        <span className="flex min-w-0 items-center gap-1.5 text-sm">
+          <span className="text-lg leading-none">{isCountry ? flagEmoji(iso2) : '🌍'}</span>
+          <span className="truncate font-medium text-white/85">{vm.scope.label}</span>
         </span>
       </div>
 
       {/* points */}
       <div className="mt-3 rounded-xl border border-white/10 bg-linear-to-br from-white/8 to-transparent px-4 py-3">
-        <div className="flex items-end justify-between">
-          <div>
-            <div className="text-[10px] uppercase tracking-wider text-white/40">Points</div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-baseline gap-3">
             <div className="font-display text-4xl font-extrabold tabular-nums text-bolt">
               {Math.round(vm.tokens)}
             </div>
+            <div className="text-[10px] uppercase tracking-wider text-white/40">Points</div>
           </div>
           {streak >= 2 && (
             <span className="rounded-full bg-orange-400/15 px-2.5 py-1 text-xs font-bold text-orange-300">

@@ -2,19 +2,41 @@
 // components/game/GameAccount.tsx — identity onboarding + account chip.
 // Shows a username modal on first entry into game mode; afterwards a small chip
 // lets a guest link a Firebase account (so points follow them across devices).
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useSessionStore } from '@/store/sessionStore';
 import {
   GAME_SERVER_ENABLED,
+  changeCountry,
   changeUsername,
   checkUsername,
   exchangeFirebaseToken,
   registerUsername,
 } from '@/lib/api';
 import { firebaseAuthConfigured, signInWithGoogle } from '@/lib/firebase';
+import { flagEmoji } from '@/lib/live/owm';
 
 const NAME_RE = /^[a-zA-Z0-9_-]{3,20}$/;
 type Avail = 'idle' | 'checking' | 'ok' | 'taken' | 'invalid' | 'error';
+const REGION_CODES = [
+  'AF', 'AL', 'DZ', 'AS', 'AD', 'AO', 'AI', 'AQ', 'AG', 'AR', 'AM', 'AW', 'AU', 'AT', 'AZ',
+  'BS', 'BH', 'BD', 'BB', 'BY', 'BE', 'BZ', 'BJ', 'BM', 'BT', 'BO', 'BQ', 'BA', 'BW', 'BR',
+  'IO', 'BN', 'BG', 'BF', 'BI', 'KH', 'CM', 'CA', 'CV', 'KY', 'CF', 'TD', 'CL', 'CN', 'CX',
+  'CC', 'CO', 'KM', 'CG', 'CD', 'CK', 'CR', 'CI', 'HR', 'CU', 'CW', 'CY', 'CZ', 'DK', 'DJ',
+  'DM', 'DO', 'EC', 'EG', 'SV', 'GQ', 'ER', 'EE', 'SZ', 'ET', 'FK', 'FO', 'FJ', 'FI', 'FR',
+  'GF', 'PF', 'TF', 'GA', 'GM', 'GE', 'DE', 'GH', 'GI', 'GR', 'GL', 'GD', 'GP', 'GU', 'GT',
+  'GG', 'GN', 'GW', 'GY', 'HT', 'HN', 'HK', 'HU', 'IS', 'IN', 'ID', 'IR', 'IQ', 'IE', 'IM',
+  'IL', 'IT', 'JM', 'JP', 'JE', 'JO', 'KZ', 'KE', 'KI', 'KP', 'KR', 'KW', 'KG', 'LA', 'LV',
+  'LB', 'LS', 'LR', 'LY', 'LI', 'LT', 'LU', 'MO', 'MG', 'MW', 'MY', 'MV', 'ML', 'MT', 'MH',
+  'MQ', 'MR', 'MU', 'YT', 'MX', 'FM', 'MD', 'MC', 'MN', 'ME', 'MS', 'MA', 'MZ', 'MM', 'NA',
+  'NR', 'NP', 'NL', 'NC', 'NZ', 'NI', 'NE', 'NG', 'NU', 'NF', 'MK', 'MP', 'NO', 'OM', 'PK',
+  'PW', 'PS', 'PA', 'PG', 'PY', 'PE', 'PH', 'PN', 'PL', 'PT', 'PR', 'QA', 'RE', 'RO', 'RU',
+  'RW', 'BL', 'SH', 'KN', 'LC', 'MF', 'PM', 'VC', 'WS', 'SM', 'ST', 'SA', 'SN', 'RS', 'SC',
+  'SL', 'SG', 'SX', 'SK', 'SI', 'SB', 'SO', 'ZA', 'GS', 'SS', 'ES', 'LK', 'SD', 'SR', 'SJ',
+  'SE', 'CH', 'SY', 'TW', 'TJ', 'TZ', 'TH', 'TL', 'TG', 'TK', 'TO', 'TT', 'TN', 'TR', 'TM',
+  'TC', 'TV', 'UG', 'UA', 'AE', 'GB', 'US', 'UM', 'UY', 'UZ', 'VU', 'VA', 'VE', 'VN', 'VG',
+  'VI', 'WF', 'EH', 'YE', 'ZM', 'ZW',
+];
 
 function FirebaseAuthButtons({ linkToken }: { linkToken: string | null }) {
   const setAuthed = useSessionStore((s) => s.setAuthed);
@@ -74,10 +96,12 @@ function AvailHint({ avail }: { avail: Avail }) {
 }
 
 function Overlay({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="pointer-events-auto fixed inset-0 z-80 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+  if (typeof document === 'undefined') return null;
+  return createPortal(
+    <div className="pointer-events-auto fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div className="glass w-full max-w-sm rounded-2xl border border-white/10 p-6 shadow-2xl">{children}</div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -258,13 +282,113 @@ function LinkModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+function countryName(code: string): string {
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'region' }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
+function FlagModal({ onClose }: { onClose: () => void }) {
+  const username = useSessionStore((s) => s.username);
+  const currentCountry = useSessionStore((s) => s.country);
+  const updateAccount = useSessionStore((s) => s.updateAccount);
+  const [query, setQuery] = useState('');
+  const [busyCode, setBusyCode] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const countries = useMemo(() => (
+    REGION_CODES
+      .map((code) => ({ code, name: countryName(code) }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  ), []);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return countries;
+    return countries.filter((country) => (
+      country.name.toLowerCase().includes(q) || country.code.toLowerCase().includes(q)
+    ));
+  }, [countries, query]);
+
+  const saveCountry = async (countryCode: string) => {
+    setBusyCode(countryCode);
+    setError(null);
+    try {
+      if (GAME_SERVER_ENABLED) {
+        const profile = await changeCountry(countryCode);
+        updateAccount(profile.username, profile);
+      } else {
+        updateAccount(username, { country: countryCode });
+      }
+      onClose();
+    } catch {
+      setError('Could not save this flag. Please try again.');
+      setBusyCode(null);
+    }
+  };
+
+  return (
+    <Overlay>
+      <div className="flex items-start justify-between">
+        <h2 className="font-display text-xl font-bold">Choose your flag</h2>
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="cursor-pointer rounded-lg px-2 py-1 text-white/50 transition hover:bg-white/10 hover:text-white"
+        >
+          ✕
+        </button>
+      </div>
+      <p className="mt-1.5 text-sm text-white/55">
+        Pick the flag displayed next to your username and on the leaderboard.
+      </p>
+      <input
+        value={query}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setError(null);
+        }}
+        autoFocus
+        placeholder="Search country..."
+        className="mt-4 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/30 focus:border-bolt"
+      />
+      {error && <p className="mt-2 text-xs text-rose-300">{error}</p>}
+      <div className="panel-scroll mt-3 max-h-[44vh] space-y-1 overflow-y-auto pr-1">
+        {filtered.map((country) => {
+          const selected = country.code === currentCountry;
+          const busy = busyCode === country.code;
+          return (
+            <button
+              key={country.code}
+              type="button"
+              onClick={() => saveCountry(country.code)}
+              disabled={Boolean(busyCode)}
+              className={`flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-left transition disabled:cursor-wait disabled:opacity-70 ${
+                selected ? 'bg-bolt/15 text-bolt' : 'bg-white/5 text-white/80 hover:bg-white/10'
+              }`}
+            >
+              <span className="text-xl leading-none">{flagEmoji(country.code)}</span>
+              <span className="min-w-0 flex-1 truncate text-sm font-semibold">{country.name}</span>
+              <span className="text-[10px] uppercase tracking-wider text-white/35">{busy ? 'Saving' : country.code}</span>
+            </button>
+          );
+        })}
+      </div>
+    </Overlay>
+  );
+}
+
 export default function GameAccount() {
   const status = useSessionStore((s) => s.status);
   const username = useSessionStore((s) => s.username);
+  const country = useSessionStore((s) => s.country);
   const verified = useSessionStore((s) => s.verified);
   const init = useSessionStore((s) => s.init);
   const [linking, setLinking] = useState(false);
   const [renaming, setRenaming] = useState(false);
+  const [choosingFlag, setChoosingFlag] = useState(false);
 
   useEffect(() => {
     if (status === 'loading') init();
@@ -277,7 +401,15 @@ export default function GameAccount() {
       {/* account chip — flows at the top of the left console column */}
       {status !== 'unset' && (
         <div className="glass pointer-events-auto flex shrink-0 items-center gap-2 self-start rounded-full px-3 py-1.5 text-xs">
-          <span className="text-bolt" aria-hidden>⚡</span>
+          <button
+            type="button"
+            onClick={() => setChoosingFlag(true)}
+            className="cursor-pointer rounded-full text-base leading-none transition hover:scale-110"
+            aria-label="Change flag"
+            title="Change flag"
+          >
+            {flagEmoji(country || null)}
+          </button>
           <button
             type="button"
             onClick={() => setRenaming(true)}
@@ -304,6 +436,7 @@ export default function GameAccount() {
       {status === 'unset' && <AutoGuestSetup />}
       {status === 'guest' && linking && <LinkModal onClose={() => setLinking(false)} />}
       {(status === 'guest' || status === 'authed') && renaming && <RenameModal onClose={() => setRenaming(false)} />}
+      {(status === 'guest' || status === 'authed') && choosingFlag && <FlagModal onClose={() => setChoosingFlag(false)} />}
     </>
   );
 }

@@ -92,7 +92,7 @@ export default async function LeaderboardPage() {
   return (
     <main className="relative min-h-screen">
       <Backdrop />
-      <div className="mx-auto w-[80vw] pb-24 pt-32">
+      <div className="mx-auto w-[70vw] pb-24 pt-32">
         {result.state === 'disabled' && (
           <EmptyCard>The leaderboard goes live once the game backend is connected.</EmptyCard>
         )}

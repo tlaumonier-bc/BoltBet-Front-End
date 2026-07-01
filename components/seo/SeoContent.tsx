@@ -54,7 +54,7 @@ export default function SeoContent({ page }: { page: LocalePage }) {
   const funnelSection = c.sections.find((s) => s.isFunnel);
 
   return (
-    <div className="mx-auto w-[80vw] pb-24 pt-4">
+    <div className="mx-auto w-[70vw] pb-24 pt-4">
       {/* breadcrumb */}
       <nav aria-label="Breadcrumb" className="text-xs text-white/50">
         {c.breadcrumb.map((name, i) => (

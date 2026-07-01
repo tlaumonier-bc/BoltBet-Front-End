@@ -5,6 +5,7 @@ export type SessionStatus = 'loading' | 'unset' | 'guest' | 'authed';
 
 export interface AccountMeta {
   verified: boolean;
+  country: string;
   canChangeUsername: boolean;
   usernameChangeAvailableAt: string | null;
 }
@@ -15,6 +16,7 @@ interface SessionStore {
   token: string | null;  // opaque server session token (sent as Bearer)
   suggestedName: string; // random default for the username field
   verified: boolean;
+  country: string;
   canChangeUsername: boolean;
   usernameChangeAvailableAt: string | null;
 
@@ -37,6 +39,7 @@ interface Persisted {
   username: string;
   token: string | null;
   verified?: boolean;
+  country?: string;
   canChangeUsername?: boolean;
   usernameChangeAvailableAt?: string | null;
 }
@@ -66,6 +69,7 @@ export const useSessionStore = create<SessionStore>((set) => ({
   token: null,
   suggestedName: randomName(),
   verified: false,
+  country: '',
   canChangeUsername: false,
   usernameChangeAvailableAt: null,
 
@@ -78,6 +82,7 @@ export const useSessionStore = create<SessionStore>((set) => ({
         username: saved.username,
         token: saved.token ?? null,
         verified: Boolean(saved.verified),
+        country: saved.country ?? '',
         canChangeUsername: Boolean(saved.canChangeUsername),
         usernameChangeAvailableAt: saved.usernameChangeAvailableAt ?? null,
       });
@@ -97,6 +102,7 @@ export const useSessionStore = create<SessionStore>((set) => ({
       token: null,
       suggestedName: suggested,
       verified: false,
+      country: '',
       canChangeUsername: false,
       usernameChangeAvailableAt: null,
     });
@@ -108,6 +114,7 @@ export const useSessionStore = create<SessionStore>((set) => ({
       username,
       token: token ?? null,
       verified: Boolean(meta.verified),
+      country: meta.country ?? '',
       canChangeUsername: Boolean(meta.canChangeUsername),
       usernameChangeAvailableAt: meta.usernameChangeAvailableAt ?? null,
     };
@@ -121,6 +128,7 @@ export const useSessionStore = create<SessionStore>((set) => ({
       username,
       token,
       verified: Boolean(meta.verified),
+      country: meta.country ?? '',
       canChangeUsername: Boolean(meta.canChangeUsername),
       usernameChangeAvailableAt: meta.usernameChangeAvailableAt ?? null,
     };
@@ -135,6 +143,7 @@ export const useSessionStore = create<SessionStore>((set) => ({
         username,
         token: current.token,
         verified: meta.verified ?? current.verified,
+        country: meta.country ?? current.country,
         canChangeUsername: meta.canChangeUsername ?? current.canChangeUsername,
         usernameChangeAvailableAt: meta.usernameChangeAvailableAt ?? current.usernameChangeAvailableAt,
       };
@@ -149,6 +158,7 @@ export const useSessionStore = create<SessionStore>((set) => ({
       username: '',
       token: null,
       verified: false,
+      country: '',
       canChangeUsername: false,
       usernameChangeAvailableAt: null,
     };
