@@ -8,6 +8,11 @@ export const metadata: Metadata = {
     'Watch real-time lightning strikes worldwide on a live 3D globe. Click any country to zoom in and see its latest strikes.',
   alternates: { canonical: '/' },
   robots: { index: true, follow: true },
+  openGraph: {
+    title: 'Live Lightning Map & Real-Time Strikes Worldwide',
+    description:
+      'Watch real-time lightning strikes worldwide on a live 3D globe. Click any country to zoom in and see its latest strikes.',
+  },
 };
 
 export default function HomePage() {

@@ -9,6 +9,9 @@ import { site } from '@/lib/content/content';
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
+// Display brand with the space, regardless of how it's stored in locales.json.
+const BRAND = 'Lightning Map Game';
+
 const unbounded = Unbounded({
   subsets: ['latin'],
   variable: '--font-unbounded',
@@ -23,8 +26,8 @@ const sora = Sora({
 export const metadata: Metadata = {
   metadataBase: new URL(site.baseUrl),
   title: {
-    template: `%s | ${site.brand}`,
-    default: `${site.brand} — Live Lightning Map & 60-Second Game`,
+    template: `%s | ${BRAND}`,
+    default: `${BRAND} — Live Lightning Map & 60-Second Game`,
   },
   description:
     'Watch real-time lightning strikes worldwide on a live map, then guess whether more or fewer bolts hit in the next 60 seconds. Free to play, no real money.',
@@ -37,7 +40,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    siteName: site.brand,
+    siteName: BRAND,
     images: [{ url: '/og-image.jpg', width: 1200, height: 630 }],
   },
   twitter: { card: 'summary_large_image' },
@@ -50,13 +53,13 @@ const structuredData = {
     {
       '@type': 'WebSite',
       '@id': `${site.baseUrl}/#website`,
-      name: 'Lightning Map Game',
+      name: BRAND,
       alternateName: 'LightningMapGame',
       url: `${site.baseUrl}/`,
     },
     {
       '@type': 'WebApplication',
-      name: site.brand,
+      name: BRAND,
       applicationCategory: 'GameApplication',
       description: 'Real-time lightning map with a 60-second prediction game',
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },

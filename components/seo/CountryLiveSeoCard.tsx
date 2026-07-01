@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { CountryNewsArticle, CountryStrike, WeatherNow } from '@/lib/api';
-import { getCountryNews, getCountryStrikes, getWeatherNow } from '@/lib/api';
+import type { CountryNewsArticle, CountryStrike, CountryStrikeMeta, WeatherNow } from '@/lib/api';
+import { getCountryNews, getCountryStrikesResult, getWeatherNow } from '@/lib/api';
 import type { LocalePage } from '@/lib/content/content-types';
 import { boundsForLocale } from '@/lib/map/countryBounds';
 import { flagEmoji } from '@/lib/live/owm';
@@ -79,6 +79,7 @@ function statLabel(perMin: number): string {
 export default function CountryLiveSeoCard({ page }: { page: LocalePage }) {
   const [state, setState] = useState<LoadState>('loading');
   const [strikes, setStrikes] = useState<CountryStrike[]>([]);
+  const [strikeMeta, setStrikeMeta] = useState<CountryStrikeMeta | null>(null);
   const [weather, setWeather] = useState<WeatherNow | null>(null);
   const [articles, setArticles] = useState<CountryNewsArticle[]>([]);
   const [now, setNow] = useState(() => Date.now());
@@ -96,7 +97,7 @@ export default function CountryLiveSeoCard({ page }: { page: LocalePage }) {
     let alive = true;
 
     Promise.allSettled([
-      getCountryStrikes(page.locale, 1000),
+      getCountryStrikesResult(page.locale, 5000),
       getWeatherNow(center.lat, center.lon),
       getCountryNews({
         country: page.locale,
@@ -107,8 +108,10 @@ export default function CountryLiveSeoCard({ page }: { page: LocalePage }) {
     ]).then(([strikeResult, weatherResult, newsResult]) => {
       if (!alive) return;
 
-      const nextStrikes = strikeResult.status === 'fulfilled' ? strikeResult.value : [];
+      const nextStrikeResult = strikeResult.status === 'fulfilled' ? strikeResult.value : null;
+      const nextStrikes = nextStrikeResult?.strikes ?? [];
       setStrikes(nextStrikes);
+      setStrikeMeta(nextStrikeResult?.meta ?? null);
       setWeather(weatherResult.status === 'fulfilled' ? weatherResult.value : null);
       setArticles(newsResult.status === 'fulfilled' ? newsResult.value.articles : []);
       setState(nextStrikes.length || weatherResult.status === 'fulfilled' || newsResult.status === 'fulfilled' ? 'ready' : 'empty');
@@ -145,6 +148,10 @@ export default function CountryLiveSeoCard({ page }: { page: LocalePage }) {
 
   if (state === 'empty') return null;
 
+  const lastHourLabel = strikeMeta?.cappedLastHour
+    ? `> ${strikeMeta.limit.toLocaleString()}`
+    : (strikeMeta?.lastHour ?? stats?.lastHour ?? 0).toLocaleString();
+
   return (
     <section className="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] shadow-2xl">
       <div className="border-b border-white/10 bg-linear-to-r from-bolt/10 via-white/[0.03] to-electric/10 px-5 py-4 sm:px-6">
@@ -178,7 +185,7 @@ export default function CountryLiveSeoCard({ page }: { page: LocalePage }) {
           {state !== 'loading' && (
             <>
               <div className="grid gap-2 sm:grid-cols-3">
-                <MiniStat value={String(stats?.lastHour ?? 0)} label="strikes · last hour" highlight />
+                <MiniStat value={lastHourLabel} label="strikes · last hour" highlight />
                 <MiniStat value={stats?.lastStrike ?? '—'} label="latest detected strike" />
                 <MiniStat
                   value={weather ? `${weather.tempC}°C` : '—'}

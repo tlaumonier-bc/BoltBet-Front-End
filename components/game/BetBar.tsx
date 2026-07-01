@@ -1,5 +1,5 @@
 'use client';
-// components/game/BetBar.tsx — bottom-centre action bar for Game mode.
+// components/game/BetBar.tsx — bottom-centre play bar for Game mode.
 import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { useStrikeGameStore } from '@/store/strikeGameStore';
@@ -81,9 +81,18 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
 
         {/* header: scope + points */}
         <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <span className="text-base leading-none">{isCountry ? flagEmoji(vm.scope.id || null) : '🌍'}</span>
-            <span className="font-medium text-white/85">{vm.scope.label}</span>
+            <span className="truncate font-medium text-white/85">{vm.scope.label}</span>
+            {isCountry && (
+              <button
+                type="button"
+                onClick={vm.playGlobe}
+                className="shrink-0 cursor-pointer rounded-md border border-electric/30 bg-electric/10 px-2 py-0.5 text-[11px] font-bold text-electric transition hover:bg-electric/20"
+              >
+                Play whole globe
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] uppercase tracking-wider text-white/40">Points</span>
@@ -91,7 +100,7 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
           </div>
         </div>
 
-        {/* per-bet progress bar */}
+        {/* active-play progress bar */}
         <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
           <div
             className="absolute inset-y-0 left-0 bg-bolt/80 transition-[width] duration-200 ease-linear"
@@ -99,22 +108,49 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
           />
         </div>
 
-        {/* ── content (pending first, so a live bet stays visible) ────────── */}
+        {/* ── content (pending first, so a live play stays visible) ───────── */}
         {vm.pending ? (
-          <div className="mt-3 flex items-center justify-between gap-4">
-            <div>
-              <div className={`font-display text-lg font-bold ${vm.pending.side === 'up' ? 'text-emerald-300' : 'text-rose-300'}`}>
-                {vm.pending.side === 'up' ? '↑ HIGHER' : '↓ LOWER'} · {vm.pending.amount} points
+          <div className="mt-4">
+            <div
+              className={`rounded-2xl border px-4 py-4 ${
+                vm.pending.side === 'up'
+                  ? 'border-emerald-300/35 bg-emerald-300/10'
+                  : 'border-rose-300/35 bg-rose-300/10'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/45">Current play</div>
+                  <div className={`mt-1 font-display text-2xl font-extrabold ${vm.pending.side === 'up' ? 'text-emerald-300' : 'text-rose-300'}`}>
+                    {vm.pending.side === 'up' ? '↑ HIGHER' : '↓ LOWER'}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-display text-4xl font-extrabold tabular-nums text-white">
+                    {Math.ceil(vm.msUntilResolve / 1000)}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wider text-white/40">seconds left</div>
+                </div>
               </div>
-              <div className="mt-0.5 text-xs text-white/55">
-                win <span className="font-semibold text-bolt">{vm.pending.amount * PAYOUT_MULTIPLIER}</span> points
+
+              <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                <div className="rounded-xl bg-black/18 px-3 py-3 text-center">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-electric/70">Score to beat</div>
+                  <div className="font-display text-4xl font-extrabold tabular-nums text-electric">{vm.pending.prevCount}</div>
+                </div>
+                <div className="font-display text-lg font-black text-white/35">vs</div>
+                <div className="rounded-xl bg-black/18 px-3 py-3 text-center">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-bolt/70">Now</div>
+                  <div className="font-display text-4xl font-extrabold tabular-nums text-bolt">{vm.pendingCurrentCount}</div>
+                </div>
               </div>
-            </div>
-            <div className="text-right">
-              <div className="font-display text-3xl font-extrabold tabular-nums text-white">
-                {Math.ceil(vm.msUntilResolve / 1000)}
+
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-white/55">
+                <span>{vm.pending.scopeLabel}</span>
+                <span>
+                  {vm.pending.amount} → <span className="font-semibold text-bolt">{vm.pending.amount * PAYOUT_MULTIPLIER}</span> points
+                </span>
               </div>
-              <div className="text-[10px] uppercase tracking-wider text-white/40">seconds to result</div>
             </div>
           </div>
         ) : isCountry && !vm.playable ? (
@@ -130,7 +166,7 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
                 onClick={vm.playGlobe}
                 className="flex-1 cursor-pointer rounded-xl border border-electric/40 bg-electric/10 py-2.5 text-sm font-bold text-electric transition hover:bg-electric/20"
               >
-                🌍 Play the globe
+                🌍 Play whole globe
               </button>
             </div>
           </div>
@@ -153,14 +189,14 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
                 className="flex cursor-pointer flex-col items-center gap-0.5 rounded-xl bg-emerald-500 py-3.5 text-white transition hover:bg-emerald-400 active:scale-[0.97]"
               >
                 <span className="font-display text-lg font-extrabold leading-none">↑ HIGHER</span>
-                <span className="text-xs font-semibold text-white/90">win {toWin}</span>
+                <span className="text-xs font-semibold text-white/90">win {toWin} points</span>
               </button>
               <button
                 onClick={() => vm.placeBet('down', clampAmt)}
                 className="flex cursor-pointer flex-col items-center gap-0.5 rounded-xl bg-rose-500 py-3.5 text-white transition hover:bg-rose-400 active:scale-[0.97]"
               >
                 <span className="font-display text-lg font-extrabold leading-none">↓ LOWER</span>
-                <span className="text-xs font-semibold text-white/90">win {toWin}</span>
+                <span className="text-xs font-semibold text-white/90">win {toWin} points</span>
               </button>
             </div>
 
@@ -185,13 +221,13 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
                 </button>
               </div>
               <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300">
-                Bet anytime
+                Play anytime
               </span>
             </div>
           </div>
         ) : (
           <div className="mt-3 flex items-center justify-between gap-4">
-            <p className="text-sm font-medium text-white/75">Waiting for this bet to settle.</p>
+            <p className="text-sm font-medium text-white/75">Waiting for this play to settle.</p>
             <div className="text-right">
               <div className="font-display text-2xl font-extrabold tabular-nums text-electric">
                 {Math.ceil(vm.msUntilResolve / 1000)}

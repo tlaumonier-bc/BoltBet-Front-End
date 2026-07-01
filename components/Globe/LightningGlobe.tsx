@@ -25,6 +25,10 @@ import { attachAtmosphereGlow } from '@/lib/globe/atmosphereGlow';
 import { attachLayers } from '@/lib/globe/layerManager';
 import { attachCountryStrikes } from '@/lib/globe/countryStrikesLayer';
 
+const FRANCE_INTRO_LON = 2.2;
+const FRANCE_INTRO_LAT = 46.2;
+const LANDING_INTRO_DURATION_S = 1.8;
+
 interface LightningGlobeProps {
   viewOnly?: boolean;
   fill?: boolean;
@@ -166,10 +170,37 @@ export default function LightningGlobe({
     });
 
     // loading states (wrapper loader + detail pill)
+    let landingIntroStarted = false;
+    const shouldRunLandingIntro = () =>
+      viewOnly &&
+      boundsMinLon == null &&
+      boundsMinLat == null &&
+      boundsMaxLon == null &&
+      boundsMaxLat == null &&
+      !interaction.stopped &&
+      !useLiveStore.getState().selectedCountry;
+    const runLandingIntro = () => {
+      if (landingIntroStarted || viewer.isDestroyed() || !shouldRunLandingIntro()) return;
+      landingIntroStarted = true;
+      interaction.stopped = true;
+      const height = camera.positionCartographic.height;
+      camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(FRANCE_INTRO_LON, FRANCE_INTRO_LAT, height),
+        orientation: {
+          heading: camera.heading,
+          pitch: Cesium.Math.toRadians(-90),
+          roll: 0,
+        },
+        duration: LANDING_INTRO_DURATION_S,
+      });
+    };
     disposers.push(
       createTileLoadTracker({
         scene,
-        onReady: () => onReadyRef.current?.(),
+        onReady: () => {
+          onReadyRef.current?.();
+          runLandingIntro();
+        },
         setTilesLoading,
       }),
     );
@@ -249,7 +280,7 @@ export default function LightningGlobe({
     // live lightning strikes
     disposers.push(attachLightningStrikes(scene));
 
-    // "orbit to" flights + per-country "latest 1000 strikes" layer (view-only)
+    // "orbit to" flights + per-country "latest 5000 strikes" layer (view-only)
     if (viewOnly) {
       disposers.push(attachOrbitFlights({ camera, interaction }));
       disposers.push(attachCountryStrikes(scene));

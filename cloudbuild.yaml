@@ -19,6 +19,8 @@ substitutions:
   _NEXT_PUBLIC_FIREBASE_APP_ID: 1:374738273879:web:d064521c6b1edc279d8512
   _NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "374738273879"
   _NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: blockchain-gemini.firebasestorage.app
+  _NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: phc_wJsYdcjNAwHdBdcbJngPR6oVhdb7ksDmBp3qqAu2EKnS
+  _NEXT_PUBLIC_POSTHOG_HOST: https://eu.i.posthog.com
 
 steps:
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
@@ -58,6 +60,10 @@ steps:
       - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${_NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
       - --build-arg
       - NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${_NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
+      - --build-arg
+      - NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=${_NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN}
+      - --build-arg
+      - NEXT_PUBLIC_POSTHOG_HOST=${_NEXT_PUBLIC_POSTHOG_HOST}
       - -f
       - Dockerfile
       - .
