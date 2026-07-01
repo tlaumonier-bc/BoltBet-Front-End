@@ -180,14 +180,14 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
                 className="flex cursor-pointer flex-col items-center gap-0.5 rounded-xl bg-emerald-500 py-3.5 text-white transition hover:bg-emerald-400 active:scale-[0.97]"
               >
                 <span className="font-display text-lg font-extrabold leading-none">↑ HIGHER</span>
-                <span className="text-xs font-semibold text-white/90">win {toWin}</span>
+                <span className="text-xs font-semibold text-white/90">win {toWin} points</span>
               </button>
               <button
                 onClick={() => vm.placeBet('down', clampAmt)}
                 className="flex cursor-pointer flex-col items-center gap-0.5 rounded-xl bg-rose-500 py-3.5 text-white transition hover:bg-rose-400 active:scale-[0.97]"
               >
                 <span className="font-display text-lg font-extrabold leading-none">↓ LOWER</span>
-                <span className="text-xs font-semibold text-white/90">win {toWin}</span>
+                <span className="text-xs font-semibold text-white/90">win {toWin} points</span>
               </button>
             </div>
 
