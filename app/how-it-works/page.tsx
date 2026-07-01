@@ -6,10 +6,10 @@ import { site } from '@/lib/content/content'
 export const metadata: Metadata = {
   title: 'How It Works — Live Lightning Globe & Prediction Game',
   description:
-    'How the live lightning globe works: real-time strikes from the Blitzortung network, view modes and weather layers, clicking any country, and the Higher/Lower 30-second prediction game played with free virtual points.',
+    'How the live lightning globe works: real-time strikes in the world, view modes and weather layers, clicking any country, and the Higher/Lower 30-second prediction game played with free virtual points.',
   keywords: [
     'how the lightning map works', 'real-time lightning globe', 'lightning prediction game',
-    'blitzortung', 'lightning strike map', 'where is lightning striking now',
+    'live strikes', 'lightning strike map', 'where is lightning striking now',
   ],
   alternates: { canonical: '/how-it-works' },
 }
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 const MODES = [
   { name: 'Free', icon: '🌍', blurb: 'Just the globe — strikes flashing worldwide, nothing else on screen.' },
   { name: 'Beginner', icon: '⚡', blurb: 'Adds a live console: orbit shortcuts, strikes in the last hour, clouds and rain layers, and a running activity readout.' },
-  { name: 'Pro', icon: '📡', blurb: 'Everything in Beginner plus 6h / 24h strike trails, temperature and wind layers, feed health, latency and signal-quality telemetry.' },
+  { name: 'Pro', icon: '📡', blurb: 'Everything in Beginner plus 3h / 6h strike trails, temperature and wind layers, feed health, latency and signal-quality telemetry.' },
   { name: 'Game', icon: '🎯', blurb: 'Predict whether the next 30 seconds bring more or fewer strikes than the last — for free virtual points.' },
 ]
 
@@ -94,7 +94,7 @@ export default function HowItWorksPage() {
       <Backdrop />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faq) }} />
 
-      <div className="mx-auto max-w-3xl px-6 pb-24 pt-32">
+      <div className="mx-auto w-[80vw] pb-24 pt-32">
         <p className="text-xs uppercase tracking-[0.3em] text-electric/70">How it works</p>
         <h1 className="font-display mt-3 text-4xl font-extrabold leading-tight sm:text-5xl">
           Watch real <span className="text-gradient">lightning</span>. Then predict it.
@@ -136,7 +136,7 @@ export default function HowItWorksPage() {
           </div>
           <p className="mt-4 text-sm text-white/45">
             In Beginner and Pro you can layer live weather over the globe — clouds, rain, temperature and wind — and switch on
-            strike trails from the last 1, 6 or 24 hours.
+            strike trails from the last 1, 3 or 6 hours.
           </p>
         </div>
 

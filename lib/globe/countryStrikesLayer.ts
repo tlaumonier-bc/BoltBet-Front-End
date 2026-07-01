@@ -1,16 +1,16 @@
 // lib/globe/countryStrikesLayer.ts
-// "Latest 1000 strikes in <country>" layer. Reacts to liveStore.selectedCountry
+// "Latest 5000 strikes in <country>" layer. Reacts to liveStore.selectedCountry
 // + liveStore.countryStrikesOn: when on and the country has an ISO-2 code, it
 // fetches /api/strikes/by-country/ and renders the points in electric cyan
 // (distinct from the recent-strikes heat-map). Fetched rows are written back to
 // the store so the country panel can show stats from the same data.
 
 import * as Cesium from 'cesium';
-import { getCountryStrikes } from '@/lib/api';
+import { getCountryStrikesResult } from '@/lib/api';
 import { useLiveStore } from '@/store/liveStore';
 
 const POLL_MS = 30_000;
-const LIMIT = 1000;
+const LIMIT = 5000;
 const COLOR = Cesium.Color.fromCssColorString('#38bdf8'); // electric cyan
 
 export function attachCountryStrikes(scene: Cesium.Scene): () => void {
@@ -52,12 +52,12 @@ export function attachCountryStrikes(scene: Cesium.Scene): () => void {
     if (!iso2 || inFlight) return;
     inFlight = true;
     try {
-      const rows = await getCountryStrikes(iso2, LIMIT);
+      const result = await getCountryStrikesResult(iso2, LIMIT);
       // Selection may have changed during the await — guard before applying.
       const now = useLiveStore.getState();
       if (now.countryStrikesOn && now.selectedCountry?.iso2 === iso2) {
-        render(rows);
-        now.setCountryStrikes(rows);
+        render(result.strikes);
+        now.setCountryStrikes(result.strikes, result.meta);
       }
     } catch {
       /* backend hiccup — keep previous render */
@@ -75,7 +75,7 @@ export function attachCountryStrikes(scene: Cesium.Scene): () => void {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     if (!key) {
       clear();
-      useLiveStore.getState().setCountryStrikes([]);
+      useLiveStore.getState().setCountryStrikes([], null);
       return;
     }
     refresh();

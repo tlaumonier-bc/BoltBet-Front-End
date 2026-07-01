@@ -2,6 +2,15 @@
 import { sessionToken } from '@/store/sessionStore';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+const STRIKES_API = process.env.NEXT_PUBLIC_STRIKES_API_URL ?? API;
+export const LEADERBOARD_API = process.env.NEXT_PUBLIC_LEADERBOARD_API_URL ?? API;
+export const TROPHIES: Trophy[] = [
+  { key: 'Bolt Tracker', points: 200, image: 'trophy-200.png', label: 'Bolt Tracker Trophy' },
+  { key: 'Could Reader', points: 500, image: 'trophy-500.png', label: 'Could Reader Trophy' },
+  { key: 'Strike Predictor', points: 1000, image: 'trophy-1000.png', label: 'Strike Predictor Trophy' },
+  { key: 'Tempest Watcher', points: 10000, image: 'trophy-10000.png', label: 'Tempest Watcher Trophy' },
+  { key: 'Lightning Lord', points: 100000, image: 'trophy-100000.png', label: 'Lightning Lord Trophy' },
+];
 
 /**
  * Server-authoritative game is OFF until the backend ships. While off, the
@@ -20,6 +29,16 @@ function csrf(): string {
 function authHeaders(): Record<string, string> {
   const t = sessionToken();
   return t ? { Authorization: `Bearer ${t}` } : {};
+}
+
+function clientCountryCode(): string {
+  if (typeof navigator === 'undefined') return '';
+  const locales = [...navigator.languages, navigator.language].filter(Boolean);
+  for (const locale of locales) {
+    const match = locale.match(/[-_]([A-Za-z]{2})$/);
+    if (match) return match[1].toUpperCase();
+  }
+  return '';
 }
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {
@@ -68,6 +87,18 @@ export interface CountryStrike {
   received_at: string;
 }
 
+export interface CountryStrikeMeta {
+  country: string;
+  limit: number;
+  lastHour: number;
+  cappedLastHour: boolean;
+}
+
+export interface CountryStrikesResult {
+  strikes: CountryStrike[];
+  meta: CountryStrikeMeta | null;
+}
+
 export interface WeatherNow {
   tempC: number;
   clouds: number;
@@ -106,7 +137,7 @@ export async function getRecentStrikes(
   });
   if (opts.after) q.set('after', opts.after);
   if (opts.downsample && opts.downsample > 1) q.set('downsample', String(opts.downsample));
-  const res = await fetch(`${API}/api/strikes/recent/?${q}`, { cache: 'no-store' });
+  const res = await fetch(`${STRIKES_API}/api/strikes/recent/?${q}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`recent strikes ${res.status}`);
   return res.json();
 }
@@ -118,12 +149,22 @@ export async function getStrikesPerMinute(minutes = 15): Promise<StrikesPerMinut
   return res.json();
 }
 
-export async function getCountryStrikes(country: string, limit = 1000): Promise<CountryStrike[]> {
+export async function getCountryStrikesResult(country: string, limit = 5000): Promise<CountryStrikesResult> {
   const q = new URLSearchParams({ country, limit: String(limit) });
   const res = await fetch(`${API}/api/strikes/by-country/?${q}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`country strikes ${res.status}`);
-  const data = (await res.json()) as Record<string, CountryStrike[]>;
-  return data[country.toUpperCase()] ?? [];
+  const data = (await res.json()) as Record<string, CountryStrike[] | CountryStrikeMeta | undefined>;
+  const key = country.toUpperCase();
+  const meta = data._meta as CountryStrikeMeta | undefined;
+  return {
+    strikes: (data[key] as CountryStrike[] | undefined) ?? [],
+    meta: meta ?? null,
+  };
+}
+
+export async function getCountryStrikes(country: string, limit = 5000): Promise<CountryStrike[]> {
+  const result = await getCountryStrikesResult(country, limit);
+  return result.strikes;
 }
 
 export async function getWeatherNow(lat: number, lon: number): Promise<WeatherNow> {
@@ -160,6 +201,7 @@ export interface Session {
   token: string;
   tokens: number; // starting balance
   verified: boolean;
+  country: string;
   canChangeUsername: boolean;
   usernameChangeAvailableAt: string | null;
 }
@@ -174,7 +216,7 @@ export async function checkUsername(username: string): Promise<UsernameCheck> {
 
 /** Create a guest account. If omitted, the backend assigns a unique random name. */
 export async function registerUsername(username?: string): Promise<Session> {
-  return postJson<Session>('/api/game/register/', username ? { username } : {});
+  return postJson<Session>('/api/game/register/', { ...(username ? { username } : {}), countryCode: clientCountryCode() });
 }
 
 /**
@@ -185,7 +227,11 @@ export async function exchangeFirebaseToken(
   idToken: string,
   linkToken?: string | null,
 ): Promise<Session> {
-  return postJson<Session>('/api/auth/firebase/', { idToken, linkToken: linkToken ?? '' });
+  return postJson<Session>('/api/auth/firebase/', {
+    idToken,
+    linkToken: linkToken ?? '',
+    countryCode: clientCountryCode(),
+  });
 }
 
 // ── Up/Down game (server-authoritative; identity comes from the Bearer token) ─
@@ -197,6 +243,7 @@ export interface PlayerProfile {
   username: string;
   tokens: number;
   verified: boolean;
+  country: string;
   canChangeUsername: boolean;
   usernameChangeAvailableAt: string | null;
 }
@@ -225,11 +272,68 @@ export interface BetResolution {
 }
 
 export interface LeaderboardEntry {
+  rank?: number | null;
   username: string;
   tokens: number;
   wins: number;
   gamesPlayed: number;
   verified: boolean;
+  country: string;
+  trophy: Trophy | null;
+}
+
+export interface Trophy {
+  key: string;
+  points: number;
+  image: string;
+  label: string;
+  achievedCount?: number;
+}
+
+export interface LeaderboardContext {
+  rows: LeaderboardEntry[];
+  currentRank: number;
+  nextTrophy: Trophy | null;
+  trophies: Trophy[];
+}
+
+export interface LeaderboardSummary {
+  entries: LeaderboardEntry[];
+  trophies: Trophy[];
+  totalPlayers: number;
+}
+
+function trophyFor(tokens: number): Trophy | null {
+  let earned: Trophy | null = null;
+  for (const trophy of TROPHIES) {
+    if (tokens >= trophy.points) earned = trophy;
+  }
+  return earned;
+}
+
+function nextTrophyFor(tokens: number): Trophy | null {
+  return TROPHIES.find((trophy) => tokens < trophy.points) ?? null;
+}
+
+function hydrateLeaderboardEntry(entry: Partial<LeaderboardEntry>, rank: number): LeaderboardEntry {
+  const tokens = Number(entry.tokens ?? 0);
+  return {
+    rank: entry.rank ?? rank,
+    username: entry.username ?? 'player',
+    tokens,
+    wins: Number(entry.wins ?? 0),
+    gamesPlayed: Number(entry.gamesPlayed ?? 0),
+    verified: Boolean(entry.verified),
+    country: entry.country ?? '',
+    trophy: entry.trophy ?? trophyFor(tokens),
+  };
+}
+
+function trophyCounts(entries: LeaderboardEntry[], trophies = TROPHIES): Trophy[] {
+  return trophies.map((trophy) => ({
+    ...trophy,
+    achievedCount: entries.filter((entry) => entry.tokens >= trophy.points).length,
+  }));
 }
 
 /** Current player's profile + balance (identity from the token). */
@@ -237,6 +341,36 @@ export async function getProfile(): Promise<PlayerProfile> {
   const res = await fetch(`${API}/api/game/profile/`, { cache: 'no-store', headers: authHeaders() });
   if (!res.ok) throw new Error(`profile ${res.status}`);
   return res.json();
+}
+
+export async function getLeaderboardContext(): Promise<LeaderboardContext> {
+  const res = await fetch(`${API}/api/game/leaderboard/context/`, { cache: 'no-store', headers: authHeaders() });
+  if (res.ok) return res.json();
+
+  const summary = await getLeaderboardSummary(3);
+  return {
+    rows: summary.entries.slice(0, 3),
+    currentRank: 0,
+    nextTrophy: nextTrophyFor(0),
+    trophies: summary.trophies,
+  };
+}
+
+export async function getLeaderboardSummary(limit = 50): Promise<LeaderboardSummary> {
+  const q = new URLSearchParams({ limit: String(limit) });
+  const res = await fetch(`${LEADERBOARD_API}/api/game/leaderboard/summary/?${q}`, { cache: 'no-store' });
+  if (res.ok) return res.json();
+
+  const legacy = await fetch(`${LEADERBOARD_API}/api/game/leaderboard/?${q}`, { cache: 'no-store' });
+  if (!legacy.ok) throw new Error(`leaderboard summary ${res.status}`);
+  const entries = ((await legacy.json()) as Partial<LeaderboardEntry>[]).map((entry, index) =>
+    hydrateLeaderboardEntry(entry, index + 1),
+  );
+  return {
+    entries,
+    trophies: trophyCounts(entries),
+    totalPlayers: entries.length,
+  };
 }
 
 export async function placeBet(payload: BetPayload): Promise<PlacedBet> {

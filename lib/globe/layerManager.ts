@@ -79,15 +79,15 @@ export function attachLayers(viewer: Cesium.Viewer, scene: Cesium.Scene): () => 
       color: Cesium.Color.fromCssColorString('#ef4444'),
       maxPoints: 180000, downsample: 1,        // full density, last hour
     }),
-    'recent-strikes-6h': makeRecentStrikesEffect(scene, {
-      minutes: 360, olderThan: 60,
+    'recent-strikes-3h': makeRecentStrikesEffect(scene, {
+      minutes: 180, olderThan: 60,
       color: Cesium.Color.fromCssColorString('#fbbf24'),
       maxPoints: 120000, downsample: 4,        // thin older band
     }),
-    'recent-strikes-24h': makeRecentStrikesEffect(scene, {
-      minutes: 1440, olderThan: 360,
+    'recent-strikes-6h': makeRecentStrikesEffect(scene, {
+      minutes: 360, olderThan: 180,
       color: Cesium.Color.fromCssColorString('#60a5fa'),
-      maxPoints: 120000, downsample: 12,       // thin oldest band hard
+      maxPoints: 120000, downsample: 8,        // thin oldest band hard
     }),
     'storm-fog': stormFog,
     'precipitation': precipitation,

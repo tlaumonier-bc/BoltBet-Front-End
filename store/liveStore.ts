@@ -2,7 +2,7 @@
 import { create } from 'zustand'
 import { DEFAULT_QUALITY, type GlobeQuality } from '@/lib/globe/quality'
 import { defaultLayerState, type GlobeLayerId } from '@/lib/globe/layers'
-import type { CountryStrike } from '@/lib/api'
+import type { CountryStrike, CountryStrikeMeta } from '@/lib/api'
 import {
   trackModeChange,
   trackCountrySelected,
@@ -48,13 +48,14 @@ interface LiveStore {
   toggleLayer: (id: GlobeLayerId) => void
   setLayer: (id: GlobeLayerId, on: boolean) => void
 
-  // ── Selected country + its "latest 1000 strikes" layer ──
+  // ── Selected country + its "latest 5000 strikes" layer ──
   selectedCountry: SelectedCountry | null
   setSelectedCountry: (c: SelectedCountry | null) => void
   countryStrikesOn: boolean
   setCountryStrikesOn: (on: boolean) => void
   countryStrikes: CountryStrike[]
-  setCountryStrikes: (rows: CountryStrike[]) => void
+  countryStrikeMeta: CountryStrikeMeta | null
+  setCountryStrikes: (rows: CountryStrike[], meta?: CountryStrikeMeta | null) => void
 
   // ── SEO text pane (slides up over the globe on a selected country) ──
   seoContentOpen: boolean
@@ -97,12 +98,14 @@ export const useLiveStore = create<LiveStore>((set) => ({
       selectedCountry,
       countryStrikesOn: !!selectedCountry,
       countryStrikes: [],
+      countryStrikeMeta: null,
     })
   },
   countryStrikesOn: false,
   setCountryStrikesOn: (countryStrikesOn) => set({ countryStrikesOn }),
   countryStrikes: [],
-  setCountryStrikes: (countryStrikes) => set({ countryStrikes }),
+  countryStrikeMeta: null,
+  setCountryStrikes: (countryStrikes, countryStrikeMeta = null) => set({ countryStrikes, countryStrikeMeta }),
 
   seoContentOpen: false,
   setSeoContentOpen: (seoContentOpen) => {

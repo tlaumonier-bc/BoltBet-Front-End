@@ -46,6 +46,7 @@ export default function CountryPanel() {
   const setSelected = useLiveStore((s) => s.setSelectedCountry)
   const setSeoContentOpen = useLiveStore((s) => s.setSeoContentOpen)
   const rows = useLiveStore((s) => s.countryStrikes)
+  const strikeMeta = useLiveStore((s) => s.countryStrikeMeta)
 
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
@@ -99,6 +100,9 @@ export default function CountryPanel() {
   const learnMore = country.iso2 ? primaryPageForLocale(country.iso2.toLowerCase()) : undefined
   const live = stats != null && stats.lastAgeSec < 120
   const tone = stats ? intensityFor(stats.perMin) : null
+  const lastHourLabel = strikeMeta?.cappedLastHour
+    ? `> ${strikeMeta.limit.toLocaleString()}`
+    : (strikeMeta?.lastHour ?? stats?.lastHour ?? 0).toLocaleString()
 
   return (
     <div className="glass panel-scroll pointer-events-auto min-h-0 w-full overflow-y-auto rounded-2xl p-4">
@@ -168,7 +172,7 @@ export default function CountryPanel() {
             <div className="flex items-end justify-between">
               <div>
                 <div className="font-display text-4xl font-extrabold tabular-nums leading-none text-bolt">
-                  {stats.lastHour}
+                  {lastHourLabel}
                 </div>
                 <div className="mt-1.5 text-[10px] uppercase tracking-wider text-white/40">
                   strikes · last hour

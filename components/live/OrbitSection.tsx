@@ -5,16 +5,20 @@ import { ORBIT_LOCATIONS } from '@/lib/live/locations'
 import { Section, coord } from './hudShared'
 
 export default function OrbitSection() {
+  const mode = useLiveStore((s) => s.mode)
   const orbitTarget = useLiveStore((s) => s.orbitTarget)
   const orbitTo = useLiveStore((s) => s.orbitTo)
   const clearOrbit = useLiveStore((s) => s.clearOrbit)
+  const setSelectedCountry = useLiveStore((s) => s.setSelectedCountry)
   const focus = orbitTarget
     ? ORBIT_LOCATIONS.find((l) => l.id === orbitTarget.id) ?? null
     : null
 
   const onGlobe = orbitTarget?.id === 'globe'
-  const backToGlobe = () =>
+  const backToGlobe = () => {
+    if (mode === 'game') setSelectedCountry(null)
     orbitTo({ id: 'globe', label: 'Whole globe', lat: 20, lon: 0, flyHeightM: 20_000_000 })
+  }
 
   return (
     <Section
