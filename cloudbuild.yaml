@@ -1,99 +1,124 @@
-substitutions:
-  _REGION: europe-west2
-  _REPO: vibe-apps
-  _SERVICE: boltbet-frontend-web
-  _IMAGE: boltbet-frontend
-  _RUNTIME_SA: vibe-app-runtime@blockchain-gemini.iam.gserviceaccount.com
-  # Next.js public env is baked in at build time. Override these with the
-  # deployed backend Cloud Run URL, for example:
-  # --substitutions=_NEXT_PUBLIC_API_URL=https://...,\
-  # _NEXT_PUBLIC_WS_URL=wss://.../ws/lightning/
-  _NEXT_PUBLIC_API_URL: https://api.lightningmapgame.com
-  _NEXT_PUBLIC_WS_URL: wss://api.lightningmapgame.com/ws/lightning/
-  _NEXT_PUBLIC_GAME_SERVER: "1"
-  _NEXT_PUBLIC_GA_ID: G-XFKXHBBW89
-  _NEXT_PUBLIC_OWM_API_KEY: ""
-  _NEXT_PUBLIC_FIREBASE_API_KEY: AIzaSyBnwj0QnamOhspYGG_4tUQRBOTD0mgMtCo
-  _NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: blockchain-gemini.firebaseapp.com
-  _NEXT_PUBLIC_FIREBASE_PROJECT_ID: blockchain-gemini
-  _NEXT_PUBLIC_FIREBASE_APP_ID: 1:374738273879:web:d064521c6b1edc279d8512
-  _NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "374738273879"
-  _NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: blockchain-gemini.firebasestorage.app
-  _NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: phc_wJsYdcjNAwHdBdcbJngPR6oVhdb7ksDmBp3qqAu2EKnS
-  _NEXT_PUBLIC_POSTHOG_HOST: https://eu.i.posthog.com
-
 steps:
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    id: configure-deployment
     entrypoint: bash
     args:
       - -ceu
       - |
-        test -n "${_NEXT_PUBLIC_API_URL}" || { echo "_NEXT_PUBLIC_API_URL is required"; exit 1; }
-        test -n "${_NEXT_PUBLIC_WS_URL}" || { echo "_NEXT_PUBLIC_WS_URL is required"; exit 1; }
+        case "$BRANCH_NAME" in
+          deploy/dev)
+            cat > /workspace/deploy.env <<'ENV'
+        REGION=europe-west2
+        REPO=vibe-apps
+        SERVICE=boltbet-frontend-dev
+        IMAGE=boltbet-frontend-dev
+        RUNTIME_SA=vibe-app-runtime@blockchain-gemini.iam.gserviceaccount.com
+        NEXT_PUBLIC_API_URL=https://boltbet-backend-dev-2ulnbyw42a-nw.a.run.app
+        NEXT_PUBLIC_WS_URL=wss://boltbet-backend-dev-2ulnbyw42a-nw.a.run.app/ws/lightning/
+        NEXT_PUBLIC_GAME_SERVER=1
+        NEXT_PUBLIC_GA_ID=G-XFKXHBBW89
+        NEXT_PUBLIC_OWM_API_KEY=
+        NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBnwj0QnamOhspYGG_4tUQRBOTD0mgMtCo
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=blockchain-gemini.firebaseapp.com
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID=blockchain-gemini
+        NEXT_PUBLIC_FIREBASE_APP_ID=1:374738273879:web:d064521c6b1edc279d8512
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=374738273879
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=blockchain-gemini.firebasestorage.app
+        NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=phc_wJsYdcjNAwHdBdcbJngPR6oVhdb7ksDmBp3qqAu2EKnS
+        NEXT_PUBLIC_POSTHOG_HOST=https://eu.i.posthog.com
+        IAP_ENABLED=true
+        ENV
+            ;;
+          deploy/prod)
+            cat > /workspace/deploy.env <<'ENV'
+        REGION=europe-west2
+        REPO=vibe-apps
+        SERVICE=boltbet-frontend-web
+        IMAGE=boltbet-frontend
+        RUNTIME_SA=vibe-app-runtime@blockchain-gemini.iam.gserviceaccount.com
+        NEXT_PUBLIC_API_URL=https://api.lightningmapgame.com
+        NEXT_PUBLIC_WS_URL=wss://api.lightningmapgame.com/ws/lightning/
+        NEXT_PUBLIC_GAME_SERVER=1
+        NEXT_PUBLIC_GA_ID=G-XFKXHBBW89
+        NEXT_PUBLIC_OWM_API_KEY=
+        NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBnwj0QnamOhspYGG_4tUQRBOTD0mgMtCo
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=blockchain-gemini.firebaseapp.com
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID=blockchain-gemini
+        NEXT_PUBLIC_FIREBASE_APP_ID=1:374738273879:web:d064521c6b1edc279d8512
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=374738273879
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=blockchain-gemini.firebasestorage.app
+        NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=
+        NEXT_PUBLIC_POSTHOG_HOST=
+        IAP_ENABLED=false
+        ENV
+            ;;
+          *)
+            echo "Unsupported deployment branch: $BRANCH_NAME"
+            echo "This build config only deploys from deploy/dev or deploy/prod."
+            exit 1
+            ;;
+        esac
 
   - name: gcr.io/cloud-builders/docker
+    id: build-image
+    entrypoint: bash
     args:
-      - build
-      - -t
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$COMMIT_SHA
-      - -t
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest
-      - --build-arg
-      - NEXT_PUBLIC_API_URL=${_NEXT_PUBLIC_API_URL}
-      - --build-arg
-      - NEXT_PUBLIC_WS_URL=${_NEXT_PUBLIC_WS_URL}
-      - --build-arg
-      - NEXT_PUBLIC_GAME_SERVER=${_NEXT_PUBLIC_GAME_SERVER}
-      - --build-arg
-      - NEXT_PUBLIC_GA_ID=${_NEXT_PUBLIC_GA_ID}
-      - --build-arg
-      - NEXT_PUBLIC_OWM_API_KEY=${_NEXT_PUBLIC_OWM_API_KEY}
-      - --build-arg
-      - NEXT_PUBLIC_FIREBASE_API_KEY=${_NEXT_PUBLIC_FIREBASE_API_KEY}
-      - --build-arg
-      - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${_NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
-      - --build-arg
-      - NEXT_PUBLIC_FIREBASE_PROJECT_ID=${_NEXT_PUBLIC_FIREBASE_PROJECT_ID}
-      - --build-arg
-      - NEXT_PUBLIC_FIREBASE_APP_ID=${_NEXT_PUBLIC_FIREBASE_APP_ID}
-      - --build-arg
-      - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${_NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
-      - --build-arg
-      - NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${_NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
-      - --build-arg
-      - NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=${_NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN}
-      - --build-arg
-      - NEXT_PUBLIC_POSTHOG_HOST=${_NEXT_PUBLIC_POSTHOG_HOST}
-      - -f
-      - Dockerfile
-      - .
+      - -ceu
+      - |
+        source /workspace/deploy.env
+        test -n "$${NEXT_PUBLIC_API_URL}" || { echo "NEXT_PUBLIC_API_URL is required"; exit 1; }
+        test -n "$${NEXT_PUBLIC_WS_URL}" || { echo "NEXT_PUBLIC_WS_URL is required"; exit 1; }
+        docker build \
+          -t "$${REGION}-docker.pkg.dev/$PROJECT_ID/$${REPO}/$${IMAGE}:$COMMIT_SHA" \
+          -t "$${REGION}-docker.pkg.dev/$PROJECT_ID/$${REPO}/$${IMAGE}:latest" \
+          --build-arg "NEXT_PUBLIC_API_URL=$${NEXT_PUBLIC_API_URL}" \
+          --build-arg "NEXT_PUBLIC_WS_URL=$${NEXT_PUBLIC_WS_URL}" \
+          --build-arg "NEXT_PUBLIC_GAME_SERVER=$${NEXT_PUBLIC_GAME_SERVER}" \
+          --build-arg "NEXT_PUBLIC_GA_ID=$${NEXT_PUBLIC_GA_ID}" \
+          --build-arg "NEXT_PUBLIC_OWM_API_KEY=$${NEXT_PUBLIC_OWM_API_KEY}" \
+          --build-arg "NEXT_PUBLIC_FIREBASE_API_KEY=$${NEXT_PUBLIC_FIREBASE_API_KEY}" \
+          --build-arg "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}" \
+          --build-arg "NEXT_PUBLIC_FIREBASE_PROJECT_ID=$${NEXT_PUBLIC_FIREBASE_PROJECT_ID}" \
+          --build-arg "NEXT_PUBLIC_FIREBASE_APP_ID=$${NEXT_PUBLIC_FIREBASE_APP_ID}" \
+          --build-arg "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}" \
+          --build-arg "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=$${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}" \
+          --build-arg "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=$${NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN}" \
+          --build-arg "NEXT_PUBLIC_POSTHOG_HOST=$${NEXT_PUBLIC_POSTHOG_HOST}" \
+          -f Dockerfile \
+          .
 
   - name: gcr.io/cloud-builders/docker
+    id: push-image
+    entrypoint: bash
     args:
-      - push
-      - --all-tags
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}
+      - -ceu
+      - |
+        source /workspace/deploy.env
+        docker push --all-tags "$${REGION}-docker.pkg.dev/$PROJECT_ID/$${REPO}/$${IMAGE}"
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
-    entrypoint: gcloud
+    id: deploy-service
+    entrypoint: bash
     args:
-      - run
-      - deploy
-      - ${_SERVICE}
-      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$COMMIT_SHA
-      - --region=${_REGION}
-      - --platform=managed
-      - --service-account=${_RUNTIME_SA}
-      - --allow-unauthenticated
-      - --port=3000
-      - --memory=1Gi
-      - --cpu=1
-      - --min-instances=0
-      - --max-instances=2
+      - -ceu
+      - |
+        source /workspace/deploy.env
+        auth_args=(--allow-unauthenticated)
+        if [ "$${IAP_ENABLED}" = "true" ]; then
+          auth_args=(--no-allow-unauthenticated --iap)
+        fi
 
-images:
-  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$COMMIT_SHA
-  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest
+        gcloud beta run deploy "$${SERVICE}" \
+          --image="$${REGION}-docker.pkg.dev/$PROJECT_ID/$${REPO}/$${IMAGE}:$COMMIT_SHA" \
+          --region="$${REGION}" \
+          --platform=managed \
+          --service-account="$${RUNTIME_SA}" \
+          "$${auth_args[@]}" \
+          --port=3000 \
+          --memory=1Gi \
+          --cpu=1 \
+          --min-instances=0 \
+          --max-instances=2
 
 options:
   logging: CLOUD_LOGGING_ONLY
