@@ -54,7 +54,7 @@ export default function SeoContent({ page }: { page: LocalePage }) {
   const funnelSection = c.sections.find((s) => s.isFunnel);
 
   return (
-    <div className="mx-auto w-[70vw] pb-24 pt-4">
+    <div className="mx-auto w-[90vw] pb-20 pt-3 text-sm sm:w-[70vw] sm:pb-24 sm:pt-4 sm:text-base">
       {/* breadcrumb */}
       <nav aria-label="Breadcrumb" className="text-xs text-white/50">
         {c.breadcrumb.map((name, i) => (
@@ -71,7 +71,7 @@ export default function SeoContent({ page }: { page: LocalePage }) {
         ))}
       </nav>
 
-      <h1 className="font-display mt-4 text-3xl font-extrabold leading-tight sm:text-5xl">
+      <h1 className="font-display mt-3 text-2xl font-extrabold leading-tight sm:mt-4 sm:text-5xl">
         {c.h1}
       </h1>
 
@@ -80,9 +80,9 @@ export default function SeoContent({ page }: { page: LocalePage }) {
       </p>
 
       {canTranslate && (
-        <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-3 sm:mt-5 sm:p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-white/60">
+            <p className="text-xs text-white/60 sm:text-sm">
               {translated
                 ? 'Showing a display-only English translation. The URL and SEO page remain in the original local language.'
                 : `This page is written in ${page.language} for local search keywords.`}
@@ -100,7 +100,7 @@ export default function SeoContent({ page }: { page: LocalePage }) {
 
       {/* inline funnel prompt */}
       {funnelSection?.ctaPrompt && (
-        <PlayCta className="mt-5 flex w-full cursor-pointer items-center justify-between gap-4 rounded-xl border border-bolt/20 bg-bolt/5 px-5 py-3 text-left text-sm transition hover:bg-bolt/10">
+        <PlayCta className="mt-5 hidden w-full cursor-pointer items-center justify-between gap-4 rounded-xl border border-bolt/20 bg-bolt/5 px-5 py-3 text-left text-sm transition hover:bg-bolt/10 md:flex">
           <span className="text-white/80">{funnelSection.ctaPrompt}</span>
           <span className="shrink-0 font-semibold text-bolt">
             {funnelSection.ctaText ?? 'Play'} →
@@ -111,20 +111,20 @@ export default function SeoContent({ page }: { page: LocalePage }) {
       <CountryLiveSeoCard page={page} />
 
       {/* localized content sections */}
-      <div className="mt-12 space-y-12">
+      <div className="mt-8 space-y-8 sm:mt-12 sm:space-y-12">
         {c.sections.map((s, i) =>
           s.isFunnel ? (
-            <section key={i} className="glass rounded-2xl border border-bolt/20 p-6">
-              <h2 className="font-display text-xl font-bold">{s.h2}</h2>
-              <p className="mt-3 text-white/70">{s.body}</p>
-              <PlayCta className="btn-glow mt-5 inline-block cursor-pointer rounded-full px-7 py-3 text-sm font-bold">
+            <section key={i} className="glass rounded-2xl border border-bolt/20 p-4 sm:p-6">
+              <h2 className="font-display text-lg font-bold sm:text-xl">{s.h2}</h2>
+              <p className="mt-2 leading-relaxed text-white/70 sm:mt-3">{s.body}</p>
+              <PlayCta className="btn-glow mt-5 hidden cursor-pointer rounded-full px-7 py-3 text-sm font-bold md:inline-block">
                 {s.ctaText ?? 'Play'}
               </PlayCta>
             </section>
           ) : (
             <section key={i}>
-              <h2 className="font-display text-xl font-bold">{s.h2}</h2>
-              <p className="mt-3 whitespace-pre-line text-white/70">{s.body}</p>
+              <h2 className="font-display text-lg font-bold sm:text-xl">{s.h2}</h2>
+              <p className="mt-2 whitespace-pre-line leading-relaxed text-white/70 sm:mt-3">{s.body}</p>
             </section>
           ),
         )}
@@ -132,15 +132,15 @@ export default function SeoContent({ page }: { page: LocalePage }) {
 
       {/* FAQ — native <details> so it's SEO-visible and JS-free */}
       {c.faq.length > 0 && (
-        <section className="mt-14">
-          <h2 className="font-display text-2xl font-bold">{c.faqHeading}</h2>
+        <section className="mt-10 sm:mt-14">
+          <h2 className="font-display text-xl font-bold sm:text-2xl">{c.faqHeading}</h2>
           <div className="mt-4 space-y-2">
             {c.faq.map((f, i) => (
               <details
                 key={i}
-                className="glass group rounded-xl px-5 py-4 [&_summary]:cursor-pointer"
+                className="glass group rounded-xl px-4 py-3 sm:px-5 sm:py-4 [&_summary]:cursor-pointer"
               >
-                <summary className="flex items-center justify-between font-medium marker:content-['']">
+                <summary className="flex items-center justify-between text-sm font-medium marker:content-[''] sm:text-base">
                   {f.q}
                   <span className="text-white/40 transition group-open:rotate-45">+</span>
                 </summary>

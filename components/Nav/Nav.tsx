@@ -2,6 +2,7 @@ import Link from 'next/link';
 import BrandHomeLink from './BrandHomeLink';
 import CountryMenu from './CountryMenu';
 import GridGameButton from './GridGameButton';
+import MobileMenuButton from './MobileMenuButton';
 import PlayButton from './PlayButton';
 import { pages, launchablePages } from '@/lib/content/content';
 
@@ -30,7 +31,10 @@ export default function Nav() {
             Leaderboard
           </Link>
           <GridGameButton />
-          <PlayButton />
+          <div className="hidden sm:block">
+            <PlayButton />
+          </div>
+          <MobileMenuButton countries={COUNTRIES} />
         </div>
       </div>
     </nav>

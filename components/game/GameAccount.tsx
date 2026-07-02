@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import posthog from 'posthog-js';
 import { useSessionStore } from '@/store/sessionStore';
+import { useStrikeGameStore } from '@/store/strikeGameStore';
 import {
   GAME_SERVER_ENABLED,
   changeCountry,
@@ -399,6 +400,7 @@ export default function GameAccount() {
   const country = useSessionStore((s) => s.country);
   const verified = useSessionStore((s) => s.verified);
   const init = useSessionStore((s) => s.init);
+  const tokens = useStrikeGameStore((s) => s.tokens);
   const [linking, setLinking] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [choosingFlag, setChoosingFlag] = useState(false);
@@ -420,7 +422,7 @@ export default function GameAccount() {
     <>
       {/* account chip — flows at the top of the left console column */}
       {status !== 'unset' && (
-        <div className="glass pointer-events-auto flex shrink-0 items-center gap-2 self-start rounded-full px-3 py-1.5 text-xs">
+        <div className="glass pointer-events-auto flex w-full shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs md:w-auto md:self-start">
           <button
             type="button"
             onClick={() => setChoosingFlag(true)}
@@ -433,20 +435,23 @@ export default function GameAccount() {
           <button
             type="button"
             onClick={() => setRenaming(true)}
-            className="cursor-pointer font-semibold text-white/85 underline-offset-3 transition hover:text-white hover:underline"
+            className="min-w-0 cursor-pointer truncate font-semibold text-white/85 underline-offset-3 transition hover:text-white hover:underline"
             title="Change username"
           >
             {username}
           </button>
+          <span className="shrink-0 font-display font-bold tabular-nums text-bolt">
+            {Math.round(tokens).toLocaleString()} pts
+          </span>
           {status === 'guest' ? (
             <button
               onClick={() => setLinking(true)}
-              className="cursor-pointer rounded-full bg-white/8 px-2 py-0.5 text-[11px] font-medium text-white/65 transition hover:bg-white/15 hover:text-white"
+              className="ml-auto cursor-pointer rounded-full bg-white/8 px-2 py-0.5 text-[11px] font-medium text-white/65 transition hover:bg-white/15 hover:text-white"
             >
               Save progress
             </button>
           ) : (
-            <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+            <span className="ml-auto rounded-full bg-emerald-400/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
               {verified ? 'Verified' : 'Signed in'}
             </span>
           )}

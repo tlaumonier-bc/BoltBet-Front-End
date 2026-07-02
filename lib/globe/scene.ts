@@ -33,9 +33,6 @@ export function configureScene(scene: Cesium.Scene): void {
   scene.globe.enableLighting = false; // city lights shown uniformly, no terminator
   scene.globe.baseColor = STORM_BG;
   scene.fog.enabled = true;
-  scene.debugShowFramesPerSecond = true;
-  
-
 
   // ── Anti-aliasing: crisp borders + labels ─────────────────────────────────
   // FXAA is a blur-based AA that softens thin lines and text — the cause of the

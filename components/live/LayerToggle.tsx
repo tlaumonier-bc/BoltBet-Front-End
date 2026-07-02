@@ -5,10 +5,12 @@ export default function LayerToggle({
   def,
   active,
   onToggle,
+  compact = false,
 }: {
   def: GlobeLayerDef
   active: boolean
   onToggle: () => void
+  compact?: boolean
 }) {
   return (
     <button
@@ -16,7 +18,7 @@ export default function LayerToggle({
       onClick={onToggle}
       aria-pressed={active}
       title={def.description}
-      className={`flex w-full items-start gap-2.5 rounded-lg border px-2.5 py-2 text-left transition ${
+      className={`flex w-full items-start gap-2.5 rounded-lg border px-2.5 text-left transition ${compact ? 'py-1.5' : 'py-2'} ${
         active
           ? 'border-electric/50 bg-electric/10'
           : 'border-white/10 bg-white/4 hover:border-white/25 hover:bg-white/8'
@@ -38,9 +40,11 @@ export default function LayerToggle({
             </span>
           )}
         </span>
-        <span className="mt-0.5 block text-[10px] leading-snug text-white/40">
-          {def.description}
-        </span>
+        {!compact && (
+          <span className="mt-0.5 block text-[10px] leading-snug text-white/40">
+            {def.description}
+          </span>
+        )}
       </span>
       <span
         className={`mt-0.5 flex h-4 w-7 shrink-0 items-center rounded-full p-0.5 transition ${

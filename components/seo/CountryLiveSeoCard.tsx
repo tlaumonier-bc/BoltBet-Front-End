@@ -153,14 +153,14 @@ export default function CountryLiveSeoCard({ page }: { page: LocalePage }) {
     : (strikeMeta?.lastHour ?? stats?.lastHour ?? 0).toLocaleString();
 
   return (
-    <section className="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] shadow-2xl">
-      <div className="border-b border-white/10 bg-linear-to-r from-bolt/10 via-white/[0.03] to-electric/10 px-5 py-4 sm:px-6">
+    <section className="mt-8 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] shadow-2xl sm:mt-10">
+      <div className="border-b border-white/10 bg-linear-to-r from-bolt/10 via-white/[0.03] to-electric/10 px-4 py-3 sm:px-6 sm:py-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-bolt/80">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-bolt/80 sm:text-xs sm:tracking-[0.22em]">
               Live in {page.country}
             </p>
-            <h2 className="font-display mt-1 text-xl font-bold">
+            <h2 className="font-display mt-1 text-lg font-bold sm:text-xl">
               {flagEmoji(page.locale)} Lightning activity right now
             </h2>
           </div>
@@ -172,7 +172,7 @@ export default function CountryLiveSeoCard({ page }: { page: LocalePage }) {
         </div>
       </div>
 
-      <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid gap-4 p-4 sm:gap-5 sm:p-6 lg:grid-cols-[1.1fr_0.9fr]">
         <div>
           {state === 'loading' && (
             <div className="grid gap-2 sm:grid-cols-3">
@@ -238,8 +238,8 @@ function MiniStat({
   highlight?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3">
-      <div className={`font-display text-2xl font-extrabold tabular-nums ${highlight ? 'text-bolt' : 'text-white/90'}`}>
+    <div className="rounded-2xl border border-white/10 bg-white/[0.035] px-3 py-2.5 sm:px-4 sm:py-3">
+      <div className={`font-display text-xl font-extrabold tabular-nums sm:text-2xl ${highlight ? 'text-bolt' : 'text-white/90'}`}>
         {value}
       </div>
       <div className="mt-1 text-[10px] uppercase tracking-wider text-white/40">{label}</div>

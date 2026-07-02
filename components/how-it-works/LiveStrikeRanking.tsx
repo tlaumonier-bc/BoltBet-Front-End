@@ -120,7 +120,7 @@ export default function LiveStrikeRanking() {
 
   if (!ready && timedOut) {
     return (
-      <div className="glass mt-6 rounded-2xl p-8 text-center text-white/55">
+      <div className="glass mt-6 rounded-2xl p-5 text-center text-sm text-white/55 sm:p-8 sm:text-base">
         The live strike feed is offline right now. The ranking will appear here once it reconnects.
       </div>
     )
@@ -128,7 +128,7 @@ export default function LiveStrikeRanking() {
 
   if (!ready) {
     return (
-      <div className="glass mt-6 flex items-center gap-3 rounded-2xl p-8 text-sm text-white/55">
+      <div className="glass mt-6 flex items-center gap-3 rounded-2xl p-5 text-sm text-white/55 sm:p-8">
         <span className="globe-loading-spinner" />
         Connecting to the live strike feed…
       </div>
@@ -147,11 +147,11 @@ export default function LiveStrikeRanking() {
 
       <ol className="glass overflow-hidden rounded-2xl">
         {snap.rows.map((r, i) => (
-          <li key={r.id} className="flex items-center gap-4 border-b border-white/5 px-5 py-3.5 last:border-b-0">
-            <span className="font-display w-7 shrink-0 text-center text-lg">
+          <li key={r.id} className="flex items-center gap-3 border-b border-white/5 px-3 py-3 last:border-b-0 sm:gap-4 sm:px-5 sm:py-3.5">
+            <span className="font-display w-6 shrink-0 text-center text-base sm:w-7 sm:text-lg">
               {MEDAL[i] ?? <span className="text-sm text-white/40">{i + 1}</span>}
             </span>
-            <span className="shrink-0 text-xl leading-none" aria-hidden>
+            <span className="shrink-0 text-lg leading-none sm:text-xl" aria-hidden>
               {r.icon}
             </span>
             <div className="min-w-0 flex-1">
@@ -160,7 +160,7 @@ export default function LiveStrikeRanking() {
                 <div className="h-full rounded-full bg-bolt/70" style={{ width: `${Math.max(3, (r.count / max) * 100)}%` }} />
               </div>
             </div>
-            <span className="font-display w-16 shrink-0 text-right text-base font-bold tabular-nums text-bolt">
+            <span className="font-display w-14 shrink-0 text-right text-sm font-bold tabular-nums text-bolt sm:w-16 sm:text-base">
               {r.count.toLocaleString()}
             </span>
           </li>

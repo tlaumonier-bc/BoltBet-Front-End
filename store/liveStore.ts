@@ -12,6 +12,7 @@ import {
 
 export type LiveViewMode = 'free' | 'beginner' | 'pro' | 'game'
 export type GlobeMapStyle = 'night' | 'day'
+export type MobileSheet = 'layers' | 'game' | null
 export type { GlobeQuality }
 
 export interface OrbitTarget {
@@ -60,6 +61,8 @@ interface LiveStore {
   // ── SEO text pane (slides up over the globe on a selected country) ──
   seoContentOpen: boolean
   setSeoContentOpen: (open: boolean) => void
+  mobileSheet: MobileSheet
+  setMobileSheet: (sheet: MobileSheet) => void
 }
 
 export const useLiveStore = create<LiveStore>((set) => ({
@@ -116,4 +119,6 @@ export const useLiveStore = create<LiveStore>((set) => ({
     }
     set({ seoContentOpen })
   },
+  mobileSheet: null,
+  setMobileSheet: (mobileSheet) => set({ mobileSheet }),
 }))
