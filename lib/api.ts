@@ -5,12 +5,13 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 const STRIKES_API = process.env.NEXT_PUBLIC_STRIKES_API_URL ?? API;
 export const LEADERBOARD_API = process.env.NEXT_PUBLIC_LEADERBOARD_API_URL ?? API;
 export const TROPHIES: Trophy[] = [
-  { key: 'Bolt Tracker', points: 200, image: 'trophy-200.png', label: 'Bolt Tracker Trophy' },
-  { key: 'Could Reader', points: 500, image: 'trophy-500.png', label: 'Could Reader Trophy' },
-  { key: 'Strike Predictor', points: 1000, image: 'trophy-1000.png', label: 'Strike Predictor Trophy' },
-  { key: 'Tempest Watcher', points: 10000, image: 'trophy-10000.png', label: 'Tempest Watcher Trophy' },
-  { key: 'Lightning Lord', points: 100000, image: 'trophy-100000.png', label: 'Lightning Lord Trophy' },
+  { key: 'bolt-tracker', points: 200, image: 'trophy-200.png', label: 'Bolt Tracker Trophy' },
+  { key: 'could-reader', points: 500, image: 'trophy-500.png', label: 'Could Reader Trophy' },
+  { key: 'strike-predictor', points: 1000, image: 'trophy-1000.png', label: 'Strike predictor Trophy' },
+  { key: 'tempest-watcher', points: 10000, image: 'trophy-10000.png', label: 'Tempest Watcher Trophy' },
+  { key: 'lightning-lord', points: 100000, image: 'trophy-100000.png', label: 'Lightning Lord Trophy' },
 ];
+const TROPHY_BY_POINTS = new Map(TROPHIES.map((trophy) => [trophy.points, trophy]));
 
 /**
  * Server-authoritative game is OFF until the backend ships. While off, the
@@ -300,6 +301,17 @@ function trophyFor(tokens: number): Trophy | null {
   return earned;
 }
 
+function normalizeTrophy(trophy: Trophy | null | undefined): Trophy | null {
+  if (!trophy) return null;
+  const canonical = TROPHY_BY_POINTS.get(Number(trophy.points));
+  return canonical ? { ...canonical, achievedCount: trophy.achievedCount } : trophy;
+}
+
+function normalizeTrophies(trophies: Trophy[] | undefined): Trophy[] {
+  if (!trophies?.length) return TROPHIES;
+  return trophies.map((trophy) => normalizeTrophy(trophy) ?? trophy);
+}
+
 function nextTrophyFor(tokens: number): Trophy | null {
   return TROPHIES.find((trophy) => tokens < trophy.points) ?? null;
 }
@@ -314,7 +326,7 @@ function hydrateLeaderboardEntry(entry: Partial<LeaderboardEntry>, rank: number)
     gamesPlayed: Number(entry.gamesPlayed ?? 0),
     verified: Boolean(entry.verified),
     country: entry.country ?? '',
-    trophy: entry.trophy ?? trophyFor(tokens),
+    trophy: normalizeTrophy(entry.trophy) ?? trophyFor(tokens),
   };
 }
 
@@ -334,7 +346,15 @@ export async function getProfile(): Promise<PlayerProfile> {
 
 export async function getLeaderboardContext(): Promise<LeaderboardContext> {
   const res = await fetch(`${API}/api/game/leaderboard/context/`, { cache: 'no-store', headers: authHeaders() });
-  if (res.ok) return res.json();
+  if (res.ok) {
+    const context = (await res.json()) as LeaderboardContext;
+    return {
+      ...context,
+      rows: context.rows.map((row, index) => hydrateLeaderboardEntry(row, row.rank ?? index + 1)),
+      nextTrophy: normalizeTrophy(context.nextTrophy),
+      trophies: normalizeTrophies(context.trophies),
+    };
+  }
 
   const summary = await getLeaderboardSummary(3);
   return {
@@ -348,7 +368,14 @@ export async function getLeaderboardContext(): Promise<LeaderboardContext> {
 export async function getLeaderboardSummary(limit = 50): Promise<LeaderboardSummary> {
   const q = new URLSearchParams({ limit: String(limit) });
   const res = await fetch(`${LEADERBOARD_API}/api/game/leaderboard/summary/?${q}`, { cache: 'no-store' });
-  if (res.ok) return res.json();
+  if (res.ok) {
+    const summary = (await res.json()) as LeaderboardSummary;
+    return {
+      ...summary,
+      entries: summary.entries.map((entry, index) => hydrateLeaderboardEntry(entry, entry.rank ?? index + 1)),
+      trophies: normalizeTrophies(summary.trophies),
+    };
+  }
 
   const legacy = await fetch(`${LEADERBOARD_API}/api/game/leaderboard/?${q}`, { cache: 'no-store' });
   if (!legacy.ok) throw new Error(`leaderboard summary ${res.status}`);

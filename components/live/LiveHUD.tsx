@@ -213,7 +213,7 @@ export default function LiveHUD() {
     <>
       {/* Left column */}
       <div className="pointer-events-none fixed bottom-4 left-4 right-4 top-20 z-40 hidden flex-col gap-3 md:flex md:right-auto md:w-75">
-        {isGame && <GameAccount />}
+        {isGame && !gameSessionReady && <GameAccount />}
         <ModeBar />
         {mode !== 'free' && (!isGame || showGamePanels) && <LeftPanel pro={mode === 'pro' || isGame} />}
       </div>

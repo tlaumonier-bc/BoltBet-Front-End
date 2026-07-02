@@ -394,7 +394,7 @@ function FlagModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-export default function GameAccount() {
+export default function GameAccount({ variant = 'standalone' }: { variant?: 'standalone' | 'inline' }) {
   const status = useSessionStore((s) => s.status);
   const username = useSessionStore((s) => s.username);
   const country = useSessionStore((s) => s.country);
@@ -422,7 +422,7 @@ export default function GameAccount() {
     <>
       {/* account chip — flows at the top of the left console column */}
       {status !== 'unset' && (
-        <div className="glass pointer-events-auto flex w-full shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs md:w-auto md:self-start">
+        <div className={`${variant === 'standalone' ? 'glass w-full md:w-auto md:self-start' : 'max-w-[320px] bg-white/6'} pointer-events-auto flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs`}>
           <button
             type="button"
             onClick={() => setChoosingFlag(true)}

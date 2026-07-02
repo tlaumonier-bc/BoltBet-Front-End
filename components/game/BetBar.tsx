@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { useStrikeGameStore } from '@/store/strikeGameStore';
 import { flagEmoji } from '@/lib/live/owm';
+import GameAccount from './GameAccount';
 import {
   PAYOUT_MULTIPLIER,
   GAME_MS,
@@ -178,10 +179,7 @@ export default function BetBar({ vm, variant = 'fixed' }: { vm: StrikeGameVM; va
               </button>
             )}
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] uppercase tracking-wider text-white/40">Points</span>
-            <span className="font-display font-bold tabular-nums text-bolt">{Math.round(vm.tokens)}</span>
-          </div>
+          <GameAccount variant="inline" />
         </div>
 
         {/* active-play progress bar */}
