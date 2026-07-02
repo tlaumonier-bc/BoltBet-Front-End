@@ -70,18 +70,18 @@ const faq = {
 
 function PlayTimeline() {
   return (
-    <div className="mt-5">
-      <div className="flex overflow-hidden rounded-xl border border-white/10 text-center text-[11px] font-semibold">
-        <div className="bg-electric/15 px-3 py-3 text-electric" style={{ flex: 1 }}>
+    <div className="mt-4 sm:mt-5">
+      <div className="flex overflow-hidden rounded-xl border border-white/10 text-center text-[10px] font-semibold sm:text-[11px]">
+        <div className="bg-electric/15 px-2 py-2.5 text-electric sm:px-3 sm:py-3" style={{ flex: 1 }}>
           Previous 30s
           <span className="mt-1 block text-[10px] font-normal text-white/50">strikes counted</span>
         </div>
-        <div className="bg-bolt/15 px-3 py-3 text-bolt" style={{ flex: 1 }}>
+        <div className="bg-bolt/15 px-2 py-2.5 text-bolt sm:px-3 sm:py-3" style={{ flex: 1 }}>
           Your play · next 30s
           <span className="mt-1 block text-[10px] font-normal text-white/50">strikes counted</span>
         </div>
       </div>
-      <p className="mt-2 text-xs text-white/40">
+      <p className="mt-2 text-xs leading-relaxed text-white/40">
         There is no shared round timer. Your 30-second window starts the moment your play is accepted.
       </p>
     </div>
@@ -94,82 +94,68 @@ export default function HowItWorksPage() {
       <Backdrop />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faq) }} />
 
-      <div className="mx-auto w-[70vw] pb-24 pt-32">
-        <p className="text-xs uppercase tracking-[0.3em] text-electric/70">How it works</p>
-        <h1 className="font-display mt-3 text-4xl font-extrabold leading-tight sm:text-5xl">
+      <div className="mx-auto w-[90vw] pb-20 pt-24 text-sm sm:w-[70vw] sm:pb-24 sm:pt-32 sm:text-base">
+        <p className="text-[10px] uppercase tracking-[0.24em] text-electric/70 sm:text-xs sm:tracking-[0.3em]">How it works</p>
+        <h1 className="font-display mt-3 text-3xl font-extrabold leading-tight sm:text-5xl">
           Watch real <span className="text-gradient">lightning</span>. Then predict it.
         </h1>
-        <p className="mt-3 text-white/55">
-          {site.brand} is a live 3D globe of real lightning strikes worldwide, plus a quick prediction game. Here is everything it does.
+        <p className="mt-3 leading-relaxed text-white/55">
+          {site.brand} is a live 3D globe of real lightning strikes worldwide, plus a quick prediction game. Click any country to fly in and open a panel with its strike count over the last hour, how active it is right now, and a history chart.
         </p>
 
-        {/* The globe */}
-        <div className="glass mt-10 rounded-2xl p-6">
-          <h2 className="font-display text-xl font-bold">A live globe of real strikes</h2>
-          <p className="mt-3 text-white/65">
-            The globe streams real lightning strikes onto a 3D Earth the moment they are detected — each one flashes as a glowing
-            bolt and fades after a couple of seconds. Click any country to fly in and open a panel with its strike count over the
-            last hour, how active it is right now, and a history chart.
-          </p>
-          <p className="mt-3 text-white/65">
-            The data comes from the Blitzortung community detection network: volunteer ground stations time the radio pulse from
-            each strike and fix its position by triangulation. The more stations that hear a strike, the sharper the fix.
-          </p>
-        </div>
-
         {/* Modes */}
-        <div className="mt-10">
-          <h2 className="font-display text-2xl font-bold">Four ways to explore</h2>
-          <p className="mt-2 text-white/55">
+        <div className="mt-8 sm:mt-10">
+          <h2 className="font-display text-xl font-bold sm:text-2xl">Four ways to explore</h2>
+          <p className="mt-2 leading-relaxed text-white/55">
             Switch between modes from the mode bar, plus a Day / Night imagery toggle.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {MODES.map((m) => (
-              <div key={m.name} className="glass rounded-2xl p-5">
+              <div key={m.name} className="glass rounded-2xl p-4 sm:p-5">
                 <div className="flex items-center gap-2.5">
-                  <span className="text-xl leading-none" aria-hidden>{m.icon}</span>
+                  <span className="text-lg leading-none sm:text-xl" aria-hidden>{m.icon}</span>
                   <span className="font-display text-base font-bold">{m.name}</span>
                 </div>
-                <p className="mt-2 text-sm text-white/60">{m.blurb}</p>
+                <p className="mt-2 text-sm leading-relaxed text-white/60">{m.blurb}</p>
               </div>
             ))}
           </div>
-          <p className="mt-4 text-sm text-white/45">
+          <p className="mt-4 text-sm leading-relaxed text-white/45">
             In Beginner and Pro you can layer live weather over the globe — clouds, rain, temperature and wind — and switch on
             strike trails from the last 1, 3 or 6 hours.
           </p>
         </div>
 
         {/* The game */}
-        <div className="glass mt-10 rounded-2xl p-6">
-          <h2 className="font-display text-xl font-bold">Play: Higher or Lower</h2>
-          <p className="mt-3 text-white/65">
+        <div className="glass mt-8 rounded-2xl p-4 sm:mt-10 sm:p-6">
+          <h2 className="font-display text-lg font-bold sm:text-xl">Play: Higher or Lower</h2>
+          <p className="mt-2 leading-relaxed text-white/65 sm:mt-3">
             Game mode turns the globe into a fast prediction game. Play whenever you want, as long as you do not already
             have one in progress. The game snapshots the last 30 seconds, then you call whether the next 30 seconds will bring{' '}
             <span className="font-semibold text-emerald-300">Higher</span> (more) or{' '}
             <span className="font-semibold text-rose-300">Lower</span> (fewer) strikes.
           </p>
-          <p className="mt-3 text-white/65">
+          <p className="mt-3 leading-relaxed text-white/65">
             Get it right and you win <span className="font-semibold text-bolt">2×</span> your points. A tie returns your points (a
             push); a wrong call loses it.
           </p>
 
           <PlayTimeline />
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl bg-white/4 p-4">
+          <div className="mt-4 grid gap-3 sm:mt-5 sm:grid-cols-3">
+            <div className="rounded-xl bg-white/4 p-3 sm:p-4">
               <div className="text-[10px] uppercase tracking-wider text-electric/70">Scope</div>
               <p className="mt-1.5 text-sm text-white/65">
                 Play the whole globe, or click a country to predict just its strikes (it needs recent activity to be playable).
               </p>
             </div>
-            <div className="rounded-xl bg-white/4 p-4">
+            <div className="rounded-xl bg-white/4 p-3 sm:p-4">
               <div className="text-[10px] uppercase tracking-wider text-electric/70">Points</div>
               <p className="mt-1.5 text-sm text-white/65">
                 Start with 100 free virtual points and claim 100 more whenever you run out. There is no real money.
               </p>
             </div>
-            <div className="rounded-xl bg-white/4 p-4">
+            <div className="rounded-xl bg-white/4 p-3 sm:p-4">
               <div className="text-[10px] uppercase tracking-wider text-electric/70">Leaderboard</div>
               <p className="mt-1.5 text-sm text-white/65">
                 Sign in with Google to keep your points across devices and climb the leaderboard, ranked by points won.
@@ -179,24 +165,20 @@ export default function HowItWorksPage() {
         </div>
 
         {/* Live ranking */}
-        <div className="mt-12">
-          <h2 className="font-display text-2xl font-bold">
+        <div className="mt-10 sm:mt-12">
+          <h2 className="font-display text-xl font-bold sm:text-2xl">
             Where is lightning striking <span className="text-gradient">right now</span>?
           </h2>
-          <p className="mt-2 text-white/55">
+          <p className="mt-2 leading-relaxed text-white/55">
             A live ranking of where strikes are landing right now, built from the same feed that powers the globe.
           </p>
           <LiveStrikeRanking />
-          <p className="mt-4 text-sm text-white/45">
+          <p className="mt-4 text-sm leading-relaxed text-white/45">
             Over the long run, the most lightning-prone place on Earth is Lake Maracaibo in Venezuela, where storms flash almost
             every night of the year. But the ranking above is live — it shows where bolts are actually landing right now.
           </p>
         </div>
 
-        <p className="mt-10 text-xs text-white/35">
-          Strike data comes from the Blitzortung community detection network. The game uses virtual credits only — there is no
-          real-money wagering.
-        </p>
       </div>
     </main>
   )

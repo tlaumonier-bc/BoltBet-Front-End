@@ -37,13 +37,13 @@ function TrophyIcon({ trophy }: { trophy: Trophy }) {
       alt={trophy.label}
       width={36}
       height={36}
-      className="size-9 object-contain"
+      className="size-7 object-contain sm:size-9"
     />
   )
 }
 
 function EmptyCard({ children }: { children: React.ReactNode }) {
-  return <div className="glass mt-8 rounded-2xl p-8 text-center text-white/55">{children}</div>
+  return <div className="glass mt-6 rounded-2xl p-5 text-center text-sm text-white/55 sm:mt-8 sm:p-8 sm:text-base">{children}</div>
 }
 
 function currentTierCount(trophies: Trophy[], index: number): number {
@@ -55,31 +55,31 @@ function currentTierCount(trophies: Trophy[], index: number): number {
 function TrophyDistribution({ summary }: { summary: LeaderboardSummary }) {
   const noTrophyCount = Math.max(0, summary.totalPlayers - (summary.trophies[0]?.achievedCount ?? 0))
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-3">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-2.5 sm:p-3">
       <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">Players by trophy</div>
       <div className="space-y-1.5">
         {[...summary.trophies].reverse().map((trophy) => {
           const originalIndex = summary.trophies.findIndex((item) => item.key === trophy.key)
           return (
-            <div key={trophy.key} className="flex items-center gap-3 rounded-xl bg-white/[0.035] px-3 py-2">
+            <div key={trophy.key} className="flex items-center gap-2 rounded-xl bg-white/[0.035] px-2.5 py-1.5 sm:gap-3 sm:px-3 sm:py-2">
               <TrophyIcon trophy={trophy} />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-white/85">{trophy.label}</div>
+                <div className="truncate text-xs font-semibold text-white/85 sm:text-sm">{trophy.label}</div>
                 <div className="text-[11px] text-white/40">{trophy.points.toLocaleString()}+ points</div>
               </div>
-              <div className="font-display text-lg font-extrabold tabular-nums text-bolt">
+              <div className="font-display text-base font-extrabold tabular-nums text-bolt sm:text-lg">
                 {currentTierCount(summary.trophies, originalIndex).toLocaleString()}
               </div>
             </div>
           )
         })}
-        <div className="flex items-center gap-3 rounded-xl bg-white/[0.035] px-3 py-2">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs text-white/35">-</span>
+        <div className="flex items-center gap-2 rounded-xl bg-white/[0.035] px-2.5 py-1.5 sm:gap-3 sm:px-3 sm:py-2">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs text-white/35 sm:size-9">-</span>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold text-white/85">No trophy yet</div>
+            <div className="truncate text-xs font-semibold text-white/85 sm:text-sm">No trophy yet</div>
             <div className="text-[11px] text-white/40">Less than 200 points</div>
           </div>
-          <div className="font-display text-lg font-extrabold tabular-nums text-bolt">{noTrophyCount.toLocaleString()}</div>
+          <div className="font-display text-base font-extrabold tabular-nums text-bolt sm:text-lg">{noTrophyCount.toLocaleString()}</div>
         </div>
       </div>
     </div>
@@ -92,7 +92,7 @@ export default async function LeaderboardPage() {
   return (
     <main className="relative min-h-screen">
       <Backdrop />
-      <div className="mx-auto w-[70vw] pb-24 pt-32">
+      <div className="mx-auto w-[90vw] pb-20 pt-24 sm:w-[70vw] sm:pb-24 sm:pt-32">
         {result.state === 'disabled' && (
           <EmptyCard>The leaderboard goes live once the game backend is connected.</EmptyCard>
         )}
@@ -102,12 +102,12 @@ export default async function LeaderboardPage() {
         )}
 
         {result.state === 'ok' && (
-          <section className="glass mt-6 rounded-3xl p-4 sm:p-5">
-            <div className="grid gap-5 lg:grid-cols-[3fr_2fr] lg:items-center">
+          <section className="glass mt-4 rounded-3xl p-3 sm:mt-6 sm:p-5">
+            <div className="grid gap-4 lg:grid-cols-[3fr_2fr] lg:items-center">
               <div className="min-w-0">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.25em] text-bolt/75">Trophy Road</p>
-                  <h2 className="font-display mt-1 text-xl font-extrabold">Your next milestone</h2>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-bolt/75 sm:text-xs sm:tracking-[0.25em]">Trophy Road</p>
+                  <h2 className="font-display mt-1 text-lg font-extrabold sm:text-xl">Your next milestone</h2>
                 </div>
                 <div className="relative mt-2 w-full">
                   <Image
@@ -133,39 +133,39 @@ export default async function LeaderboardPage() {
         )}
 
         
-        <h2 className="font-display mt-12 text-3xl font-extrabold sm:text-4xl">Leaderboard</h2>
-        <p className="mt-2 text-white/55">Top lightning predictors by points won.</p>
+        <h2 className="font-display mt-8 text-2xl font-extrabold sm:mt-12 sm:text-4xl">Leaderboard</h2>
+        <p className="mt-2 text-sm text-white/55 sm:text-base">Top lightning predictors by points won.</p>
 
         {result.state === 'ok' && result.summary.entries.length > 0 && (
-          <div className="mt-8 space-y-2">
+          <div className="mt-5 space-y-2 sm:mt-8">
             {result.summary.entries.map((e, i) => (
               <div
                 key={e.username}
-                className="glass grid grid-cols-[2.5rem_2.25rem_1fr_auto_auto] items-center gap-3 rounded-2xl px-5 py-4 transition hover:bg-white/6 sm:grid-cols-[3rem_2.5rem_1fr_auto_auto]"
+                className="glass grid grid-cols-[1.8rem_1.8rem_1fr_auto_auto] items-center gap-2 rounded-2xl px-3 py-3 text-sm transition hover:bg-white/6 sm:grid-cols-[3rem_2.5rem_1fr_auto_auto] sm:gap-3 sm:px-5 sm:py-4 sm:text-base"
               >
-                <span className="font-display w-8 text-center text-lg">
+                <span className="font-display w-7 text-center text-base sm:w-8 sm:text-lg">
                   {MEDAL[i] ?? <span className="text-white/40">{i + 1}</span>}
                 </span>
-                <span className="text-center text-xl leading-none">{flagEmoji(e.country || null)}</span>
+                <span className="text-center text-lg leading-none sm:text-xl">{flagEmoji(e.country || null)}</span>
                 <div className="min-w-0">
                   <span className="flex min-w-0 items-center gap-2 font-medium">
                     <span className="truncate">{e.username}</span>
                     {e.verified && (
-                      <span className="shrink-0 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-200">
+                      <span className="hidden shrink-0 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-200 sm:inline">
                         Verified
                       </span>
                     )}
                   </span>
-                  <span className="text-xs text-white/40">{e.wins} wins · {e.gamesPlayed} games</span>
+                  <span className="text-[11px] text-white/40 sm:text-xs">{e.wins} wins · {e.gamesPlayed} games</span>
                 </div>
-                <span className="font-display w-28 text-right font-bold text-bolt">
+                <span className="font-display w-16 text-right text-sm font-bold text-bolt sm:w-28 sm:text-base">
                   {e.tokens.toLocaleString()}
                 </span>
-                <span className="flex w-10 justify-end">
+                <span className="flex w-8 justify-end sm:w-10">
                   {e.trophy ? (
                     <TrophyIcon trophy={e.trophy} />
                   ) : (
-                    <span className="flex size-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs text-white/30">-</span>
+                    <span className="flex size-7 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs text-white/30 sm:size-8">-</span>
                   )}
                 </span>
               </div>

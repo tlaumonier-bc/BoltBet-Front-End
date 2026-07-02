@@ -14,7 +14,7 @@ const MAP_STYLES: { id: GlobeMapStyle; label: string }[] = [
   { id: 'night', label: 'Night' },
 ]
 
-export default function ModeBar() {
+export default function ModeBar({ showModeSwitch = true }: { showModeSwitch?: boolean }) {
   const mode = useLiveStore((s) => s.mode)
   const setMode = useLiveStore((s) => s.setMode)
   const mapStyle = useLiveStore((s) => s.mapStyle)
@@ -39,22 +39,23 @@ export default function ModeBar() {
         ))}
       </div>
 
-      {/* Free / Beginner / Pro / Game */}
-      <div className="glass pointer-events-auto flex shrink-0 self-start rounded-full p-1 text-xs font-semibold">
-        {MODES.map((m) => (
-          <button
-            key={m.id}
-            onClick={() => setMode(m.id)}
-            className={`rounded-full px-3.5 py-1.5 transition ${
-              mode === m.id
-                ? 'bg-bolt text-storm shadow-[0_0_14px_rgba(253,224,71,0.45)]'
-                : 'text-white/60 hover:text-white'
-            }`}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
+      {showModeSwitch && (
+        <div className="glass pointer-events-auto flex shrink-0 self-start rounded-full p-1 text-xs font-semibold">
+          {MODES.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => setMode(m.id)}
+              className={`rounded-full px-3.5 py-1.5 transition ${
+                mode === m.id
+                  ? 'bg-bolt text-storm shadow-[0_0_14px_rgba(253,224,71,0.45)]'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      )}
     </>
   )
 }

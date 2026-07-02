@@ -15,9 +15,19 @@ export default function BrandHomeLink() {
         event.preventDefault();
         setSeoContentOpen(false);
       }}
-      className="font-display text-base font-bold tracking-tight"
+      className="min-w-0"
     >
-      <span className="text-bolt">⚡</span> Lightning Map Game
+      <span className="flex min-w-0 items-center gap-1.5">
+        <span className="text-bolt leading-none">⚡</span>
+        <span className="min-w-0 leading-none">
+          <span className="font-display block truncate text-sm font-bold tracking-tight sm:text-base">
+            Lightning Map Game
+          </span>
+          <span className="mt-0.5 block truncate text-[9px] font-semibold uppercase tracking-[0.14em] text-white/45 sm:text-[10px]">
+            Real time live lightning map
+          </span>
+        </span>
+      </span>
     </Link>
   );
 }

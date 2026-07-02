@@ -149,7 +149,7 @@ export default function CountryPanel() {
         <button
           type="button"
           onClick={() => setSeoContentOpen(true)}
-          className="btn-glow mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold"
+          className="btn-glow mt-3 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold md:mt-4 md:px-4 md:py-3 md:text-sm"
         >
           Learn more about {country.name}
           <span aria-hidden>↓</span>

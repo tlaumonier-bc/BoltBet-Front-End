@@ -4,7 +4,9 @@
 // lets a guest link a Firebase account (so points follow them across devices).
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import posthog from 'posthog-js';
 import { useSessionStore } from '@/store/sessionStore';
+import { useStrikeGameStore } from '@/store/strikeGameStore';
 import {
   GAME_SERVER_ENABLED,
   changeCountry,
@@ -53,8 +55,11 @@ function FirebaseAuthButtons({ linkToken }: { linkToken: string | null }) {
       const idToken = await signInWithGoogle();
       const session = await exchangeFirebaseToken(idToken, linkToken);
       setAuthed(session.username, session.token, session);
+      posthog.identify(session.username, { verified: session.verified, country: session.country });
+      posthog.capture('user_signed_in', { method: 'google', verified: session.verified });
     } catch {
       setError('Sign-in failed. Please try again.');
+      posthog.captureException(new Error('Google sign-in failed'));
       setBusy(false);
     }
   };
@@ -117,12 +122,19 @@ function AutoGuestSetup() {
       try {
         if (GAME_SERVER_ENABLED) {
           const session = await registerUsername();
-          if (alive) setGuest(session.username, session.token, session);
+          if (alive) {
+            setGuest(session.username, session.token, session);
+            posthog.identify(session.username, { verified: session.verified, country: session.country });
+            posthog.capture('user_registered', { method: 'server', username: session.username });
+          }
         } else if (alive) {
           setGuest(suggested, null, { canChangeUsername: true });
+          posthog.identify(suggested);
+          posthog.capture('user_registered', { method: 'local', username: suggested });
         }
       } catch {
         if (alive) setError(true);
+        posthog.captureException(new Error('Guest registration failed'));
       }
     };
     setup();
@@ -195,6 +207,7 @@ function RenameModal({ onClose }: { onClose: () => void }) {
     try {
       const profile = await changeUsername(name);
       updateAccount(profile.username, profile);
+      posthog.capture('username_changed', { new_username: name });
       onClose();
     } catch {
       setError('This username is unavailable or your monthly change is still locked.');
@@ -322,6 +335,7 @@ function FlagModal({ onClose }: { onClose: () => void }) {
       } else {
         updateAccount(username, { country: countryCode });
       }
+      posthog.capture('flag_changed', { country_code: countryCode });
       onClose();
     } catch {
       setError('Could not save this flag. Please try again.');
@@ -380,12 +394,13 @@ function FlagModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-export default function GameAccount() {
+export default function GameAccount({ variant = 'standalone' }: { variant?: 'standalone' | 'inline' }) {
   const status = useSessionStore((s) => s.status);
   const username = useSessionStore((s) => s.username);
   const country = useSessionStore((s) => s.country);
   const verified = useSessionStore((s) => s.verified);
   const init = useSessionStore((s) => s.init);
+  const tokens = useStrikeGameStore((s) => s.tokens);
   const [linking, setLinking] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [choosingFlag, setChoosingFlag] = useState(false);
@@ -394,13 +409,20 @@ export default function GameAccount() {
     if (status === 'loading') init();
   }, [status, init]);
 
+  // Identify returning user from persisted session
+  useEffect(() => {
+    if (username && (status === 'guest' || status === 'authed')) {
+      posthog.identify(username, { verified, country });
+    }
+  }, [username, status, verified, country]);
+
   if (status === 'loading') return null;
 
   return (
     <>
       {/* account chip — flows at the top of the left console column */}
       {status !== 'unset' && (
-        <div className="glass pointer-events-auto flex shrink-0 items-center gap-2 self-start rounded-full px-3 py-1.5 text-xs">
+        <div className={`${variant === 'standalone' ? 'glass w-full md:w-auto md:self-start' : 'max-w-[320px] bg-white/6'} pointer-events-auto flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs`}>
           <button
             type="button"
             onClick={() => setChoosingFlag(true)}
@@ -413,20 +435,23 @@ export default function GameAccount() {
           <button
             type="button"
             onClick={() => setRenaming(true)}
-            className="cursor-pointer font-semibold text-white/85 underline-offset-3 transition hover:text-white hover:underline"
+            className="min-w-0 cursor-pointer truncate font-semibold text-white/85 underline-offset-3 transition hover:text-white hover:underline"
             title="Change username"
           >
             {username}
           </button>
+          <span className="shrink-0 font-display font-bold tabular-nums text-bolt">
+            {Math.round(tokens).toLocaleString()} pts
+          </span>
           {status === 'guest' ? (
             <button
               onClick={() => setLinking(true)}
-              className="cursor-pointer rounded-full bg-white/8 px-2 py-0.5 text-[11px] font-medium text-white/65 transition hover:bg-white/15 hover:text-white"
+              className="ml-auto cursor-pointer rounded-full bg-white/8 px-2 py-0.5 text-[11px] font-medium text-white/65 transition hover:bg-white/15 hover:text-white"
             >
               Save progress
             </button>
           ) : (
-            <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+            <span className="ml-auto rounded-full bg-emerald-400/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
               {verified ? 'Verified' : 'Signed in'}
             </span>
           )}

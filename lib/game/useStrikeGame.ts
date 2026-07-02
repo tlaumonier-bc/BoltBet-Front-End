@@ -72,6 +72,8 @@ export interface StrikeGameVM {
   pendingCurrentCount: number; // live count of the pending bet's game window
   series: number[];
   seriesMax: number;
+  rollingTrend: number[];
+  rollingTrendMax: number;
   tokens: number;
   pending: PendingBet | null;
   canBet: boolean;
@@ -121,6 +123,8 @@ interface Derived {
   pendingCurrentCount: number;
   series: number[];
   seriesMax: number;
+  rollingTrend: number[];
+  rollingTrendMax: number;
 }
 
 function emptyDerived(): Derived {
@@ -135,6 +139,8 @@ function emptyDerived(): Derived {
     pendingCurrentCount: 0,
     series: new Array(SERIES_LEN).fill(0),
     seriesMax: 1,
+    rollingTrend: new Array(30).fill(0),
+    rollingTrendMax: 1,
   };
 }
 
@@ -352,6 +358,23 @@ export function useStrikeGame(): StrikeGameVM {
       }
       const seriesMax = Math.max(1, ...series);
       const nowIndex = Math.max(0, Math.min(SERIES_LEN, Math.floor((now - base) / 1000)));
+      const rollingBuckets = new Array(60).fill(0);
+      const rollingBase = now - 60_000;
+      for (const s of strikes) {
+        if (s.receivedAt < rollingBase) break;
+        if (s.receivedAt > now) continue;
+        if (!matchScope(s, kind, id)) continue;
+        const idx = Math.floor((s.receivedAt - rollingBase) / 1000);
+        if (idx >= 0 && idx < rollingBuckets.length) rollingBuckets[idx]++;
+      }
+      let rollingSum = rollingBuckets.slice(0, 30).reduce((sum, value) => sum + value, 0);
+      const rollingTrend = new Array(30).fill(0);
+      for (let i = 0; i < rollingTrend.length; i++) {
+        rollingTrend[i] = rollingSum;
+        rollingSum += rollingBuckets[i + 30] ?? 0;
+        rollingSum -= rollingBuckets[i] ?? 0;
+      }
+      const rollingTrendMax = Math.max(1, ...rollingTrend);
 
       const elapsedMs = pend ? Math.max(0, Math.min(GAME_MS, now - pend.placedAt)) : 0;
       const msUntilResolve = pend ? Math.max(0, pend.placedAt + GAME_MS - now) : 0;
@@ -385,6 +408,8 @@ export function useStrikeGame(): StrikeGameVM {
         pendingCurrentCount,
         series,
         seriesMax,
+        rollingTrend,
+        rollingTrendMax,
       });
     };
 
@@ -504,6 +529,8 @@ export function useStrikeGame(): StrikeGameVM {
     pendingCurrentCount: derived.pendingCurrentCount,
     series: derived.series,
     seriesMax: derived.seriesMax,
+    rollingTrend: derived.rollingTrend,
+    rollingTrendMax: derived.rollingTrendMax,
     tokens,
     pending,
     canBet,

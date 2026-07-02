@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { useStrikeGameStore } from '@/store/strikeGameStore';
 import { flagEmoji } from '@/lib/live/owm';
+import GameAccount from './GameAccount';
 import {
   PAYOUT_MULTIPLIER,
   GAME_MS,
@@ -13,7 +14,7 @@ import {
 const CHIPS = [10, 25, 50];
 const FLOAT_MS = 1600;
 
-export default function BetBar({ vm }: { vm: StrikeGameVM }) {
+export default function BetBar({ vm, variant = 'fixed' }: { vm: StrikeGameVM; variant?: 'fixed' | 'embedded' | 'compact' }) {
   const [amount, setAmount] = useState(10);
   const isCountry = vm.scope.kind === 'country';
 
@@ -65,9 +66,93 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
     }
   };
 
-  return (
-    <div className="pointer-events-none fixed bottom-24 left-1/2 z-50 w-[min(640px,94vw)] -translate-x-1/2">
-      <div className="glass-opaque pointer-events-auto relative rounded-2xl border border-white/10 p-4 shadow-2xl">
+  const compactContent = (
+    <div className="glass-opaque pointer-events-auto relative rounded-2xl border border-white/10 p-3 shadow-2xl">
+      {vm.pending && (
+        <div className="relative h-1 overflow-hidden rounded-full bg-white/10">
+          <div className="absolute inset-y-0 left-0 bg-bolt/80 transition-[width] duration-200 ease-linear" style={{ width: `${gamePct}%` }} />
+        </div>
+      )}
+
+      {vm.pending ? (
+        <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.04] p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className={`font-display text-lg font-extrabold ${vm.pending.side === 'up' ? 'text-emerald-300' : 'text-rose-300'}`}>
+                {vm.pending.side === 'up' ? '↑ Higher' : '↓ Lower'}
+              </div>
+              <div className="mt-1 text-[11px] text-white/45">
+                Beat {vm.pending.prevCount} · now {vm.pendingCurrentCount}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-display text-2xl font-extrabold tabular-nums text-white">
+                {Math.ceil(vm.msUntilResolve / 1000)}
+              </div>
+              <div className="text-[9px] uppercase tracking-wider text-white/40">sec</div>
+            </div>
+          </div>
+        </div>
+      ) : isCountry && !vm.playable ? (
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={handleFind} className="btn-glow min-h-10 rounded-xl px-2 text-xs font-bold">
+            Find country
+          </button>
+          <button
+            onClick={vm.playGlobe}
+            className="min-h-10 rounded-xl border border-electric/40 bg-electric/10 px-2 text-xs font-bold text-electric"
+          >
+            Play globe
+          </button>
+        </div>
+      ) : vm.tokens <= 0 ? (
+        <button onClick={vm.claimTokens} className="btn-glow min-h-10 w-full rounded-xl px-3 text-xs font-bold">
+          Claim 100 free points
+        </button>
+      ) : vm.canBet ? (
+        <div>
+          <div className="mb-2 flex items-center justify-between gap-2 text-[11px] text-white/55">
+            <span><span className="font-bold text-electric">{vm.prevCount}</span> strikes to beat</span>
+            <div className="flex gap-1">
+              {CHIPS.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setAmount(c)}
+                  className={`rounded-md px-2 py-1 text-[10px] font-bold ${clampAmt === c ? 'bg-bolt text-storm' : 'bg-white/8 text-white/65'}`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => vm.placeBet('up', clampAmt)}
+              className="min-h-10 rounded-xl bg-emerald-500 px-2 py-2 text-white active:scale-[0.98]"
+            >
+              <div className="font-display text-sm font-extrabold">↑ HIGHER</div>
+              <div className="text-[10px] font-semibold text-white/90">win {toWin} pts</div>
+            </button>
+            <button
+              onClick={() => vm.placeBet('down', clampAmt)}
+              className="min-h-10 rounded-xl bg-rose-500 px-2 py-2 text-white active:scale-[0.98]"
+            >
+              <div className="font-display text-sm font-extrabold">↓ LOWER</div>
+              <div className="text-[10px] font-semibold text-white/90">win {toWin} pts</div>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between rounded-xl bg-white/[0.04] p-3 text-xs text-white/70">
+          <span>Waiting for result</span>
+          <span className="font-display text-lg font-bold text-electric">{Math.ceil(vm.msUntilResolve / 1000)}s</span>
+        </div>
+      )}
+    </div>
+  );
+
+  const content = (
+    <div className="glass-opaque pointer-events-auto relative rounded-2xl border border-white/10 p-4 shadow-2xl">
         {/* result float */}
         {floatResult && (
           <span
@@ -94,10 +179,7 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
               </button>
             )}
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] uppercase tracking-wider text-white/40">Points</span>
-            <span className="font-display font-bold tabular-nums text-bolt">{Math.round(vm.tokens)}</span>
-          </div>
+          <GameAccount variant="inline" />
         </div>
 
         {/* active-play progress bar */}
@@ -236,7 +318,15 @@ export default function BetBar({ vm }: { vm: StrikeGameVM }) {
             </div>
           </div>
         )}
-      </div>
+    </div>
+  );
+
+  if (variant === 'embedded') return content;
+  if (variant === 'compact') return compactContent;
+
+  return (
+    <div className="pointer-events-none fixed bottom-24 left-1/2 z-50 w-[min(640px,94vw)] -translate-x-1/2 max-md:hidden">
+      {content}
     </div>
   );
 }

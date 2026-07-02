@@ -22,6 +22,7 @@ const COUNTRY_LINKS = buildCountryLinks();
 export default function GlobeExperience({ initialPage }: { initialPage?: LocalePage }) {
   const selectedCountry = useLiveStore((s) => s.selectedCountry);
   const seoContentOpen = useLiveStore((s) => s.seoContentOpen);
+  const mobileSheet = useLiveStore((s) => s.mobileSheet);
   const setSeoContentOpen = useLiveStore((s) => s.setSeoContentOpen);
   const setSelectedCountry = useLiveStore((s) => s.setSelectedCountry);
 
@@ -142,11 +143,11 @@ export default function GlobeExperience({ initialPage }: { initialPage?: LocaleP
       </div>
 
       {/* Mobile affordance to reach the text — CountryPanel's button is lg+ only. */}
-      {activePage && !seoContentOpen && (
+      {activePage && !seoContentOpen && !mobileSheet && (
         <button
           type="button"
           onClick={() => setSeoContentOpen(true)}
-          className="btn-glow fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full px-6 py-3 text-sm font-bold lg:hidden cursor-pointer"
+          className="btn-glow fixed bottom-[74px] left-1/2 z-50 max-w-[88vw] -translate-x-1/2 cursor-pointer truncate rounded-full px-4 py-2 text-xs font-bold lg:hidden"
         >
           Learn more about {activePage.country} ↓
         </button>

@@ -196,7 +196,7 @@
         ],
         "h1": "Ukkostutka – salamat kartalla reaaliajassa",
         "title": "Ukkostutka – Salamat kartalla reaaliajassa | lightningmapgame",
-        "metaDescription": "Seuraa ukkosta reaaliaikaisella ukkostutkalla. Näe salamaniskut kartalla juuri nyt – ja arvaa, iskeekö seuraavan 60 sekunnin aikana enemmän vai vähemmän salamoita.",
+        "metaDescription": "Seuraa ukkosta reaaliaikaisella ukkostutkalla. Näe salamaniskut kartalla juuri nyt – ja arvaa, iskeekö seuraavan 30 sekunnin aikana enemmän vai vähemmän salamoita.",
         "imageAlt": "Ukkostutka – salamaniskut Suomen kartalla reaaliajassa",
         "sections": [
           {
@@ -212,10 +212,10 @@
             "body": "Salamadata tulee Blitzortung-yhteisön ylläpitämästä havaintoverkosta. Maanpäälliset vastaanottimet mittaavat salaman lähettämän radiopulssin saapumisajan, ja iskun sijainti lasketaan kolmiomittauksella useammasta asemasta. Mitä useampi asema havaitsee saman iskun, sitä tarkempi paikannus on. Palvelusta käytetään monia nimiä – esimerkiksi salamakartta, lightningmaps ja lighting map – mutta kyse on samasta reaaliaikaisesta ukkostutkasta."
           },
           {
-            "h2": "Arvaa seuraavat 60 sekuntia",
+            "h2": "Arvaa seuraavat 30 sekuntia",
             "body": "Iskeekö seuraavan minuutin aikana enemmän vai vähemmän salamoita? Tee arvaus ja katso reaaliajassa, miten käy. Kyseessä on maksuton peli – ei oikealla rahalla pelattava veto.",
             "isFunnel": true,
-            "ctaText": "Pelaa: arvaa seuraavat 60 sekuntia",
+            "ctaText": "Pelaa: arvaa seuraavat 30 sekuntia",
             "ctaPrompt": "Iskeekö seuraavan minuutin aikana enemmän vai vähemmän salamoita?"
           }
         ],
@@ -239,7 +239,7 @@
           },
           {
             "q": "Voiko ukkosen tuloa ennustaa?",
-            "a": "Tarkkaa hetkeä ei voi ennustaa, mutta salamatiheydestä ja solun liikkeestä näkee, onko ukkonen lähestymässä. Voit myös testata arviotasi pelissä: arvaa, iskeekö seuraavan 60 sekunnin aikana enemmän vai vähemmän salamoita."
+            "a": "Tarkkaa hetkeä ei voi ennustaa, mutta salamatiheydestä ja solun liikkeestä näkee, onko ukkonen lähestymässä. Voit myös testata arviotasi pelissä: arvaa, iskeekö seuraavan 30 sekunnin aikana enemmän vai vähemmän salamoita."
           }
         ]
       },
@@ -322,10 +322,10 @@
             "body": "The strike data comes from Blitzortung, a network of receiving stations run by volunteers. The stations measure when the radio pulse from each strike arrives, and its position is fixed by triangulation from several stations. The more stations that detect the same strike, the more accurate the position. It's sometimes called a lightning tracker or lightning radar, but it's the same real-time lightning map."
           },
           {
-            "h2": "Guess the next 60 seconds",
+            "h2": "Guess the next 30 seconds",
             "body": "Will more or fewer bolts strike in the next minute? Make your call and watch it play out in real time. It's a free game — no real money.",
             "isFunnel": true,
-            "ctaText": "Play: guess the next 60 seconds",
+            "ctaText": "Play: guess the next 30 seconds",
             "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
           }
         ],
@@ -349,7 +349,7 @@
           },
           {
             "q": "Can you predict where lightning will strike?",
-            "a": "The exact moment can't be predicted, but strike density and cell movement show whether a storm is approaching. You can also test your instinct in the game: guess whether more or fewer bolts strike in the next 60 seconds."
+            "a": "The exact moment can't be predicted, but strike density and cell movement show whether a storm is approaching. You can also test your instinct in the game: guess whether more or fewer bolts strike in the next 30 seconds."
           }
         ]
       },
@@ -432,10 +432,10 @@
             "body": "Dane pochodzą z sieci Blitzortung – społeczności stacji odbiorczych prowadzonych przez wolontariuszy. Stacje mierzą, kiedy dociera impuls radiowy z pioruna, a pozycję wyznacza się przez triangulację z wielu stacji. Im więcej stacji wykryje to samo wyładowanie, tym dokładniejsza jest lokalizacja."
           },
           {
-            "h2": "Zgadnij następne 60 sekund",
+            "h2": "Zgadnij następne 30 sekund",
             "body": "Czy w następnej minucie uderzy więcej, czy mniej piorunów? Obstaw i zobacz w czasie rzeczywistym, co się stanie. To darmowa gra – bez prawdziwych pieniędzy.",
             "isFunnel": true,
-            "ctaText": "Zagraj: zgadnij następne 60 sekund",
+            "ctaText": "Zagraj: zgadnij następne 30 sekund",
             "ctaPrompt": "Więcej czy mniej piorunów w następnej minucie?"
           }
         ],
@@ -459,7 +459,7 @@
           },
           {
             "q": "Czy można przewidzieć, gdzie uderzy piorun?",
-            "a": "Dokładnego miejsca i czasu nie da się przewidzieć, ale gęstość wyładowań i ruch komórki pokazują, czy burza się zbliża. Możesz też sprawdzić swój instynkt w grze: zgadnij, czy w ciągu następnych 60 sekund uderzy więcej czy mniej piorunów."
+            "a": "Dokładnego miejsca i czasu nie da się przewidzieć, ale gęstość wyładowań i ruch komórki pokazują, czy burza się zbliża. Możesz też sprawdzić swój instynkt w grze: zgadnij, czy w ciągu następnych 30 sekund uderzy więcej czy mniej piorunów."
           }
         ]
       },
@@ -542,10 +542,10 @@
             "body": "Dane o wyładowaniach pochodzą z sieci Blitzortung – społeczności stacji odbiorczych prowadzonych przez wolontariuszy. Stacje mierzą, kiedy dociera impuls radiowy z pioruna, a pozycję wyznacza się przez triangulację z wielu stacji. Im więcej stacji wykryje to samo wyładowanie, tym dokładniejsza jest lokalizacja. Usługę nazywa się też mapą burzową lub radarem burz – to ten sam radar burzowy na żywo."
           },
           {
-            "h2": "Zgadnij następne 60 sekund",
+            "h2": "Zgadnij następne 30 sekund",
             "body": "Czy w następnej minucie uderzy więcej, czy mniej piorunów? Obstaw i zobacz w czasie rzeczywistym, co się stanie. To darmowa gra – bez prawdziwych pieniędzy.",
             "isFunnel": true,
-            "ctaText": "Zagraj: zgadnij następne 60 sekund",
+            "ctaText": "Zagraj: zgadnij następne 30 sekund",
             "ctaPrompt": "Więcej czy mniej piorunów w następnej minucie?"
           }
         ],
@@ -569,7 +569,7 @@
           },
           {
             "q": "Czy można przewidzieć, gdzie uderzy piorun?",
-            "a": "Dokładnego miejsca i czasu nie da się przewidzieć, ale gęstość wyładowań i kierunek ruchu komórki pokazują, czy burza się zbliża. Możesz też sprawdzić swój instynkt w grze: zgadnij, czy w ciągu następnych 60 sekund uderzy więcej czy mniej piorunów."
+            "a": "Dokładnego miejsca i czasu nie da się przewidzieć, ale gęstość wyładowań i kierunek ruchu komórki pokazują, czy burza się zbliża. Możesz też sprawdzić swój instynkt w grze: zgadnij, czy w ciągu następnych 30 sekund uderzy więcej czy mniej piorunów."
           }
         ]
       },
@@ -758,10 +758,10 @@
             "body": "Välguandmed pärinevad Blitzortungi võrgust – vabatahtlike hallatavate vastuvõtujaamade kogukonnast. Jaamad mõõdavad, millal välgu raadioimpulss saabub, ja asukoht määratakse triangulatsiooniga mitmest jaamast. Mida rohkem jaamu sama välku tuvastab, seda täpsem on asukoht."
           },
           {
-            "h2": "Arva järgmised 60 sekundit",
+            "h2": "Arva järgmised 30 sekundit",
             "body": "Kas järgmise minuti jooksul lööb rohkem või vähem välke? Tee oma pakkumine ja vaata reaalajas, mis juhtub. See on tasuta mäng – ilma päris rahata.",
             "isFunnel": true,
-            "ctaText": "Mängi: arva järgmised 60 sekundit",
+            "ctaText": "Mängi: arva järgmised 30 sekundit",
             "ctaPrompt": "Rohkem või vähem välke järgmise minuti jooksul?"
           }
         ],
@@ -785,7 +785,7 @@
           },
           {
             "q": "Kas saab ennustada, kuhu välk lööb?",
-            "a": "Täpset kohta ja aega ei saa ennustada, kuid välkude tihedus ja raku liikumine näitavad, kas äike läheneb. Oma aimdust saad proovida ka mängus: arva, kas järgmise 60 sekundi jooksul lööb rohkem või vähem välke."
+            "a": "Täpset kohta ja aega ei saa ennustada, kuid välkude tihedus ja raku liikumine näitavad, kas äike läheneb. Oma aimdust saad proovida ka mängus: arva, kas järgmise 30 sekundi jooksul lööb rohkem või vähem välke."
           }
         ]
       },
@@ -876,10 +876,10 @@
             "body": "Blixtdatan kommer från Blitzortung – ett nätverk av mottagarstationer som drivs av frivilliga. Stationerna mäter när radiopulsen från blixten anländer, och nedslaget positioneras genom triangulering från flera stationer. Ju fler stationer som fångar samma blixt, desto noggrannare blir positionen. Tjänsten kallas även blixtkarta, åskradar eller lightningmaps, och liknar radar blixt SMHI – men det är samma blixtradar i realtid."
           },
           {
-            "h2": "Gissa de närmaste 60 sekunderna",
+            "h2": "Gissa de närmaste 30 sekunderna",
             "body": "Slår det ner fler eller färre blixtar nästa minut? Gissa och se vad som händer i realtid. Det är ett gratis spel – inga riktiga pengar.",
             "isFunnel": true,
-            "ctaText": "Spela: gissa de närmaste 60 sekunderna",
+            "ctaText": "Spela: gissa de närmaste 30 sekunderna",
             "ctaPrompt": "Slår det ner fler eller färre blixtar nästa minut?"
           }
         ],
@@ -903,7 +903,7 @@
           },
           {
             "q": "Går det att förutsäga åskan?",
-            "a": "Den exakta tidpunkten går inte att förutsäga, men blixttätheten och cellens rörelse visar om ovädret närmar sig. Du kan också testa din gissning i spelet: gissa om det slår ner fler eller färre blixtar de närmaste 60 sekunderna."
+            "a": "Den exakta tidpunkten går inte att förutsäga, men blixttätheten och cellens rörelse visar om ovädret närmar sig. Du kan också testa din gissning i spelet: gissa om det slår ner fler eller färre blixtar de närmaste 30 sekunderna."
           }
         ]
       },
@@ -978,10 +978,10 @@
             "body": "The strike data comes from Blitzortung, a network of receiving stations run by volunteers. The stations measure when the radio pulse from each strike arrives, and its position is fixed by triangulation from several stations. The more stations that detect the same strike, the more accurate the position — often within a few miles. It's sometimes called a lightning tracker, but it's the same real-time lightning map."
           },
           {
-            "h2": "Guess the next 60 seconds",
+            "h2": "Guess the next 30 seconds",
             "body": "Will more or fewer bolts strike in the next minute? Make your call and watch it play out in real time. It's a free game — no real money.",
             "isFunnel": true,
-            "ctaText": "Play: guess the next 60 seconds",
+            "ctaText": "Play: guess the next 30 seconds",
             "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
           }
         ],
@@ -1005,7 +1005,7 @@
           },
           {
             "q": "Can you predict where lightning will strike?",
-            "a": "The exact moment can't be predicted, but strike density and cell movement show whether a storm is approaching. You can also test your instinct in the game: guess whether more or fewer strikes hit in the next 60 seconds."
+            "a": "The exact moment can't be predicted, but strike density and cell movement show whether a storm is approaching. You can also test your instinct in the game: guess whether more or fewer strikes hit in the next 30 seconds."
           }
         ]
       },
@@ -1096,10 +1096,10 @@
             "body": "Lyndataene kommer fra Blitzortung – et fellesskap av mottakerstasjoner drevet av frivillige. Stasjonene måler når radiopulsen fra lynet ankommer, og nedslaget posisjoneres ved triangulering fra flere stasjoner. Jo flere stasjoner som fanger opp samme lyn, desto mer nøyaktig blir posisjonen. Tjenesten kalles også lynkart, lynradar eller lightningmaps – men det er den samme sanntids lynradaren du kjenner fra lynvarsel og met-tjenester."
           },
           {
-            "h2": "Gjett de neste 60 sekundene",
+            "h2": "Gjett de neste 30 sekundene",
             "body": "Slår det ned flere eller færre lyn det neste minuttet? Gjett og se hva som skjer i sanntid. Det er et gratis spill – ingen pengespill.",
             "isFunnel": true,
-            "ctaText": "Spill: gjett de neste 60 sekundene",
+            "ctaText": "Spill: gjett de neste 30 sekundene",
             "ctaPrompt": "Slår det ned flere eller færre lyn det neste minuttet?"
           }
         ],
@@ -1123,7 +1123,7 @@
           },
           {
             "q": "Kan man forutsi når lynet slår ned?",
-            "a": "Det nøyaktige tidspunktet kan ikke forutsies, men lyntetthet og cellens bevegelse viser om uværet nærmer seg. Du kan også teste anslaget ditt i spillet: gjett om det slår ned flere eller færre lyn de neste 60 sekundene."
+            "a": "Det nøyaktige tidspunktet kan ikke forutsies, men lyntetthet og cellens bevegelse viser om uværet nærmer seg. Du kan også teste anslaget ditt i spillet: gjett om det slår ned flere eller færre lyn de neste 30 sekundene."
           }
         ]
       },
@@ -1206,10 +1206,10 @@
             "body": "Die Blitzdaten stammen von Blitzortung – einem Netzwerk aus Empfangsstationen, das von Freiwilligen betrieben wird. Die Stationen messen, wann der Funkimpuls des Blitzes eintrifft, und der Einschlag wird per Triangulation aus mehreren Stationen verortet. Je mehr Stationen denselben Blitz erfassen, desto genauer ist die Position. Der Dienst wird auch Blitzkarte, Gewitterradar oder lightningmaps genannt – aber es ist dasselbe Blitzradar in Echtzeit."
           },
           {
-            "h2": "Rate die nächsten 60 Sekunden",
+            "h2": "Rate die nächsten 30 sekunden",
             "body": "Schlagen in der nächsten Minute mehr oder weniger Blitze ein? Gib einen Tipp ab und sieh in Echtzeit, was passiert. Es ist ein kostenloses Spiel – kein Echtgeld.",
             "isFunnel": true,
-            "ctaText": "Spielen: errate die nächsten 60 Sekunden",
+            "ctaText": "Spielen: errate die nächsten 30 sekunden",
             "ctaPrompt": "Schlagen in der nächsten Minute mehr oder weniger Blitze ein?"
           }
         ],
@@ -1233,7 +1233,7 @@
           },
           {
             "q": "Kann man Gewitter vorhersagen?",
-            "a": "Der genaue Zeitpunkt lässt sich nicht vorhersagen, aber Blitzdichte und Zellbewegung zeigen, ob ein Gewitter näher kommt. Du kannst deine Einschätzung auch im Spiel testen: rate, ob in den nächsten 60 Sekunden mehr oder weniger Blitze einschlagen."
+            "a": "Der genaue Zeitpunkt lässt sich nicht vorhersagen, aber Blitzdichte und Zellbewegung zeigen, ob ein Gewitter näher kommt. Du kannst deine Einschätzung auch im Spiel testen: rate, ob in den nächsten 30 sekunden mehr oder weniger Blitze einschlagen."
           }
         ]
       },
@@ -1304,10 +1304,10 @@
             "body": "Die Blitzdaten stammen aus dem Blitzortung-Netzwerk, einem Verbund freiwilliger Empfangsstationen, die jeden Blitz per Triangulation orten. Diese Karte zeigt die tatsächliche, aktuelle Blitzaktivität – sie ist aber kein amtlicher Wetterdienst. Offizielle Unwetterwarnungen gibt der Deutsche Wetterdienst (DWD) heraus; nutze die Karte, um zu sehen, wo es gerade wirklich gewittert."
           },
           {
-            "h2": "Rate die nächsten 60 Sekunden",
+            "h2": "Rate die nächsten 30 sekunden",
             "body": "Schlagen in der nächsten Minute mehr oder weniger Blitze ein? Gib einen Tipp ab und sieh in Echtzeit, was passiert. Es ist ein kostenloses Spiel – kein Echtgeld.",
             "isFunnel": true,
-            "ctaText": "Spielen: errate die nächsten 60 Sekunden",
+            "ctaText": "Spielen: errate die nächsten 30 sekunden",
             "ctaPrompt": "Schlagen in der nächsten Minute mehr oder weniger Blitze ein?"
           }
         ],
@@ -1331,7 +1331,7 @@
           },
           {
             "q": "Kann man vorhersagen, wo der Blitz einschlägt?",
-            "a": "Der genaue Ort und Zeitpunkt lassen sich nicht vorhersagen, aber Blitzdichte und Zugrichtung zeigen, ob ein Gewitter näher kommt. Im Spiel kannst du es testen: rate, ob in den nächsten 60 Sekunden mehr oder weniger Blitze einschlagen."
+            "a": "Der genaue Ort und Zeitpunkt lassen sich nicht vorhersagen, aber Blitzdichte und Zugrichtung zeigen, ob ein Gewitter näher kommt. Im Spiel kannst du es testen: rate, ob in den nächsten 30 sekunden mehr oder weniger Blitze einschlagen."
           }
         ]
       },
@@ -1422,10 +1422,10 @@
             "body": "De bliksemdata komt van Blitzortung – een netwerk van ontvangststations dat door vrijwilligers wordt beheerd. De stations meten wanneer de radiopuls van de bliksem aankomt, en de inslag wordt bepaald via triangulatie vanaf meerdere stations. Hoe meer stations dezelfde blikseminslag oppikken, hoe nauwkeuriger de positie. De dienst heet ook wel bliksemkaart, onweerradar of lightningmaps – en is vooral handig bij noodweer – maar het is dezelfde onweersradar in realtime."
           },
           {
-            "h2": "Raad de komende 60 seconden",
+            "h2": "Raad de komende 30 seconden",
             "body": "Slaan er de komende minuut meer of minder bliksems in? Doe een gok en zie in realtime wat er gebeurt. Het is een gratis spel – geen echt geld.",
             "isFunnel": true,
-            "ctaText": "Speel: voorspel de komende 60 seconden",
+            "ctaText": "Speel: voorspel de komende 30 seconden",
             "ctaPrompt": "Slaan er de komende minuut meer of minder bliksems in?"
           }
         ],
@@ -1449,7 +1449,7 @@
           },
           {
             "q": "Kun je onweer voorspellen?",
-            "a": "Het exacte moment is niet te voorspellen, maar de bliksemdichtheid en de beweging van de bui laten zien of het onweer dichterbij komt. Je kunt je inschatting ook testen in het spel: raad of er de komende 60 seconden meer of minder bliksems inslaan."
+            "a": "Het exacte moment is niet te voorspellen, maar de bliksemdichtheid en de beweging van de bui laten zien of het onweer dichterbij komt. Je kunt je inschatting ook testen in het spel: raad of er de komende 30 seconden meer of minder bliksems inslaan."
           }
         ]
       },
@@ -1540,10 +1540,10 @@
             "body": "Data o blescích pocházejí ze sítě Blitzortung – komunity přijímacích stanic provozovaných dobrovolníky. Stanice měří, kdy dorazí rádiový impulz blesku, a poloha se určí triangulací z více stanic. Čím víc stanic zachytí stejný blesk, tím přesnější je poloha. Službě se říká také bouřková mapa, radar bouřky nebo radar bouřek – je to stejný radar bouřek v reálném čase."
           },
           {
-            "h2": "Hádej příštích 60 sekund",
+            "h2": "Hádej příštích 30 sekund",
             "body": "Udeří v příští minutě víc, nebo míň blesků? Vsaď si tip a sleduj v reálném čase, co se stane. Je to hra zdarma – bez skutečných peněz.",
             "isFunnel": true,
-            "ctaText": "Hrát: hádej příštích 60 sekund",
+            "ctaText": "Hrát: hádej příštích 30 sekund",
             "ctaPrompt": "Víc, nebo míň blesků v příští minutě?"
           }
         ],
@@ -1567,7 +1567,7 @@
           },
           {
             "q": "Dá se předpovědět, kam blesk udeří?",
-            "a": "Přesné místo a čas předpovědět nelze, ale hustota blesků a pohyb buňky ukážou, jestli se bouřka blíží. Svůj odhad si můžeš vyzkoušet i ve hře: hádej, jestli v příštích 60 sekundách udeří víc, nebo míň blesků."
+            "a": "Přesné místo a čas předpovědět nelze, ale hustota blesků a pohyb buňky ukážou, jestli se bouřka blíží. Svůj odhad si můžeš vyzkoušet i ve hře: hádej, jestli v příštích 30 sekundách udeří víc, nebo míň blesků."
           }
         ]
       },
@@ -1642,10 +1642,10 @@
             "body": "Dati par zibeņiem nāk no Blitzortung tīkla – uztvērējstaciju kopienas, ko uztur brīvprātīgie. Stacijas mēra, kad pienāk zibens radioimpulss, un atrašanās vietu nosaka, triangulējot no vairākām stacijām. Jo vairāk staciju reģistrē vienu un to pašu zibeni, jo precīzāka ir atrašanās vieta."
           },
           {
-            "h2": "Uzmini nākamās 60 sekundes",
+            "h2": "Uzmini nākamās 30 sekundes",
             "body": "Vai nākamajā minūtē iezibsnīsies vairāk vai mazāk zibeņu? Izdari minējumu un skaties reāllaikā, kas notiks. Tā ir bezmaksas spēle – bez īstas naudas.",
             "isFunnel": true,
-            "ctaText": "Spēlē: uzmini nākamās 60 sekundes",
+            "ctaText": "Spēlē: uzmini nākamās 30 sekundes",
             "ctaPrompt": "Vairāk vai mazāk zibeņu nākamajā minūtē?"
           }
         ],
@@ -1669,7 +1669,7 @@
           },
           {
             "q": "Vai var paredzēt, kur iespers zibens?",
-            "a": "Precīzu vietu un laiku paredzēt nevar, bet zibeņu blīvums un šūnas kustība rāda, vai tuvojas negaiss. Savu nojautu vari pārbaudīt arī spēlē: uzmini, vai nākamajās 60 sekundēs iezibsnīsies vairāk vai mazāk zibeņu."
+            "a": "Precīzu vietu un laiku paredzēt nevar, bet zibeņu blīvums un šūnas kustība rāda, vai tuvojas negaiss. Savu nojautu vari pārbaudīt arī spēlē: uzmini, vai nākamajās 30 sekundēs iezibsnīsies vairāk vai mazāk zibeņu."
           }
         ]
       },
@@ -1752,10 +1752,10 @@
             "body": "Podaci o munjama dolaze iz mreže Blitzortung – zajednice prijemnih stanica kojima upravljaju volonteri. Stanice mjere kad stigne radijski impuls munje, a položaj se određuje triangulacijom iz više stanica. Što više stanica zabilježi istu munju, to je položaj točniji."
           },
           {
-            "h2": "Pogodi sljedećih 60 sekundi",
+            "h2": "Pogodi sljedećih 30 sekundi",
             "body": "Hoće li u sljedećoj minuti udariti više ili manje munja? Procijeni i gledaj u stvarnom vremenu što će se dogoditi. Besplatna je igra – bez pravog novca.",
             "isFunnel": true,
-            "ctaText": "Igraj: pogodi sljedećih 60 sekundi",
+            "ctaText": "Igraj: pogodi sljedećih 30 sekundi",
             "ctaPrompt": "Više ili manje munja u sljedećoj minuti?"
           }
         ],
@@ -1779,7 +1779,7 @@
           },
           {
             "q": "Može li se predvidjeti gdje će udariti munja?",
-            "a": "Točno mjesto i vrijeme ne mogu se predvidjeti, ali gustoća munja i kretanje ćelije pokazuju približava li se nevrijeme. Svoju procjenu možeš isprobati i u igri: pogodi hoće li u sljedećih 60 sekundi udariti više ili manje munja."
+            "a": "Točno mjesto i vrijeme ne mogu se predvidjeti, ali gustoća munja i kretanje ćelije pokazuju približava li se nevrijeme. Svoju procjenu možeš isprobati i u igri: pogodi hoće li u sljedećih 30 sekundi udariti više ili manje munja."
           }
         ]
       },
@@ -1846,10 +1846,10 @@
             "body": "The strike data comes from Blitzortung, a network of receiving stations run by volunteers. The stations measure when the radio pulse from each strike arrives, and its position is fixed by triangulation from several stations. The more stations that detect the same strike, the more accurate the position — often within a few kilometres. It's the same data behind most live lightning maps."
           },
           {
-            "h2": "Guess the next 60 seconds",
+            "h2": "Guess the next 30 seconds",
             "body": "Will more or fewer bolts strike in the next minute? Make your call and watch it play out in real time. It's a free game — no real money.",
             "isFunnel": true,
-            "ctaText": "Play: guess the next 60 seconds",
+            "ctaText": "Play: guess the next 30 seconds",
             "ctaPrompt": "Will more or fewer bolts strike in the next minute?"
           }
         ],
@@ -1873,7 +1873,7 @@
           },
           {
             "q": "Can you predict where lightning will strike?",
-            "a": "The exact moment can't be predicted, but strike density and cell movement show whether a storm is approaching. You can also test your instinct in the game: guess whether more or fewer bolts strike in the next 60 seconds."
+            "a": "The exact moment can't be predicted, but strike density and cell movement show whether a storm is approaching. You can also test your instinct in the game: guess whether more or fewer bolts strike in the next 30 seconds."
           }
         ]
       },
@@ -1940,10 +1940,10 @@
             "body": "Die Blitzdaten stammen aus dem Blitzortung-Netzwerk, einem Verbund von Empfangsstationen, der von Freiwilligen betrieben wird. Die Stationen messen, wann der Funkimpuls des Blitzes eintrifft, und der Einschlag wird per Triangulation aus mehreren Stationen verortet. Je mehr Stationen denselben Blitz erfassen, desto genauer die Position. Der Dienst wird auch Blitzkarte oder Gewitterradar genannt – aber es ist dieselbe Blitzortung in Echtzeit."
           },
           {
-            "h2": "Rate die nächsten 60 Sekunden",
+            "h2": "Rate die nächsten 30 sekunden",
             "body": "Schlagen in der nächsten Minute mehr oder weniger Blitze ein? Gib einen Tipp ab und sieh in Echtzeit, was passiert. Es ist ein kostenloses Spiel – kein Echtgeld.",
             "isFunnel": true,
-            "ctaText": "Spielen: errate die nächsten 60 Sekunden",
+            "ctaText": "Spielen: errate die nächsten 30 sekunden",
             "ctaPrompt": "Schlagen in der nächsten Minute mehr oder weniger Blitze ein?"
           }
         ],
@@ -1967,7 +1967,7 @@
           },
           {
             "q": "Kann man Gewitter vorhersagen?",
-            "a": "Der genaue Zeitpunkt lässt sich nicht vorhersagen, aber Blitzdichte und Zellbewegung zeigen, ob ein Gewitter näher kommt. Du kannst dein Gespür auch im Spiel testen: rate, ob in den nächsten 60 Sekunden mehr oder weniger Blitze einschlagen."
+            "a": "Der genaue Zeitpunkt lässt sich nicht vorhersagen, aber Blitzdichte und Zellbewegung zeigen, ob ein Gewitter näher kommt. Du kannst dein Gespür auch im Spiel testen: rate, ob in den nächsten 30 sekunden mehr oder weniger Blitze einschlagen."
           }
         ]
       },
@@ -2152,10 +2152,10 @@
             "body": "I dati sui fulmini provengono da Blitzortung, una rete di stazioni riceventi gestita da volontari. Le stazioni misurano quando arriva l'impulso radio del fulmine e la posizione viene calcolata per triangolazione da più stazioni. Più stazioni rilevano lo stesso fulmine, più precisa è la posizione. Il servizio è chiamato anche radar dei temporali o meteo radar, ma è la stessa mappa dei fulmini in tempo reale."
           },
           {
-            "h2": "Indovina i prossimi 60 secondi",
+            "h2": "Indovina i prossimi 30 secondi",
             "body": "Nel prossimo minuto cadranno più o meno fulmini? Fai la tua previsione e guarda cosa succede in tempo reale. È un gioco gratuito, senza denaro reale.",
             "isFunnel": true,
-            "ctaText": "Gioca: indovina i prossimi 60 secondi",
+            "ctaText": "Gioca: indovina i prossimi 30 secondi",
             "ctaPrompt": "Nel prossimo minuto cadranno più o meno fulmini?"
           }
         ],
@@ -2179,7 +2179,7 @@
           },
           {
             "q": "Si possono prevedere i fulmini?",
-            "a": "Il momento esatto non è prevedibile, ma la densità dei fulmini e il movimento della cella indicano se il temporale si avvicina. Puoi anche mettere alla prova il tuo intuito nel gioco: indovina se nei prossimi 60 secondi cadranno più o meno fulmini."
+            "a": "Il momento esatto non è prevedibile, ma la densità dei fulmini e il movimento della cella indicano se il temporale si avvicina. Puoi anche mettere alla prova il tuo intuito nel gioco: indovina se nei prossimi 30 secondi cadranno più o meno fulmini."
           }
         ]
       },
@@ -2254,10 +2254,10 @@
             "body": "Lyndataene kommer fra Blitzortung – et netværk af modtagerstationer drevet af frivillige. Stationerne måler, hvornår radiopulsen fra lynet ankommer, og nedslaget bestemmes ved triangulering fra flere stationer. Jo flere stationer der fanger samme lyn, jo mere præcis bliver positionen. Tjenesten kaldes også lynkort, lightning map eller lighting map – men det er den samme lynradar i realtid."
           },
           {
-            "h2": "Gæt de næste 60 sekunder",
+            "h2": "Gæt de næste 30 sekunder",
             "body": "Slår der flere eller færre lyn ned i det næste minut? Gæt, og se hvad der sker i realtid. Det er et gratis spil – ingen rigtige penge.",
             "isFunnel": true,
-            "ctaText": "Spil: gæt de næste 60 sekunder",
+            "ctaText": "Spil: gæt de næste 30 sekunder",
             "ctaPrompt": "Slår der flere eller færre lyn ned i det næste minut?"
           }
         ],
@@ -2281,7 +2281,7 @@
           },
           {
             "q": "Kan man forudsige lyn?",
-            "a": "Det præcise tidspunkt kan ikke forudsiges, men lyntætheden og cellens bevægelse viser, om uvejret nærmer sig. Du kan også teste din fornemmelse i spillet: gæt, om der slår flere eller færre lyn ned i de næste 60 sekunder."
+            "a": "Det præcise tidspunkt kan ikke forudsiges, men lyntætheden og cellens bevægelse viser, om uvejret nærmer sig. Du kan også teste din fornemmelse i spillet: gæt, om der slår flere eller færre lyn ned i de næste 30 sekunder."
           }
         ]
       },
@@ -2356,10 +2356,10 @@
             "body": "Duomenys apie žaibus gaunami iš Blitzortung tinklo – savanorių prižiūrimų imtuvų bendruomenės. Stotys matuoja, kada ateina žaibo radijo impulsas, o vieta nustatoma trianguliuojant iš kelių stočių. Kuo daugiau stočių aptinka tą patį žaibą, tuo tikslesnė vieta."
           },
           {
-            "h2": "Atspėk kitas 60 sekundžių",
+            "h2": "Atspėk kitas 30 sekundžių",
             "body": "Ar kitą minutę trenks daugiau ar mažiau žaibų? Pateik spėjimą ir stebėk realiu laiku, kas nutiks. Tai nemokamas žaidimas – be tikrų pinigų.",
             "isFunnel": true,
-            "ctaText": "Žaisk: atspėk kitas 60 sekundžių",
+            "ctaText": "Žaisk: atspėk kitas 30 sekundžių",
             "ctaPrompt": "Daugiau ar mažiau žaibų kitą minutę?"
           }
         ],
@@ -2383,7 +2383,7 @@
           },
           {
             "q": "Ar galima nuspėti, kur trenks žaibas?",
-            "a": "Tikslios vietos ir laiko nuspėti negalima, bet žaibų tankis ir ląstelės judėjimas rodo, ar artėja perkūnija. Savo nuojautą gali išbandyti ir žaidime: atspėk, ar per kitas 60 sekundžių trenks daugiau ar mažiau žaibų."
+            "a": "Tikslios vietos ir laiko nuspėti negalima, bet žaibų tankis ir ląstelės judėjimas rodo, ar artėja perkūnija. Savo nuojautą gali išbandyti ir žaidime: atspėk, ar per kitas 30 sekundžių trenks daugiau ar mažiau žaibų."
           }
         ]
       },
@@ -2466,10 +2466,10 @@
             "body": "Dáta o bleskoch pochádzajú zo siete Blitzortung – komunity prijímacích staníc prevádzkovaných dobrovoľníkmi. Stanice merajú, kedy dorazí rádiový impulz blesku, a poloha sa určí trianguláciou z viacerých staníc. Čím viac staníc zachytí ten istý blesk, tým presnejšia je poloha."
           },
           {
-            "h2": "Hádaj ďalších 60 sekúnd",
+            "h2": "Hádaj ďalších 30 sekúnd",
             "body": "Udrie v ďalšej minúte viac, alebo menej bleskov? Tipni si a sleduj v reálnom čase, čo sa stane. Je to hra zadarmo – bez skutočných peňazí.",
             "isFunnel": true,
-            "ctaText": "Hrať: hádaj ďalších 60 sekúnd",
+            "ctaText": "Hrať: hádaj ďalších 30 sekúnd",
             "ctaPrompt": "Viac, alebo menej bleskov v ďalšej minúte?"
           }
         ],
@@ -2493,7 +2493,7 @@
           },
           {
             "q": "Dá sa predpovedať, kam blesk udrie?",
-            "a": "Presné miesto a čas sa predpovedať nedá, ale hustota bleskov a pohyb bunky ukážu, či sa búrka blíži. Svoj tip si môžeš vyskúšať aj v hre: hádaj, či v ďalších 60 sekundách udrie viac, alebo menej bleskov."
+            "a": "Presné miesto a čas sa predpovedať nedá, ale hustota bleskov a pohyb bunky ukážu, či sa búrka blíži. Svoj tip si môžeš vyskúšať aj v hre: hádaj, či v ďalších 30 sekundách udrie viac, alebo menej bleskov."
           }
         ]
       },
@@ -2576,10 +2576,10 @@
             "body": "Los datos proceden de Blitzortung, una red de estaciones receptoras gestionada por voluntarios. Las estaciones miden cuándo llega el impulso de radio del rayo, y la posición se calcula por triangulación desde varias estaciones. Cuantas más estaciones detectan el mismo rayo, más precisa es la posición. El servicio también se conoce como radar de tormentas o lightning map, pero es el mismo mapa de rayos en tiempo real."
           },
           {
-            "h2": "Adivina los próximos 60 segundos",
+            "h2": "Adivina los próximos 30 segundos",
             "body": "¿Caerán más o menos rayos en el próximo minuto? Haz tu pronóstico y mira qué pasa en tiempo real. Es un juego gratuito, sin dinero real.",
             "isFunnel": true,
-            "ctaText": "Jugar: adivina los próximos 60 segundos",
+            "ctaText": "Jugar: adivina los próximos 30 segundos",
             "ctaPrompt": "¿Más o menos rayos en el próximo minuto?"
           }
         ],
@@ -2603,7 +2603,7 @@
           },
           {
             "q": "¿Se pueden predecir los rayos?",
-            "a": "El momento exacto no se puede predecir, pero la densidad de rayos y el movimiento de la célula indican si la tormenta se acerca. También puedes poner a prueba tu intuición en el juego: adivina si en los próximos 60 segundos caerán más o menos rayos."
+            "a": "El momento exacto no se puede predecir, pero la densidad de rayos y el movimiento de la célula indican si la tormenta se acerca. También puedes poner a prueba tu intuición en el juego: adivina si en los próximos 30 segundos caerán más o menos rayos."
           }
         ]
       },
@@ -2678,10 +2678,10 @@
             "body": "Podaci o munjama dolaze iz mreže Blitzortung – zajednice prijemnih stanica kojima upravljaju volonteri. Stanice mere kada stigne radio-impuls munje, a položaj se određuje triangulacijom iz više stanica. Što više stanica zabeleži istu munju, to je položaj tačniji."
           },
           {
-            "h2": "Pogodi sledećih 60 sekundi",
+            "h2": "Pogodi sledećih 30 sekundi",
             "body": "Da li će u sledećem minutu udariti više ili manje munja? Proceni i gledaj u realnom vremenu šta će se desiti. Besplatna je igra – bez pravog novca.",
             "isFunnel": true,
-            "ctaText": "Igraj: pogodi sledećih 60 sekundi",
+            "ctaText": "Igraj: pogodi sledećih 30 sekundi",
             "ctaPrompt": "Više ili manje munja u sledećem minutu?"
           }
         ],
@@ -2705,7 +2705,7 @@
           },
           {
             "q": "Može li se predvideti gde će udariti munja?",
-            "a": "Tačno mesto i vreme ne mogu se predvideti, ali gustina munja i kretanje ćelije pokazuju da li se nevreme približava. Svoju procenu možeš isprobati i u igri: pogodi da li će u sledećih 60 sekundi udariti više ili manje munja."
+            "a": "Tačno mesto i vreme ne mogu se predvideti, ali gustina munja i kretanje ćelije pokazuju da li se nevreme približava. Svoju procenu možeš isprobati i u igri: pogodi da li će u sledećih 30 sekundi udariti više ili manje munja."
           }
         ]
       },

@@ -27,10 +27,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(site.baseUrl),
   title: {
     template: `%s | ${BRAND}`,
-    default: `${BRAND} — Live Lightning Map & 60-Second Game`,
+    default: `${BRAND} — Live Lightning Map & 30-Second Game`,
   },
   description:
-    'Watch real-time lightning strikes worldwide on a live map, then guess whether more or fewer bolts hit in the next 60 seconds. Free to play, no real money.',
+    'Watch real-time lightning strikes worldwide on a live map, then guess whether more or fewer bolts hit in the next 30 seconds. Free to play, no real money.',
   keywords: [
     'lightning map', 'lightning map live', 'lightning tracker', 'lightning strike map',
     'real-time lightning', 'storm tracker', 'blitzortung', 'weather game online',
