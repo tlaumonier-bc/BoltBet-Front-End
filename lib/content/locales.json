@@ -24,7 +24,7 @@
       },
       {
         "hreflang": "pl-PL",
-        "url": "https://lightningmapgame.com/pl/blitzortung"
+        "url": "https://lightningmapgame.com/pl/mapa-wyladowan"
       },
       {
         "hreflang": "fr-FR",
@@ -76,7 +76,7 @@
       },
       {
         "hreflang": "el-GR",
-        "url": "https://lightningmapgame.com/gr/blitzortung"
+        "url": "https://lightningmapgame.com/gr/xartis-keravnon"
       },
       {
         "hreflang": "it-IT",
@@ -104,7 +104,7 @@
       },
       {
         "hreflang": "ro-RO",
-        "url": "https://lightningmapgame.com/ro/blitzortung"
+        "url": "https://lightningmapgame.com/ro/harta-fulgerelor"
       },
       {
         "hreflang": "x-default",
@@ -209,7 +209,7 @@
           },
           {
             "h2": "Miten ukkostutka toimii?",
-            "body": "Salamadata tulee Blitzortung-yhteisön ylläpitämästä havaintoverkosta. Maanpäälliset vastaanottimet mittaavat salaman lähettämän radiopulssin saapumisajan, ja iskun sijainti lasketaan kolmiomittauksella useammasta asemasta. Mitä useampi asema havaitsee saman iskun, sitä tarkempi paikannus on. Palvelusta käytetään monia nimiä – esimerkiksi salamakartta, lightningmaps ja lighting map – mutta kyse on samasta reaaliaikaisesta ukkostutkasta."
+            "body": "Salamadata tulee vapaaehtoinen salamanhavaintoverkko ylläpitämästä havaintoverkosta. Maanpäälliset vastaanottimet mittaavat salaman lähettämän radiopulssin saapumisajan, ja iskun sijainti lasketaan kolmiomittauksella useammasta asemasta. Mitä useampi asema havaitsee saman iskun, sitä tarkempi paikannus on. Palvelusta käytetään monia nimiä – esimerkiksi salamakartta, lightningmaps ja lighting map – mutta kyse on samasta reaaliaikaisesta ukkostutkasta."
           },
           {
             "h2": "Arvaa seuraavat 30 sekuntia",
@@ -231,7 +231,7 @@
           },
           {
             "q": "Mistä salamadata tulee?",
-            "a": "Data tulee Blitzortung-yhteisön salamanhavaintoverkosta, jossa vapaaehtoisten ylläpitämät vastaanottimet paikantavat salamat kolmiomittauksella."
+            "a": "Data tulee vapaaehtoinen salamanhavaintoverkko salamanhavaintoverkosta, jossa vapaaehtoisten ylläpitämät vastaanottimet paikantavat salamat kolmiomittauksella."
           },
           {
             "q": "Kuinka usein kartta päivittyy?",
@@ -319,7 +319,7 @@
           },
           {
             "h2": "How does the lightning map work?",
-            "body": "The strike data comes from Blitzortung, a network of receiving stations run by volunteers. The stations measure when the radio pulse from each strike arrives, and its position is fixed by triangulation from several stations. The more stations that detect the same strike, the more accurate the position. It's sometimes called a lightning tracker or lightning radar, but it's the same real-time lightning map."
+            "body": "The strike data comes from a volunteer lightning detection network run by receiving stations operated by volunteers. The stations measure when the radio pulse from each strike arrives, and its position is fixed by triangulation from several stations. The more stations that detect the same strike, the more accurate the position. It's sometimes called a lightning tracker or lightning radar, but it's the same real-time lightning map."
           },
           {
             "h2": "Guess the next 30 seconds",
@@ -341,7 +341,7 @@
           },
           {
             "q": "Where does the lightning data come from?",
-            "a": "From the Blitzortung network, where volunteer receiving stations locate strikes by triangulation."
+            "a": "From a volunteer lightning detection network, where volunteer receiving stations locate strikes by triangulation."
           },
           {
             "q": "How often does the map update?",
@@ -362,16 +362,16 @@
       "country": "Poland",
       "language": "Polish",
       "hreflang": "pl-PL",
-      "slug": "/pl/blitzortung",
+      "slug": "/pl/mapa-wyladowan",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "blitzortung",
-      "primaryKeyword": "blitzortung",
+      "primaryKeywordOriginal": "mapa wyładowań",
+      "primaryKeyword": "mapa wyładowań",
       "primaryVolume": 135000,
       "primaryKd": 54,
       "keywords": [
         {
-          "term": "blitzortung",
+          "term": "sieć detekcji wyładowań",
           "role": "primary",
           "volume": 135000,
           "kd": 54,
@@ -411,25 +411,25 @@
       "content": {
         "translated": true,
         "breadcrumb": [
-          "Strona główna",
-          "Blitzortung"
+          "Polska",
+          "Mapa wyładowań"
         ],
-        "h1": "Blitzortung – mapa wyładowań na żywo",
-        "title": "Blitzortung – mapa wyładowań i błyskawic na żywo | lightningmapgame",
-        "metaDescription": "Blitzortung po polsku: zobacz wyładowania atmosferyczne na żywej mapie w czasie rzeczywistym. Śledź błyskawice – i zgadnij, czy w następnej minucie uderzy więcej czy mniej piorunów.",
-        "imageAlt": "Blitzortung – wyładowania i błyskawice na mapie Polski w czasie rzeczywistym",
+        "h1": "Mapa wyładowań – błyskawice na żywo",
+        "title": "Mapa wyładowań i błyskawic na żywo | Lightning Map Game",
+        "metaDescription": "Zobacz wyładowania atmosferyczne na żywej mapie w czasie rzeczywistym. Śledź błyskawice i sprawdź, gdzie właśnie przechodzi burza.",
+        "imageAlt": "Mapa wyładowań i błyskawic w Polsce w czasie rzeczywistym",
         "sections": [
           {
             "h2": "Gdzie teraz uderzają pioruny?",
             "body": "Mapa pokazuje każde wyładowanie w chwili, gdy zostaje wykryte – od razu widać, gdzie błyska i w którą stronę się przemieszcza. Czerwone i żółte obszary to najsilniejsze komórki burzowe. Zezwól na lokalizację i naciśnij «pokaż w pobliżu», aby zobaczyć najbliższe wyładowania i liczbę piorunów z ostatnich 60 minut w Twojej okolicy."
           },
           {
-            "h2": "Blitzortung i mapa wyładowań w czasie rzeczywistym",
+            "h2": "sieć detekcji wyładowań i mapa wyładowań w czasie rzeczywistym",
             "body": "Mapa wyładowań odświeża się automatycznie co sekundę. Im gęściej pioruny uderzają na tym samym obszarze, tym silniejsza jest komórka burzowa. Śledź gęstość błyskawic i ruch komórki, aby zobaczyć, czy burza się nasila, czy słabnie. Usługa bywa nazywana też mapą burzową, lighting maps lub lighting map – to ta sama mapa wyładowań na żywo."
           },
           {
-            "h2": "Jak działa Blitzortung?",
-            "body": "Dane pochodzą z sieci Blitzortung – społeczności stacji odbiorczych prowadzonych przez wolontariuszy. Stacje mierzą, kiedy dociera impuls radiowy z pioruna, a pozycję wyznacza się przez triangulację z wielu stacji. Im więcej stacji wykryje to samo wyładowanie, tym dokładniejsza jest lokalizacja."
+            "h2": "Jak działa sieć detekcji wyładowań?",
+            "body": "Dane pochodzą z sieci detekcji wyładowań – społeczności stacji odbiorczych prowadzonych przez wolontariuszy. Stacje mierzą, kiedy dociera impuls radiowy z pioruna, a pozycję wyznacza się przez triangulację z wielu stacji. Im więcej stacji wykryje to samo wyładowanie, tym dokładniejsza jest lokalizacja."
           },
           {
             "h2": "Zgadnij następne 30 sekund",
@@ -442,8 +442,8 @@
         "faqHeading": "Najczęstsze pytania",
         "faq": [
           {
-            "q": "Co to jest Blitzortung?",
-            "a": "Blitzortung to mapa w czasie rzeczywistym pokazująca wykryte wyładowania atmosferyczne, gdy tylko nastąpią. Od razu widać, gdzie błyska i w którą stronę przemieszcza się burza."
+            "q": "Co to jest sieć detekcji wyładowań?",
+            "a": "sieć detekcji wyładowań to mapa w czasie rzeczywistym pokazująca wykryte wyładowania atmosferyczne, gdy tylko nastąpią. Od razu widać, gdzie błyska i w którą stronę przemieszcza się burza."
           },
           {
             "q": "Jak dokładna jest mapa?",
@@ -451,7 +451,7 @@
           },
           {
             "q": "Skąd pochodzą dane?",
-            "a": "Z sieci Blitzortung, w której stacje odbiorcze prowadzone przez wolontariuszy lokalizują pioruny metodą triangulacji."
+            "a": "Z sieci detekcji wyładowań, w której stacje odbiorcze prowadzone przez wolontariuszy lokalizują pioruny metodą triangulacji."
           },
           {
             "q": "Jak często odświeża się mapa?",
@@ -539,7 +539,7 @@
           },
           {
             "h2": "Skąd pochodzą dane?",
-            "body": "Dane o wyładowaniach pochodzą z sieci Blitzortung – społeczności stacji odbiorczych prowadzonych przez wolontariuszy. Stacje mierzą, kiedy dociera impuls radiowy z pioruna, a pozycję wyznacza się przez triangulację z wielu stacji. Im więcej stacji wykryje to samo wyładowanie, tym dokładniejsza jest lokalizacja. Usługę nazywa się też mapą burzową lub radarem burz – to ten sam radar burzowy na żywo."
+            "body": "Dane o wyładowaniach pochodzą z sieci detekcji wyładowań – społeczności stacji odbiorczych prowadzonych przez wolontariuszy. Stacje mierzą, kiedy dociera impuls radiowy z pioruna, a pozycję wyznacza się przez triangulację z wielu stacji. Im więcej stacji wykryje to samo wyładowanie, tym dokładniejsza jest lokalizacja. Usługę nazywa się też mapą burzową lub radarem burz – to ten sam radar burzowy na żywo."
           },
           {
             "h2": "Zgadnij następne 30 sekund",
@@ -561,7 +561,7 @@
           },
           {
             "q": "Skąd pochodzą dane o wyładowaniach?",
-            "a": "Z sieci Blitzortung, w której stacje odbiorcze prowadzone przez wolontariuszy lokalizują pioruny metodą triangulacji."
+            "a": "Z sieci detekcji wyładowań, w której stacje odbiorcze prowadzone przez wolontariuszy lokalizują pioruny metodą triangulacji."
           },
           {
             "q": "Jak często odświeża się mapa?",
@@ -653,7 +653,7 @@
           },
           {
             "h2": "Comment fonctionne la carte de la foudre ?",
-            "body": "Les données proviennent de Blitzortung, un réseau de stations réceptrices animé par des bénévoles. Les stations mesurent l'instant d'arrivée de l'impulsion radio de l'éclair, et la position est calculée par triangulation à partir de plusieurs stations. Plus de stations détectent le même éclair, plus la position est précise. Le service est aussi appelé radar des orages ou carte des orages, mais il s'agit de la même carte de la foudre en temps réel."
+            "body": "Les données proviennent d'un réseau de détection de la foudre de stations réceptrices animé par des bénévoles. Les stations mesurent l'instant d'arrivée de l'impulsion radio de l'éclair, et la position est calculée par triangulation à partir de plusieurs stations. Plus de stations détectent le même éclair, plus la position est précise. Le service est aussi appelé radar des orages ou carte des orages, mais il s'agit de la même carte de la foudre en temps réel."
           },
           {
             "h2": "Devinez les 60 prochaines secondes",
@@ -675,7 +675,7 @@
           },
           {
             "q": "D'où viennent les données ?",
-            "a": "Du réseau Blitzortung, où des stations réceptrices tenues par des bénévoles localisent les éclairs par triangulation."
+            "a": "D'un réseau de détection de la foudre, où des stations réceptrices tenues par des bénévoles localisent les éclairs par triangulation."
           },
           {
             "q": "À quelle fréquence la carte se met-elle à jour ?",
@@ -755,7 +755,7 @@
           },
           {
             "h2": "Kuidas välgukaart töötab?",
-            "body": "Välguandmed pärinevad Blitzortungi võrgust – vabatahtlike hallatavate vastuvõtujaamade kogukonnast. Jaamad mõõdavad, millal välgu raadioimpulss saabub, ja asukoht määratakse triangulatsiooniga mitmest jaamast. Mida rohkem jaamu sama välku tuvastab, seda täpsem on asukoht."
+            "body": "Välguandmed pärinevad vabatahtlik välgutuvastusvõrk võrgust – vabatahtlike hallatavate vastuvõtujaamade kogukonnast. Jaamad mõõdavad, millal välgu raadioimpulss saabub, ja asukoht määratakse triangulatsiooniga mitmest jaamast. Mida rohkem jaamu sama välku tuvastab, seda täpsem on asukoht."
           },
           {
             "h2": "Arva järgmised 30 sekundit",
@@ -777,7 +777,7 @@
           },
           {
             "q": "Kust andmed pärinevad?",
-            "a": "Blitzortungi võrgust, kus vabatahtlike hallatavad vastuvõtujaamad määravad välkude asukoha triangulatsiooniga."
+            "a": "vabatahtlik välgutuvastusvõrk võrgust, kus vabatahtlike hallatavad vastuvõtujaamad määravad välkude asukoha triangulatsiooniga."
           },
           {
             "q": "Kui sageli kaarti uuendatakse?",
@@ -873,7 +873,7 @@
           },
           {
             "h2": "Hur fungerar blixtradarn?",
-            "body": "Blixtdatan kommer från Blitzortung – ett nätverk av mottagarstationer som drivs av frivilliga. Stationerna mäter när radiopulsen från blixten anländer, och nedslaget positioneras genom triangulering från flera stationer. Ju fler stationer som fångar samma blixt, desto noggrannare blir positionen. Tjänsten kallas även blixtkarta, åskradar eller lightningmaps, och liknar radar blixt SMHI – men det är samma blixtradar i realtid."
+            "body": "Blixtdatan kommer från ett frivilligt blixtdetekteringsnätverk – ett nätverk av mottagarstationer som drivs av frivilliga. Stationerna mäter när radiopulsen från blixten anländer, och nedslaget positioneras genom triangulering från flera stationer. Ju fler stationer som fångar samma blixt, desto noggrannare blir positionen. Tjänsten kallas även blixtkarta, åskradar eller lightningmaps, och liknar radar blixt SMHI – men det är samma blixtradar i realtid."
           },
           {
             "h2": "Gissa de närmaste 30 sekunderna",
@@ -895,7 +895,7 @@
           },
           {
             "q": "Var kommer blixtdatan ifrån?",
-            "a": "Datan kommer från Blitzortung-nätverket, där frivilliga mottagarstationer positionerar blixtar genom triangulering."
+            "a": "Datan kommer från ett frivilligt blixtdetekteringsnätverk, där frivilliga mottagarstationer positionerar blixtar genom triangulering."
           },
           {
             "q": "Hur ofta uppdateras kartan?",
@@ -975,7 +975,7 @@
           },
           {
             "h2": "How does the lightning map work?",
-            "body": "The strike data comes from Blitzortung, a network of receiving stations run by volunteers. The stations measure when the radio pulse from each strike arrives, and its position is fixed by triangulation from several stations. The more stations that detect the same strike, the more accurate the position — often within a few miles. It's sometimes called a lightning tracker, but it's the same real-time lightning map."
+            "body": "The strike data comes from a volunteer lightning detection network run by receiving stations operated by volunteers. The stations measure when the radio pulse from each strike arrives, and its position is fixed by triangulation from several stations. The more stations that detect the same strike, the more accurate the position — often within a few miles. It's sometimes called a lightning tracker, but it's the same real-time lightning map."
           },
           {
             "h2": "Guess the next 30 seconds",
@@ -997,7 +997,7 @@
           },
           {
             "q": "Where does the lightning data come from?",
-            "a": "From the Blitzortung network, where volunteer receiving stations locate strikes by triangulation."
+            "a": "From a volunteer lightning detection network, where volunteer receiving stations locate strikes by triangulation."
           },
           {
             "q": "How often does the map update?",
@@ -1093,7 +1093,7 @@
           },
           {
             "h2": "Hvordan fungerer lynradaren?",
-            "body": "Lyndataene kommer fra Blitzortung – et fellesskap av mottakerstasjoner drevet av frivillige. Stasjonene måler når radiopulsen fra lynet ankommer, og nedslaget posisjoneres ved triangulering fra flere stasjoner. Jo flere stasjoner som fanger opp samme lyn, desto mer nøyaktig blir posisjonen. Tjenesten kalles også lynkart, lynradar eller lightningmaps – men det er den samme sanntids lynradaren du kjenner fra lynvarsel og met-tjenester."
+            "body": "Lyndataene kommer fra et frivillig lyndeteksjonsnettverk – et fellesskap av mottakerstasjoner drevet av frivillige. Stasjonene måler når radiopulsen fra lynet ankommer, og nedslaget posisjoneres ved triangulering fra flere stasjoner. Jo flere stasjoner som fanger opp samme lyn, desto mer nøyaktig blir posisjonen. Tjenesten kalles også lynkart, lynradar eller lightningmaps – men det er den samme sanntids lynradaren du kjenner fra lynvarsel og met-tjenester."
           },
           {
             "h2": "Gjett de neste 30 sekundene",
@@ -1115,7 +1115,7 @@
           },
           {
             "q": "Hvor kommer lyndataene fra?",
-            "a": "Dataene kommer fra Blitzortung-nettverket, der frivillige mottakerstasjoner posisjonerer lyn ved triangulering."
+            "a": "Dataene kommer fra et frivillig lyndeteksjonsnettverk, der frivillige mottakerstasjoner posisjonerer lyn ved triangulering."
           },
           {
             "q": "Hvor ofte oppdateres kartet?",
@@ -1287,7 +1287,7 @@
           "Gewitterwarnung"
         ],
         "h1": "Gewitterwarnung – wo es gerade gewittert, live",
-        "title": "Gewitterwarnung – Gewitter & Unwetter live auf der Karte | lightningmapgame",
+        "title": "Gewitter live: Wo es gerade blitzt & gewittert | Lightning Map Game",
         "metaDescription": "Sieh auf der Live-Karte, wo gerade ein Gewitter oder Unwetter aufzieht – Blitz für Blitz in Echtzeit. Verfolge starke Gewitter und rate, ob in der nächsten Minute mehr oder weniger Blitze einschlagen.",
         "imageAlt": "Gewitterwarnung – aktive Gewitter und Blitzeinschläge auf der Karte von Deutschland in Echtzeit",
         "sections": [
@@ -1419,7 +1419,7 @@
           },
           {
             "h2": "Hoe werkt de onweersradar?",
-            "body": "De bliksemdata komt van Blitzortung – een netwerk van ontvangststations dat door vrijwilligers wordt beheerd. De stations meten wanneer de radiopuls van de bliksem aankomt, en de inslag wordt bepaald via triangulatie vanaf meerdere stations. Hoe meer stations dezelfde blikseminslag oppikken, hoe nauwkeuriger de positie. De dienst heet ook wel bliksemkaart, onweerradar of lightningmaps – en is vooral handig bij noodweer – maar het is dezelfde onweersradar in realtime."
+            "body": "De bliksemdata komt van een vrijwillig bliksemdetectienetwerk – een netwerk van ontvangststations dat door vrijwilligers wordt beheerd. De stations meten wanneer de radiopuls van de bliksem aankomt, en de inslag wordt bepaald via triangulatie vanaf meerdere stations. Hoe meer stations dezelfde blikseminslag oppikken, hoe nauwkeuriger de positie. De dienst heet ook wel bliksemkaart, onweerradar of lightningmaps – en is vooral handig bij noodweer – maar het is dezelfde onweersradar in realtime."
           },
           {
             "h2": "Raad de komende 30 seconden",
@@ -1441,7 +1441,7 @@
           },
           {
             "q": "Waar komt de bliksemdata vandaan?",
-            "a": "De data komt van het Blitzortung-netwerk, waar vrijwillige ontvangststations bliksem via triangulatie lokaliseren."
+            "a": "De data komt van het een vrijwillig bliksemdetectienetwerk-netwerk, waar vrijwillige ontvangststations bliksem via triangulatie lokaliseren."
           },
           {
             "q": "Hoe vaak wordt de kaart bijgewerkt?",
@@ -1503,7 +1503,7 @@
           "isBrand": false
         },
         {
-          "term": "blitzortung",
+          "term": "síť detekce blesků",
           "role": "secondary",
           "volume": 1900,
           "kd": null,
@@ -1537,7 +1537,7 @@
           },
           {
             "h2": "Jak radar bouřek funguje?",
-            "body": "Data o blescích pocházejí ze sítě Blitzortung – komunity přijímacích stanic provozovaných dobrovolníky. Stanice měří, kdy dorazí rádiový impulz blesku, a poloha se určí triangulací z více stanic. Čím víc stanic zachytí stejný blesk, tím přesnější je poloha. Službě se říká také bouřková mapa, radar bouřky nebo radar bouřek – je to stejný radar bouřek v reálném čase."
+            "body": "Data o blescích pocházejí ze sítě síť detekce blesků – komunity přijímacích stanic provozovaných dobrovolníky. Stanice měří, kdy dorazí rádiový impulz blesku, a poloha se určí triangulací z více stanic. Čím víc stanic zachytí stejný blesk, tím přesnější je poloha. Službě se říká také bouřková mapa, radar bouřky nebo radar bouřek – je to stejný radar bouřek v reálném čase."
           },
           {
             "h2": "Hádej příštích 30 sekund",
@@ -1559,7 +1559,7 @@
           },
           {
             "q": "Odkud pocházejí data o blescích?",
-            "a": "Ze sítě Blitzortung, kde přijímací stanice provozované dobrovolníky lokalizují blesky triangulací."
+            "a": "Ze sítě síť detekce blesků, kde přijímací stanice provozované dobrovolníky lokalizují blesky triangulací."
           },
           {
             "q": "Jak často se mapa aktualizuje?",
@@ -1639,7 +1639,7 @@
           },
           {
             "h2": "Kā zibens karte darbojas?",
-            "body": "Dati par zibeņiem nāk no Blitzortung tīkla – uztvērējstaciju kopienas, ko uztur brīvprātīgie. Stacijas mēra, kad pienāk zibens radioimpulss, un atrašanās vietu nosaka, triangulējot no vairākām stacijām. Jo vairāk staciju reģistrē vienu un to pašu zibeni, jo precīzāka ir atrašanās vieta."
+            "body": "Dati par zibeņiem nāk no brīvprātīgs zibens noteikšanas tīkls tīkla – uztvērējstaciju kopienas, ko uztur brīvprātīgie. Stacijas mēra, kad pienāk zibens radioimpulss, un atrašanās vietu nosaka, triangulējot no vairākām stacijām. Jo vairāk staciju reģistrē vienu un to pašu zibeni, jo precīzāka ir atrašanās vieta."
           },
           {
             "h2": "Uzmini nākamās 30 sekundes",
@@ -1661,7 +1661,7 @@
           },
           {
             "q": "No kurienes nāk dati?",
-            "a": "No Blitzortung tīkla, kur brīvprātīgo uzturētas uztvērējstacijas nosaka zibeņu atrašanās vietu ar triangulāciju."
+            "a": "No brīvprātīgs zibens noteikšanas tīkls tīkla, kur brīvprātīgo uzturētas uztvērējstacijas nosaka zibeņu atrašanās vietu ar triangulāciju."
           },
           {
             "q": "Cik bieži karte atjaunojas?",
@@ -1715,7 +1715,7 @@
           "isBrand": false
         },
         {
-          "term": "blitzortung",
+          "term": "mreža za detekciju munja",
           "role": "secondary",
           "volume": 2900,
           "kd": 47,
@@ -1749,7 +1749,7 @@
           },
           {
             "h2": "Kako karta munja radi?",
-            "body": "Podaci o munjama dolaze iz mreže Blitzortung – zajednice prijemnih stanica kojima upravljaju volonteri. Stanice mjere kad stigne radijski impuls munje, a položaj se određuje triangulacijom iz više stanica. Što više stanica zabilježi istu munju, to je položaj točniji."
+            "body": "Podaci o munjama dolaze iz mreže mreža za detekciju munja – zajednice prijemnih stanica kojima upravljaju volonteri. Stanice mjere kad stigne radijski impuls munje, a položaj se određuje triangulacijom iz više stanica. Što više stanica zabilježi istu munju, to je položaj točniji."
           },
           {
             "h2": "Pogodi sljedećih 30 sekundi",
@@ -1771,7 +1771,7 @@
           },
           {
             "q": "Odakle dolaze podaci?",
-            "a": "Iz mreže Blitzortung, gdje prijemne stanice kojima upravljaju volonteri određuju položaj munja triangulacijom."
+            "a": "Iz mreže mreža za detekciju munja, gdje prijemne stanice kojima upravljaju volonteri određuju položaj munja triangulacijom."
           },
           {
             "q": "Koliko se često karta osvježava?",
@@ -1843,7 +1843,7 @@
           },
           {
             "h2": "How does the lightning map work?",
-            "body": "The strike data comes from Blitzortung, a network of receiving stations run by volunteers. The stations measure when the radio pulse from each strike arrives, and its position is fixed by triangulation from several stations. The more stations that detect the same strike, the more accurate the position — often within a few kilometres. It's the same data behind most live lightning maps."
+            "body": "The strike data comes from a volunteer lightning detection network run by receiving stations operated by volunteers. The stations measure when the radio pulse from each strike arrives, and its position is fixed by triangulation from several stations. The more stations that detect the same strike, the more accurate the position — often within a few kilometres. It's the same data behind most live lightning maps."
           },
           {
             "h2": "Guess the next 30 seconds",
@@ -1865,7 +1865,7 @@
           },
           {
             "q": "Where does the lightning data come from?",
-            "a": "From the Blitzortung network, where volunteer receiving stations locate strikes by triangulation."
+            "a": "From a volunteer lightning detection network, where volunteer receiving stations locate strikes by triangulation."
           },
           {
             "q": "How often does the map update?",
@@ -1980,10 +1980,10 @@
       "country": "Greece",
       "language": "Greek",
       "hreflang": "el-GR",
-      "slug": "/gr/blitzortung",
+      "slug": "/gr/xartis-keravnon",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "blitzortung",
+      "primaryKeywordOriginal": "χάρτης κεραυνών",
       "primaryKeyword": "κεραυνοι live",
       "primaryVolume": 6600,
       "primaryKd": 22,
@@ -2039,7 +2039,7 @@
           },
           {
             "h2": "Πώς λειτουργεί ο χάρτης κεραυνών;",
-            "body": "Τα δεδομένα προέρχονται από το δίκτυο Blitzortung, μια κοινότητα σταθμών λήψης που λειτουργούν εθελοντές. Οι σταθμοί μετρούν πότε φτάνει ο ραδιοπαλμός του κεραυνού, και η θέση υπολογίζεται με τριγωνισμό από πολλούς σταθμούς. Όσο περισσότεροι σταθμοί εντοπίζουν τον ίδιο κεραυνό, τόσο πιο ακριβής είναι η θέση. Η υπηρεσία λέγεται και χάρτης κεραυνών, αλλά είναι ο ίδιος live χάρτης σε πραγματικό χρόνο."
+            "body": "Τα δεδομένα προέρχονται από το δίκτυο εντοπισμού κεραυνών, μια κοινότητα σταθμών λήψης που λειτουργούν εθελοντές. Οι σταθμοί μετρούν πότε φτάνει ο ραδιοπαλμός του κεραυνού, και η θέση υπολογίζεται με τριγωνισμό από πολλούς σταθμούς. Όσο περισσότεροι σταθμοί εντοπίζουν τον ίδιο κεραυνό, τόσο πιο ακριβής είναι η θέση. Η υπηρεσία λέγεται και χάρτης κεραυνών, αλλά είναι ο ίδιος live χάρτης σε πραγματικό χρόνο."
           },
           {
             "h2": "Μάντεψε τα επόμενα 60 δευτερόλεπτα",
@@ -2061,7 +2061,7 @@
           },
           {
             "q": "Από πού προέρχονται τα δεδομένα;",
-            "a": "Από το δίκτυο Blitzortung, όπου εθελοντικοί σταθμοί λήψης εντοπίζουν τους κεραυνούς με τριγωνισμό."
+            "a": "Από το δίκτυο εντοπισμού κεραυνών, όπου εθελοντικοί σταθμοί λήψης εντοπίζουν τους κεραυνούς με τριγωνισμό."
           },
           {
             "q": "Πόσο συχνά ενημερώνεται ο χάρτης;",
@@ -2085,7 +2085,7 @@
       "slug": "/it/mappa-fulmini",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "blitzortung",
+      "primaryKeywordOriginal": "una rete di rilevamento dei fulmini",
       "primaryKeyword": "fulmine",
       "primaryVolume": 12100,
       "primaryKd": 26,
@@ -2149,7 +2149,7 @@
           },
           {
             "h2": "Come funziona la mappa dei fulmini?",
-            "body": "I dati sui fulmini provengono da Blitzortung, una rete di stazioni riceventi gestita da volontari. Le stazioni misurano quando arriva l'impulso radio del fulmine e la posizione viene calcolata per triangolazione da più stazioni. Più stazioni rilevano lo stesso fulmine, più precisa è la posizione. Il servizio è chiamato anche radar dei temporali o meteo radar, ma è la stessa mappa dei fulmini in tempo reale."
+            "body": "I dati sui fulmini provengono da una rete di rilevamento dei fulmini, una rete di stazioni riceventi gestita da volontari. Le stazioni misurano quando arriva l'impulso radio del fulmine e la posizione viene calcolata per triangolazione da più stazioni. Più stazioni rilevano lo stesso fulmine, più precisa è la posizione. Il servizio è chiamato anche radar dei temporali o meteo radar, ma è la stessa mappa dei fulmini in tempo reale."
           },
           {
             "h2": "Indovina i prossimi 30 secondi",
@@ -2171,7 +2171,7 @@
           },
           {
             "q": "Da dove provengono i dati?",
-            "a": "Dalla rete Blitzortung, in cui stazioni riceventi gestite da volontari localizzano i fulmini per triangolazione."
+            "a": "Dalla rete una rete di rilevamento dei fulmini, in cui stazioni riceventi gestite da volontari localizzano i fulmini per triangolazione."
           },
           {
             "q": "Ogni quanto si aggiorna la mappa?",
@@ -2251,7 +2251,7 @@
           },
           {
             "h2": "Hvordan fungerer lynradaren?",
-            "body": "Lyndataene kommer fra Blitzortung – et netværk af modtagerstationer drevet af frivillige. Stationerne måler, hvornår radiopulsen fra lynet ankommer, og nedslaget bestemmes ved triangulering fra flere stationer. Jo flere stationer der fanger samme lyn, jo mere præcis bliver positionen. Tjenesten kaldes også lynkort, lightning map eller lighting map – men det er den samme lynradar i realtid."
+            "body": "Lyndataene kommer fra et frivilligt lyndetektionsnetværk – et netværk af modtagerstationer drevet af frivillige. Stationerne måler, hvornår radiopulsen fra lynet ankommer, og nedslaget bestemmes ved triangulering fra flere stationer. Jo flere stationer der fanger samme lyn, jo mere præcis bliver positionen. Tjenesten kaldes også lynkort, lightning map eller lighting map – men det er den samme lynradar i realtid."
           },
           {
             "h2": "Gæt de næste 30 sekunder",
@@ -2273,7 +2273,7 @@
           },
           {
             "q": "Hvor kommer lyndataene fra?",
-            "a": "Fra Blitzortung-netværket, hvor frivillige modtagerstationer lokaliserer lyn ved triangulering."
+            "a": "Fra et frivilligt lyndetektionsnetværk, hvor frivillige modtagerstationer lokaliserer lyn ved triangulering."
           },
           {
             "q": "Hvor ofte opdateres kortet?",
@@ -2353,7 +2353,7 @@
           },
           {
             "h2": "Kaip veikia žaibų žemėlapis?",
-            "body": "Duomenys apie žaibus gaunami iš Blitzortung tinklo – savanorių prižiūrimų imtuvų bendruomenės. Stotys matuoja, kada ateina žaibo radijo impulsas, o vieta nustatoma trianguliuojant iš kelių stočių. Kuo daugiau stočių aptinka tą patį žaibą, tuo tikslesnė vieta."
+            "body": "Duomenys apie žaibus gaunami iš žaibų aptikimo tinklas tinklo – savanorių prižiūrimų imtuvų bendruomenės. Stotys matuoja, kada ateina žaibo radijo impulsas, o vieta nustatoma trianguliuojant iš kelių stočių. Kuo daugiau stočių aptinka tą patį žaibą, tuo tikslesnė vieta."
           },
           {
             "h2": "Atspėk kitas 30 sekundžių",
@@ -2375,7 +2375,7 @@
           },
           {
             "q": "Iš kur gaunami duomenys?",
-            "a": "Iš Blitzortung tinklo, kuriame savanorių prižiūrimos imtuvų stotys nustato žaibų vietą trianguliacija."
+            "a": "Iš žaibų aptikimo tinklas tinklo, kuriame savanorių prižiūrimos imtuvų stotys nustato žaibų vietą trianguliacija."
           },
           {
             "q": "Kaip dažnai atnaujinamas žemėlapis?",
@@ -2463,7 +2463,7 @@
           },
           {
             "h2": "Ako mapa bleskov funguje?",
-            "body": "Dáta o bleskoch pochádzajú zo siete Blitzortung – komunity prijímacích staníc prevádzkovaných dobrovoľníkmi. Stanice merajú, kedy dorazí rádiový impulz blesku, a poloha sa určí trianguláciou z viacerých staníc. Čím viac staníc zachytí ten istý blesk, tým presnejšia je poloha."
+            "body": "Dáta o bleskoch pochádzajú zo siete sieť detekcie bleskov – komunity prijímacích staníc prevádzkovaných dobrovoľníkmi. Stanice merajú, kedy dorazí rádiový impulz blesku, a poloha sa určí trianguláciou z viacerých staníc. Čím viac staníc zachytí ten istý blesk, tým presnejšia je poloha."
           },
           {
             "h2": "Hádaj ďalších 30 sekúnd",
@@ -2485,7 +2485,7 @@
           },
           {
             "q": "Odkiaľ pochádzajú dáta o bleskoch?",
-            "a": "Zo siete Blitzortung, kde prijímacie stanice prevádzkované dobrovoľníkmi lokalizujú blesky trianguláciou."
+            "a": "Zo siete sieť detekcie bleskov, kde prijímacie stanice prevádzkované dobrovoľníkmi lokalizujú blesky trianguláciou."
           },
           {
             "q": "Ako často sa mapa aktualizuje?",
@@ -2573,7 +2573,7 @@
           },
           {
             "h2": "¿Cómo funciona el mapa de rayos?",
-            "body": "Los datos proceden de Blitzortung, una red de estaciones receptoras gestionada por voluntarios. Las estaciones miden cuándo llega el impulso de radio del rayo, y la posición se calcula por triangulación desde varias estaciones. Cuantas más estaciones detectan el mismo rayo, más precisa es la posición. El servicio también se conoce como radar de tormentas o lightning map, pero es el mismo mapa de rayos en tiempo real."
+            "body": "Los datos proceden de una red de detección de rayos, una red de estaciones receptoras gestionada por voluntarios. Las estaciones miden cuándo llega el impulso de radio del rayo, y la posición se calcula por triangulación desde varias estaciones. Cuantas más estaciones detectan el mismo rayo, más precisa es la posición. El servicio también se conoce como radar de tormentas o lightning map, pero es el mismo mapa de rayos en tiempo real."
           },
           {
             "h2": "Adivina los próximos 30 segundos",
@@ -2595,7 +2595,7 @@
           },
           {
             "q": "¿De dónde proceden los datos?",
-            "a": "De la red Blitzortung, donde estaciones receptoras gestionadas por voluntarios localizan los rayos por triangulación."
+            "a": "De la red una red de detección de rayos, donde estaciones receptoras gestionadas por voluntarios localizan los rayos por triangulación."
           },
           {
             "q": "¿Cada cuánto se actualiza el mapa?",
@@ -2641,7 +2641,7 @@
           "isBrand": true
         },
         {
-          "term": "blitzortung",
+          "term": "mreža za detekciju munja",
           "role": "secondary",
           "volume": 1600,
           "kd": null,
@@ -2675,7 +2675,7 @@
           },
           {
             "h2": "Kako karta munja radi?",
-            "body": "Podaci o munjama dolaze iz mreže Blitzortung – zajednice prijemnih stanica kojima upravljaju volonteri. Stanice mere kada stigne radio-impuls munje, a položaj se određuje triangulacijom iz više stanica. Što više stanica zabeleži istu munju, to je položaj tačniji."
+            "body": "Podaci o munjama dolaze iz mreže mreža za detekciju munja – zajednice prijemnih stanica kojima upravljaju volonteri. Stanice mere kada stigne radio-impuls munje, a položaj se određuje triangulacijom iz više stanica. Što više stanica zabeleži istu munju, to je položaj tačniji."
           },
           {
             "h2": "Pogodi sledećih 30 sekundi",
@@ -2697,7 +2697,7 @@
           },
           {
             "q": "Odakle dolaze podaci?",
-            "a": "Iz mreže Blitzortung, gde prijemne stanice kojima upravljaju volonteri određuju položaj munja triangulacijom."
+            "a": "Iz mreže mreža za detekciju munja, gde prijemne stanice kojima upravljaju volonteri određuju položaj munja triangulacijom."
           },
           {
             "q": "Koliko često se mapa osvežava?",
@@ -2718,16 +2718,16 @@
       "country": "Romania",
       "language": "Romanian",
       "hreflang": "ro-RO",
-      "slug": "/ro/blitzortung",
+      "slug": "/ro/harta-fulgerelor",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "blitzortung",
-      "primaryKeyword": "blitzortung",
+      "primaryKeywordOriginal": "harta fulgerelor",
+      "primaryKeyword": "harta fulgerelor",
       "primaryVolume": 2900,
       "primaryKd": 40,
       "keywords": [
         {
-          "term": "blitzortung",
+          "term": "rețeaua de detecție a fulgerelor",
           "role": "primary",
           "volume": 2900,
           "kd": 40,
@@ -2759,13 +2759,13 @@
       "content": {
         "translated": true,
         "breadcrumb": [
-          "Acasă",
-          "Blitzortung"
+          "România",
+          "Harta fulgerelor"
         ],
-        "h1": "Blitzortung – harta fulgerelor în timp real",
-        "title": "Blitzortung – harta fulgerelor în timp real | lightningmapgame",
-        "metaDescription": "Blitzortung în română: vezi fulgerele pe hartă în timp real. Urmărește furtuna – și ghicește dacă în următorul minut vor cădea mai multe sau mai puține fulgere.",
-        "imageAlt": "Blitzortung – fulgere pe harta României în timp real",
+        "h1": "Harta fulgerelor în timp real",
+        "title": "Harta fulgerelor în timp real | Lightning Map Game",
+        "metaDescription": "Vezi fulgerele pe hartă în timp real. Urmărește furtuna și verifică unde cad fulgerele acum în România.",
+        "imageAlt": "Harta fulgerelor din România în timp real",
         "sections": [
           {
             "h2": "Unde cad fulgere acum?",
@@ -2776,8 +2776,8 @@
             "body": "Cu cât fulgerele cad mai des în aceeași zonă, cu atât celula de furtună e mai puternică. Când numărul de fulgere crește repede și celula se apropie, vine o furtună puternică. Urmărește densitatea fulgerelor și direcția de deplasare. Serviciul se numește și lightingmap sau lighting map – e aceeași hartă a fulgerelor în timp real."
           },
           {
-            "h2": "Cum funcționează Blitzortung?",
-            "body": "Datele despre fulgere provin din rețeaua Blitzortung – o comunitate de stații de recepție administrate de voluntari. Stațiile măsoară când sosește impulsul radio al fulgerului, iar poziția se calculează prin triangulație din mai multe stații. Cu cât mai multe stații detectează același fulger, cu atât poziția e mai precisă."
+            "h2": "Cum funcționează rețeaua de detecție a fulgerelor?",
+            "body": "Datele despre fulgere provin din rețeaua de detecție a fulgerelor – o comunitate de stații de recepție administrate de voluntari. Stațiile măsoară când sosește impulsul radio al fulgerului, iar poziția se calculează prin triangulație din mai multe stații. Cu cât mai multe stații detectează același fulger, cu atât poziția e mai precisă."
           },
           {
             "h2": "Ghicește următoarele 60 de secunde",
@@ -2790,8 +2790,8 @@
         "faqHeading": "Întrebări frecvente",
         "faq": [
           {
-            "q": "Ce este Blitzortung?",
-            "a": "Blitzortung este o hartă în timp real care arată fulgerele detectate pe măsură ce cad. Vezi imediat unde e furtună și în ce direcție se mișcă."
+            "q": "Ce este rețeaua de detecție a fulgerelor?",
+            "a": "rețeaua de detecție a fulgerelor este o hartă în timp real care arată fulgerele detectate pe măsură ce cad. Vezi imediat unde e furtună și în ce direcție se mișcă."
           },
           {
             "q": "Cât de precisă este?",
@@ -2799,7 +2799,7 @@
           },
           {
             "q": "De unde provin datele?",
-            "a": "Din rețeaua Blitzortung, unde stații de recepție administrate de voluntari localizează fulgerele prin triangulație."
+            "a": "Din rețeaua de detecție a fulgerelor, unde stații de recepție administrate de voluntari localizează fulgerele prin triangulație."
           },
           {
             "q": "Cât de des se actualizează harta?",

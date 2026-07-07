@@ -24,6 +24,7 @@ import { GlobeZoomButtons, TileLoadingPill } from './GlobeOverlays';
 import { attachAtmosphereGlow } from '@/lib/globe/atmosphereGlow';
 import { attachLayers } from '@/lib/globe/layerManager';
 import { attachCountryStrikes } from '@/lib/globe/countryStrikesLayer';
+import { attachNearbyStrikes } from '@/lib/globe/nearbyStrikesLayer';
 
 const FRANCE_INTRO_LON = 2.2;
 const FRANCE_INTRO_LAT = 46.2;
@@ -284,6 +285,7 @@ export default function LightningGlobe({
     if (viewOnly) {
       disposers.push(attachOrbitFlights({ camera, interaction }));
       disposers.push(attachCountryStrikes(scene));
+      disposers.push(attachNearbyStrikes(scene));
     }
 
     return () => {
