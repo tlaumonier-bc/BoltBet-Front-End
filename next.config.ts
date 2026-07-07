@@ -18,6 +18,26 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/dk/lyn-radar",
+        destination: "/dk/tordenvejr-kort",
+        permanent: true,
+      },
+      {
+        source: "/ee/lightning-map",
+        destination: "/ee/aike-kaart",
+        permanent: true,
+      },
+      {
+        source: "/lv/lightning-map",
+        destination: "/lv/zibens-karte",
+        permanent: true,
+      },
+      {
+        source: "/pl/gdzie-jest-burza",
+        destination: "/pl/radar-burz",
+        permanent: true,
+      },
+      {
         source: "/:path*",
         has: [{ type: "host", value: "www.lightningmapgame.com" }],
         destination: "https://lightningmapgame.com/:path*",

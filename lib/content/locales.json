@@ -32,7 +32,7 @@
       },
       {
         "hreflang": "et-EE",
-        "url": "https://lightningmapgame.com/ee/lightning-map"
+        "url": "https://lightningmapgame.com/ee/aike-kaart"
       },
       {
         "hreflang": "sv-SE",
@@ -60,7 +60,7 @@
       },
       {
         "hreflang": "lv-LV",
-        "url": "https://lightningmapgame.com/lv/lightning-map"
+        "url": "https://lightningmapgame.com/lv/zibens-karte"
       },
       {
         "hreflang": "hr-HR",
@@ -84,7 +84,7 @@
       },
       {
         "hreflang": "da-DK",
-        "url": "https://lightningmapgame.com/dk/lyn-radar"
+        "url": "https://lightningmapgame.com/dk/tordenvejr-kort"
       },
       {
         "hreflang": "lt-LT",
@@ -114,7 +114,7 @@
     "seo_storm": [
       {
         "hreflang": "pl-PL",
-        "url": "https://lightningmapgame.com/pl/gdzie-jest-burza"
+        "url": "https://lightningmapgame.com/pl/radar-burz"
       },
       {
         "hreflang": "de-DE",
@@ -472,11 +472,11 @@
       "country": "Poland",
       "language": "Polish",
       "hreflang": "pl-PL",
-      "slug": "/pl/gdzie-jest-burza",
+      "slug": "/pl/radar-burz",
       "pageType": "seo_storm",
       "intentTier": "storm",
-      "primaryKeywordOriginal": "gdzie jest burza",
-      "primaryKeyword": "gdzie jest burza",
+      "primaryKeywordOriginal": "radar burz",
+      "primaryKeyword": "radar burz",
       "primaryVolume": 550000,
       "primaryKd": 48,
       "keywords": [
@@ -514,27 +514,27 @@
         }
       ],
       "leadSecondary": {
-        "term": "radar burz",
+        "term": "mapa piorunów",
         "kd": 44,
         "volume": 1220000
       },
       "content": {
         "translated": true,
         "breadcrumb": [
-          "Strona główna",
-          "Gdzie jest burza"
+          "Polska",
+          "Radar burz"
         ],
-        "h1": "Gdzie jest burza? Radar burz na żywo",
-        "title": "Gdzie jest burza – radar burz na żywo | lightningmapgame",
-        "metaDescription": "Sprawdź na żywej mapie, gdzie jest burza w tej chwili. Radar burz pokazuje wyładowania w czasie rzeczywistym – a Ty zgadnij, czy w następnej minucie uderzy więcej czy mniej piorunów.",
-        "imageAlt": "Gdzie jest burza – wyładowania i radar burz na mapie Polski w czasie rzeczywistym",
+        "h1": "Radar burz na żywo – gdzie teraz uderzają pioruny",
+        "title": "Radar burz na żywo – mapa piorunów w Polsce",
+        "metaDescription": "Radar burz na żywo: sprawdź, gdzie teraz uderzają pioruny w Polsce. Zobacz wyładowania i ruch burzy na mapie w czasie rzeczywistym.",
+        "imageAlt": "Radar burz i mapa piorunów w Polsce w czasie rzeczywistym",
         "sections": [
           {
-            "h2": "Gdzie jest burza w tej chwili?",
+            "h2": "Gdzie teraz uderzają pioruny?",
             "body": "Mapa pokazuje każde wyładowanie w momencie, gdy zostaje wykryte – dzięki temu od razu widzisz, gdzie jest burza i w którą stronę się przemieszcza. Czerwone i żółte obszary to najsilniejsze komórki burzowe. Zezwól na lokalizację i naciśnij «pokaż w pobliżu», aby zobaczyć najbliższe wyładowania i liczbę piorunów z ostatnich 60 minut w Twojej okolicy."
           },
           {
-            "h2": "Radar burz w czasie rzeczywistym",
+            "h2": "Radar burz i mapa piorunów na żywo",
             "body": "Im gęściej pioruny uderzają na tym samym obszarze, tym silniejsza jest komórka burzowa. Gdy liczba wyładowań szybko rośnie, a komórka zbliża się do Ciebie, nadciąga silna burza. Śledź gęstość wyładowań i kierunek przemieszczania się burzy, aby sprawdzić, czy burze dziś się nasilają, czy słabną."
           },
           {
@@ -552,8 +552,8 @@
         "faqHeading": "Najczęstsze pytania",
         "faq": [
           {
-            "q": "Gdzie jest teraz burza?",
-            "a": "Mapa pokazuje wyładowania w czasie rzeczywistym, więc od razu widać, gdzie jest burza i w którą stronę się przemieszcza."
+            "q": "Co pokazuje radar burz?",
+            "a": "Radar burz pokazuje wykryte wyładowania i miejsca, w których teraz uderzają pioruny. Dzięki temu szybko widzisz, gdzie jest burza i w którą stronę się przesuwa."
           },
           {
             "q": "Jak dokładny jest radar burz?",
@@ -696,41 +696,41 @@
       "country": "Estonia",
       "language": "Estonian",
       "hreflang": "et-EE",
-      "slug": "/ee/lightning-map",
+      "slug": "/ee/aike-kaart",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "lighting map",
-      "primaryKeyword": "lighting map",
+      "primaryKeywordOriginal": "äike",
+      "primaryKeyword": "äike",
       "primaryVolume": 60500,
       "primaryKd": 48,
       "keywords": [
         {
-          "term": "lighting map",
-          "role": "primary",
-          "volume": 60500,
+          "term": "äike",
+          "kd": 13,
+          "volume": 1900,
+          "tier": "map"
+        },
+        {
+          "term": "torm",
           "kd": 48,
-          "tier": "lightning",
-          "isBrand": true
+          "volume": 60500,
+          "tier": "storm"
         },
         {
-          "term": "lightning map",
-          "role": "secondary",
-          "volume": 40500,
-          "kd": 44,
-          "tier": "lightning",
-          "isBrand": true
-        },
-        {
-          "term": "lightningmaps",
-          "role": "secondary",
-          "volume": 14800,
+          "term": "äikeseradar",
           "kd": 40,
-          "tier": "lightning",
-          "isBrand": true
+          "volume": 14800,
+          "tier": "map"
+        },
+        {
+          "term": "välgukaart",
+          "kd": 13,
+          "volume": 110,
+          "tier": "map"
         }
       ],
       "leadSecondary": {
-        "term": "lightningmaps",
+        "term": "äikeseradar",
         "kd": 40,
         "volume": 14800
       },
@@ -738,24 +738,24 @@
         "translated": true,
         "breadcrumb": [
           "Avaleht",
-          "Välgukaart"
+          "Äike"
         ],
-        "h1": "Välgukaart – välgud kaardil reaalajas",
-        "title": "Välgukaart – välgud kaardil reaalajas | lightningmapgame",
-        "metaDescription": "Jälgi äikest reaalajas välgukaardil. Vaata välke kaardil kohe – ja arva, kas järgmise minuti jooksul lööb rohkem või vähem välke.",
-        "imageAlt": "Välgukaart – välgud Eesti kaardil reaalajas",
+        "h1": "Äike reaalajas – kus praegu lööb välku?",
+        "title": "Äike ja välgukaart reaalajas – kus praegu müristab",
+        "metaDescription": "Äike reaalajas: vaata, kus praegu müristab ja lööb välku. Jälgi äikeseradarit ning näe välke kaardil Eestis ja maailmas.",
+        "imageAlt": "Äike ja välgukaart Eesti kaardil reaalajas",
         "sections": [
           {
-            "h2": "Kus praegu lööb välku?",
+            "h2": "Kus praegu on äike?",
             "body": "Kaart näitab iga välku hetkel, mil see tuvastatakse – näed kohe, kus on äike ja mis suunas see liigub. Punased ja kollased alad tähistavad tugevaimaid äikeserakke. Luba asukoht ja vajuta «näita minu lähedal», et näha lähimaid välke ja mitu neist on löönud viimase 60 minuti jooksul sinu ümbruses."
           },
           {
-            "h2": "Välgukaart reaalajas",
-            "body": "Mida tihedamalt välgud samasse piirkonda löövad, seda tugevam on äikeserakk. Kui välkude arv kasvab kiiresti ja rakk läheneb, on tulemas tugev äike. Jälgi välkude tihedust ja raku liikumist. Teenust nimetatakse ka lighting map, lightning map või lightningmaps – see on sama välgukaart reaalajas."
+            "h2": "Äikeseradar ja välgukaart reaalajas",
+            "body": "Äikeseradar ja välgukaart uuenevad automaatselt. Mida tihedamalt välgud samasse piirkonda löövad, seda tugevam on äikeserakk. Jälgi välkude tihedust ja raku liikumist, et näha, kas torm tugevneb või vaibub."
           },
           {
-            "h2": "Kuidas välgukaart töötab?",
-            "body": "Välguandmed pärinevad vabatahtlik välgutuvastusvõrk võrgust – vabatahtlike hallatavate vastuvõtujaamade kogukonnast. Jaamad mõõdavad, millal välgu raadioimpulss saabub, ja asukoht määratakse triangulatsiooniga mitmest jaamast. Mida rohkem jaamu sama välku tuvastab, seda täpsem on asukoht."
+            "h2": "Kuidas äikeseradar töötab?",
+            "body": "Välguandmed pärinevad vabatahtlikust välgutuvastusvõrgust. Vastuvõtujaamad mõõdavad, millal välgu raadioimpulss saabub, ja asukoht määratakse triangulatsiooniga mitmest jaamast. Mida rohkem jaamu sama välku tuvastab, seda täpsem on asukoht."
           },
           {
             "h2": "Arva järgmised 30 sekundit",
@@ -768,8 +768,8 @@
         "faqHeading": "Korduma kippuvad küsimused",
         "faq": [
           {
-            "q": "Mis on välgukaart?",
-            "a": "Välgukaart on reaalajas kaart, mis näitab tuvastatud välke nende löömise hetkel. Näed kohe, kus on äike ja mis suunas see liigub."
+            "q": "Mis on äikeseradar?",
+            "a": "Äikeseradar on reaalajas kaart, mis näitab tuvastatud välke nende löömise hetkel. Näed kohe, kus on äike ja mis suunas torm liigub."
           },
           {
             "q": "Kui täpne see on?",
@@ -777,7 +777,7 @@
           },
           {
             "q": "Kust andmed pärinevad?",
-            "a": "vabatahtlik välgutuvastusvõrk võrgust, kus vabatahtlike hallatavad vastuvõtujaamad määravad välkude asukoha triangulatsiooniga."
+            "a": "Andmed tulevad vabatahtlikust välgutuvastusvõrgust, kus vastuvõtujaamad määravad välkude asukoha triangulatsiooniga."
           },
           {
             "q": "Kui sageli kaarti uuendatakse?",
@@ -1287,7 +1287,7 @@
           "Gewitterwarnung"
         ],
         "h1": "Gewitterwarnung – wo es gerade gewittert, live",
-        "title": "Gewitter live: Wo es gerade blitzt & gewittert | Lightning Map Game",
+        "title": "Gewitter live: Wo es gerade blitzt & gewittert",
         "metaDescription": "Sieh auf der Live-Karte, wo gerade ein Gewitter oder Unwetter aufzieht – Blitz für Blitz in Echtzeit. Verfolge starke Gewitter und rate, ob in der nächsten Minute mehr oder weniger Blitze einschlagen.",
         "imageAlt": "Gewitterwarnung – aktive Gewitter und Blitzeinschläge auf der Karte von Deutschland in Echtzeit",
         "sections": [
@@ -1580,11 +1580,11 @@
       "country": "Latvia",
       "language": "Latvian",
       "hreflang": "lv-LV",
-      "slug": "/lv/lightning-map",
+      "slug": "/lv/zibens-karte",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "lightning map",
-      "primaryKeyword": "lightning map",
+      "primaryKeywordOriginal": "zibens karte",
+      "primaryKeyword": "zibens karte",
       "primaryVolume": 18100,
       "primaryKd": 43,
       "keywords": [
@@ -1624,9 +1624,9 @@
           "Sākums",
           "Zibens karte"
         ],
-        "h1": "Zibens karte – zibeņi kartē reāllaikā",
-        "title": "Zibens karte – lightning map reāllaikā | lightningmapgame",
-        "metaDescription": "Seko pērkona negaisam ar zibens karti reāllaikā. Skaties zibeņus kartē tagad – un uzmini, vai nākamajā minūtē iezibsnīsies vairāk vai mazāk zibeņu.",
+        "h1": "Zibens karte reāllaikā",
+        "title": "Zibens karte reāllaikā – kur tagad zibeņo",
+        "metaDescription": "Zibens karte reāllaikā: skaties, kur tagad zibeņo Latvijā un pasaulē. Seko negaisam un redzi jaunākos zibens spērienus kartē.",
         "imageAlt": "Zibens karte – zibeņi Latvijas kartē reāllaikā",
         "sections": [
           {
@@ -1639,7 +1639,7 @@
           },
           {
             "h2": "Kā zibens karte darbojas?",
-            "body": "Dati par zibeņiem nāk no brīvprātīgs zibens noteikšanas tīkls tīkla – uztvērējstaciju kopienas, ko uztur brīvprātīgie. Stacijas mēra, kad pienāk zibens radioimpulss, un atrašanās vietu nosaka, triangulējot no vairākām stacijām. Jo vairāk staciju reģistrē vienu un to pašu zibeni, jo precīzāka ir atrašanās vieta."
+            "body": "Dati par zibeņiem nāk no brīvprātīga zibens noteikšanas tīkla. Uztvērējstacijas mēra, kad pienāk zibens radioimpulss, un atrašanās vietu nosaka, triangulējot no vairākām stacijām. Jo vairāk staciju reģistrē vienu un to pašu zibeni, jo precīzāka ir atrašanās vieta."
           },
           {
             "h2": "Uzmini nākamās 30 sekundes",
@@ -1661,7 +1661,7 @@
           },
           {
             "q": "No kurienes nāk dati?",
-            "a": "No brīvprātīgs zibens noteikšanas tīkls tīkla, kur brīvprātīgo uzturētas uztvērējstacijas nosaka zibeņu atrašanās vietu ar triangulāciju."
+            "a": "No brīvprātīga zibens noteikšanas tīkla, kur uztvērējstacijas nosaka zibeņu atrašanās vietu ar triangulāciju."
           },
           {
             "q": "Cik bieži karte atjaunojas?",
@@ -2192,62 +2192,62 @@
       "country": "Denmark",
       "language": "Danish",
       "hreflang": "da-DK",
-      "slug": "/dk/lyn-radar",
+      "slug": "/dk/tordenvejr-kort",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "lightning map",
-      "primaryKeyword": "lightning map",
+      "primaryKeywordOriginal": "tordenvejr",
+      "primaryKeyword": "tordenvejr",
       "primaryVolume": 6600,
       "primaryKd": 44,
       "keywords": [
         {
-          "term": "lightning map",
-          "role": "primary",
-          "volume": 6600,
-          "kd": 44,
-          "tier": "lightning",
-          "isBrand": true
+          "term": "tordenvejr",
+          "kd": 20,
+          "volume": null,
+          "tier": "storm"
         },
         {
-          "term": "lighting map",
-          "role": "secondary",
-          "volume": 6600,
+          "term": "lynradar",
           "kd": 49,
-          "tier": "lightning",
-          "isBrand": true
+          "volume": 6600,
+          "tier": "map"
         },
         {
-          "term": "lyn radar",
-          "role": "secondary",
-          "volume": 1900,
-          "kd": null,
-          "tier": null,
-          "isBrand": false
+          "term": "lynkort",
+          "kd": 49,
+          "volume": 6600,
+          "tier": "map"
+        },
+        {
+          "term": "lyn",
+          "kd": 49,
+          "volume": 6600,
+          "tier": "map"
         }
       ],
       "leadSecondary": {
-        "term": "lighting map",
+        "term": "lynradar",
         "kd": 49,
         "volume": 6600
       },
       "content": {
         "translated": true,
         "breadcrumb": [
-          "Hjem",
-          "Lynradar"
+          "Danmark",
+          "Tordenvejr kort"
         ],
-        "h1": "Lynradar – lyn på kortet i realtid",
-        "title": "Lynradar – Lyn på kortet i realtid | lightningmapgame",
-        "metaDescription": "Følg tordenvejret med en lynradar i realtid. Se lynnedslag på kortet lige nu – og gæt, om der slår flere eller færre lyn ned i det næste minut.",
-        "imageAlt": "Lynradar – lynnedslag på kortet over Danmark i realtid",
+        "h1": "Tordenvejr live – se lyn på kortet i realtid",
+        "title": "Tordenvejr og lynradar live – se lyn nu",
+        "metaDescription": "Tordenvejr live i Danmark: se lyn på kortet i realtid, følg lynradar og tordenvejr, og se hvor det lyner lige nu.",
+        "imageAlt": "Tordenvejr og lyn på kortet i Danmark i realtid",
         "sections": [
           {
-            "h2": "Hvor slår lynet ned lige nu?",
+            "h2": "Hvor er der tordenvejr lige nu?",
             "body": "Lynradaren viser lynnedslag på kortet i det øjeblik, de registreres. Røde og gule områder viser, hvor det tordner nu, og hvilken vej uvejret bevæger sig. Tillad position og tryk «vis i nærheden» for at se de nærmeste nedslag og antallet af lyn de seneste 60 minutter, hvor du er."
           },
           {
-            "h2": "Lynradar i realtid",
-            "body": "Et lynkort opdateres automatisk hvert sekund. Jo tættere lynene slår ned i samme område, jo kraftigere er bygecellen. Følg lyntætheden og cellens bevægelse for at se, om tordenvejret er på vej op eller aftager."
+            "h2": "Tordenvejr kort og lynradar live",
+            "body": "Tordenvejrskortet og lynradaren opdateres automatisk. Jo tættere lynene slår ned i samme område, jo kraftigere er bygecellen. Følg lyntætheden og cellens bevægelse for at se, om tordenvejret er på vej op eller aftager."
           },
           {
             "h2": "Hvordan fungerer lynradaren?",
@@ -2264,8 +2264,8 @@
         "faqHeading": "Ofte stillede spørgsmål",
         "faq": [
           {
-            "q": "Hvad er en lynradar?",
-            "a": "En lynradar er et realtidskort, der viser registrerede lynnedslag, efterhånden som de sker. Så ser du hurtigt, hvor det tordner, og hvilken vej uvejret trækker."
+            "q": "Hvad viser et tordenvejrskort?",
+            "a": "Et tordenvejrskort viser registrerede lyn i realtid, så du hurtigt kan se, hvor det tordner, og hvilken vej uvejret trækker."
           },
           {
             "q": "Hvor præcis er lynradaren?",
