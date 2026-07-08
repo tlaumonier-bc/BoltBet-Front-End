@@ -85,7 +85,7 @@ export default function SeoContent({ page }: { page: LocalePage }) {
             <p className="text-xs text-white/60 sm:text-sm">
               {translated
                 ? 'Showing a display-only English translation. The URL and SEO page remain in the original local language.'
-                : `This page is written in ${page.language} for local search keywords.`}
+                : `This page is written in ${page.language}.`}
             </p>
             <button
               type="button"
@@ -108,7 +108,7 @@ export default function SeoContent({ page }: { page: LocalePage }) {
         </PlayCta>
       )}
 
-      <CountryLiveSeoCard page={page} />
+      <CountryLiveSeoCard page={page} translated={translated && canTranslate} />
 
       {/* localized content sections */}
       <div className="mt-8 space-y-8 sm:mt-12 sm:space-y-12">

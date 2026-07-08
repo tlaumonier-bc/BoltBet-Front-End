@@ -37,6 +37,7 @@ interface LightningGlobeProps {
   showZoomButtons?: boolean;
   autoRotate?: boolean;
   initialBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number };
+  disableLandingIntro?: boolean;
   onReady?: () => void;
   countryLinks?: CountryLink[];
   onPickCountry?: (slug: string) => void;
@@ -49,6 +50,7 @@ export default function LightningGlobe({
   showZoomButtons = false,
   autoRotate,
   initialBounds,
+  disableLandingIntro = false,
   onReady,
   countryLinks,
   onPickCountry,
@@ -178,6 +180,7 @@ export default function LightningGlobe({
       boundsMinLat == null &&
       boundsMaxLon == null &&
       boundsMaxLat == null &&
+      !disableLandingIntro &&
       !interaction.stopped &&
       !useLiveStore.getState().selectedCountry;
     const runLandingIntro = () => {
@@ -301,6 +304,7 @@ export default function LightningGlobe({
     boundsMinLat,
     boundsMaxLon,
     boundsMaxLat,
+    disableLandingIntro,
   ]);
 
   return (

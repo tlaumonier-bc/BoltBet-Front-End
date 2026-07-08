@@ -39,9 +39,17 @@ function humanDuration(ms: number): string {
 export default function StrikeHistoryChart({
   rows,
   now,
+  title = 'Strike history',
+  barLabel = 'each bar',
+  nowLabel = 'now',
+  ariaLabel,
 }: {
   rows: CountryStrike[]
   now: number
+  title?: string
+  barLabel?: string
+  nowLabel?: string
+  ariaLabel?: (total: number) => string
 }) {
   const data = useMemo(() => {
     const times: number[] = []
@@ -88,8 +96,8 @@ export default function StrikeHistoryChart({
   return (
     <div className="mt-4">
       <div className="mb-1.5 flex items-center justify-between text-[10px] uppercase tracking-wider text-white/40">
-        <span>Strike history</span>
-        <span className="text-white/30">each bar ≈ {humanDuration(bucketMs)}</span>
+        <span>{title}</span>
+        <span className="text-white/30">{barLabel} ≈ {humanDuration(bucketMs)}</span>
       </div>
 
       <div className="rounded-xl bg-white/4 p-3">
@@ -105,7 +113,7 @@ export default function StrikeHistoryChart({
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
             className="h-24 w-full text-bolt"
-            aria-label={`Strike count over time for the latest ${total} strikes`}
+            aria-label={ariaLabel ? ariaLabel(total) : `Strike count over time for the latest ${total} strikes`}
           >
             {/* baseline */}
             <line x1="0" y1="100" x2="100" y2="100" stroke="currentColor" strokeWidth="0.4" opacity="0.18" />
@@ -133,7 +141,7 @@ export default function StrikeHistoryChart({
           <div className="flex flex-1 justify-between tabular-nums">
             <span>{fmt(left)}</span>
             <span>{fmt((left + right) / 2)}</span>
-            <span>{rightIsNow ? 'now' : fmt(right)}</span>
+            <span>{rightIsNow ? nowLabel : fmt(right)}</span>
           </div>
         </div>
       </div>

@@ -64,7 +64,7 @@
       },
       {
         "hreflang": "hr-HR",
-        "url": "https://lightningmapgame.com/hr/lighting-map"
+        "url": "https://lightningmapgame.com/hr/nevrijeme-munje"
       },
       {
         "hreflang": "en-CA",
@@ -72,7 +72,7 @@
       },
       {
         "hreflang": "de-AT",
-        "url": "https://lightningmapgame.com/at/blitzortung"
+        "url": "https://lightningmapgame.com/at/gewitter"
       },
       {
         "hreflang": "el-GR",
@@ -80,7 +80,7 @@
       },
       {
         "hreflang": "it-IT",
-        "url": "https://lightningmapgame.com/it/mappa-fulmini"
+        "url": "https://lightningmapgame.com/it/temporali-in-tempo-reale"
       },
       {
         "hreflang": "da-DK",
@@ -88,11 +88,11 @@
       },
       {
         "hreflang": "lt-LT",
-        "url": "https://lightningmapgame.com/lt/lighting-map"
+        "url": "https://lightningmapgame.com/lt/audra-zaibai"
       },
       {
         "hreflang": "sk-SK",
-        "url": "https://lightningmapgame.com/sk/blesky"
+        "url": "https://lightningmapgame.com/sk/burka-nazivo"
       },
       {
         "hreflang": "es-ES",
@@ -100,7 +100,7 @@
       },
       {
         "hreflang": "sr-RS",
-        "url": "https://lightningmapgame.com/rs/lighting-map"
+        "url": "https://lightningmapgame.com/rs/nevreme-uzivo"
       },
       {
         "hreflang": "ro-RO",
@@ -585,8 +585,8 @@
       "slug": "/fr/foudre-en-direct",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "orage en direct",
-      "primaryKeyword": "orage en direct",
+      "primaryKeywordOriginal": "foudre en direct",
+      "primaryKeyword": "foudre en direct",
       "primaryVolume": 60500,
       "primaryKd": 55,
       "keywords": [
@@ -801,8 +801,8 @@
       "slug": "/se/blixtkarta",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "blixtradar",
-      "primaryKeyword": "blixtradar",
+      "primaryKeywordOriginal": "blixtkarta",
+      "primaryKeyword": "blixtkarta",
       "primaryVolume": 49500,
       "primaryKd": 32,
       "keywords": [
@@ -1021,8 +1021,8 @@
       "slug": "/no/lynkart",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "lyn met",
-      "primaryKeyword": "lyn met",
+      "primaryKeywordOriginal": "lynkart",
+      "primaryKeyword": "lynkart",
       "primaryVolume": 49500,
       "primaryKd": 25,
       "keywords": [
@@ -1139,8 +1139,8 @@
       "slug": "/de/blitzortung",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "lightningmaps",
-      "primaryKeyword": "lightningmaps",
+      "primaryKeywordOriginal": "blitzortung",
+      "primaryKeyword": "blitzortung",
       "primaryVolume": 33100,
       "primaryKd": 35,
       "keywords": [
@@ -1465,8 +1465,8 @@
       "slug": "/cz/bourky-radar",
       "pageType": "seo_map",
       "intentTier": "storm",
-      "primaryKeywordOriginal": "bouřka",
-      "primaryKeyword": "bouřka",
+      "primaryKeywordOriginal": "radar bouřek",
+      "primaryKeyword": "radar bouřek",
       "primaryVolume": 110000,
       "primaryKd": 41,
       "keywords": [
@@ -1682,74 +1682,66 @@
       "country": "Croatia",
       "language": "Croatian",
       "hreflang": "hr-HR",
-      "slug": "/hr/lighting-map",
+      "slug": "/hr/nevrijeme-munje",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "lightning map",
-      "primaryKeyword": "lightning map",
+      "primaryKeywordOriginal": "nevrijeme uživo",
+      "primaryKeyword": "nevrijeme uživo",
       "primaryVolume": 18100,
       "primaryKd": 40,
       "keywords": [
         {
-          "term": "lightning map",
-          "role": "primary",
-          "volume": 18100,
-          "kd": 40,
-          "tier": "lightning",
-          "isBrand": true
-        },
-        {
-          "term": "lighting maps",
-          "role": "secondary",
-          "volume": 14800,
+          "term": "nevrijeme uživo",
           "kd": 43,
-          "tier": "lightning",
-          "isBrand": true
+          "volume": 14800,
+          "tier": "storm"
         },
         {
           "term": "karta munja",
-          "role": "secondary",
-          "volume": null,
-          "kd": null,
-          "tier": null,
-          "isBrand": false
+          "kd": 43,
+          "volume": 14800,
+          "tier": "map"
         },
         {
-          "term": "mreža za detekciju munja",
-          "role": "secondary",
-          "volume": 2900,
-          "kd": 47,
-          "tier": "lightning",
-          "isBrand": true
+          "term": "munje uživo",
+          "kd": 43,
+          "volume": 14800,
+          "tier": "map"
+        },
+        {
+          "term": "lightning map",
+          "kd": 43,
+          "volume": 14800,
+          "tier": "map"
         }
       ],
       "leadSecondary": {
-        "term": "lighting maps",
+        "term": "karta munja",
         "kd": 43,
         "volume": 14800
       },
       "content": {
         "translated": true,
         "breadcrumb": [
-          "Početna",
-          "Karta munja"
+          "Hrvatska",
+          "Nevrijeme uživo"
         ],
-        "h1": "Karta munja – munje uživo na karti",
-        "title": "Karta munja – lightning map uživo | lightningmapgame",
-        "metaDescription": "Prati grmljavinsko nevrijeme uživo na karti munja u stvarnom vremenu. Gledaj udare munja sada – i pogodi hoće li u sljedećoj minuti udariti više ili manje munja.",
-        "imageAlt": "Karta munja – udari munja na karti Hrvatske u stvarnom vremenu",
+        "h1": "Nevrijeme uživo – karta munja u stvarnom vremenu",
+        "title": "Nevrijeme uživo – karta munja u stvarnom vremenu",
+        "metaDescription": "Nevrijeme uživo: prati kartu munja u stvarnom vremenu i vidi gdje sada sijevaju munje u Hrvatskoj i regiji.",
+        "imageAlt": "Nevrijeme uživo i karta munja u Hrvatskoj u stvarnom vremenu",
         "sections": [
           {
-            "h2": "Gdje sada udaraju munje?",
+            "h2": "Gdje je nevrijeme trenutno?",
             "body": "Karta prikazuje svaku munju u trenutku kad je zabilježena – odmah vidiš gdje je grmljavinsko nevrijeme i u kojem se smjeru kreće. Crvena i žuta područja označavaju najjače olujne ćelije. Dopusti lokaciju i pritisni «prikaži blizu mene» da vidiš najbliže udare i koliko ih je palo u zadnjih 60 minuta u tvojoj okolici."
           },
           {
             "h2": "Karta munja u stvarnom vremenu",
-            "body": "Što gušće munje udaraju na istom području, to je olujna ćelija jača. Kad broj udara brzo raste, a ćelija se približava, dolazi jako nevrijeme. Prati gustoću munja i kretanje ćelije. Usluga se naziva i lightning map ili lighting maps – to je ista karta munja uživo."
+            "body": "Što gušće munje udaraju na istom području, to je olujna ćelija jača. Kad broj udara brzo raste, a ćelija se približava, dolazi jako nevrijeme. Prati gustoću munja i kretanje ćelije. Usluga se naziva i lightning map ili karta munja – to je ista karta munja uživo."
           },
           {
             "h2": "Kako karta munja radi?",
-            "body": "Podaci o munjama dolaze iz mreže mreža za detekciju munja – zajednice prijemnih stanica kojima upravljaju volonteri. Stanice mjere kad stigne radijski impuls munje, a položaj se određuje triangulacijom iz više stanica. Što više stanica zabilježi istu munju, to je položaj točniji."
+            "body": "Podaci o munjama dolaze iz mreže za detekciju munja – zajednice prijemnih stanica kojima upravljaju volonteri. Stanice mjere kad stigne radijski impuls munje, a položaj se određuje triangulacijom iz više stanica. Što više stanica zabilježi istu munju, to je položaj točniji."
           },
           {
             "h2": "Pogodi sljedećih 30 sekundi",
@@ -1771,7 +1763,7 @@
           },
           {
             "q": "Odakle dolaze podaci?",
-            "a": "Iz mreže mreža za detekciju munja, gdje prijemne stanice kojima upravljaju volonteri određuju položaj munja triangulacijom."
+            "a": "Iz mreže za detekciju munja, gdje prijemne stanice kojima upravljaju volonteri određuju položaj munja triangulacijom."
           },
           {
             "q": "Koliko se često karta osvježava?",
@@ -1886,11 +1878,11 @@
       "country": "Austria",
       "language": "German",
       "hreflang": "de-AT",
-      "slug": "/at/blitzortung",
+      "slug": "/at/gewitter",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "lightningmaps",
-      "primaryKeyword": "blitzortung",
+      "primaryKeywordOriginal": "gewitter",
+      "primaryKeyword": "gewitter",
       "primaryVolume": 5400,
       "primaryKd": 43,
       "keywords": [
@@ -1912,23 +1904,23 @@
         }
       ],
       "leadSecondary": {
-        "term": "blitzortung",
+        "term": "blitze österreich",
         "kd": 43,
         "volume": 5400
       },
       "content": {
         "translated": true,
         "breadcrumb": [
-          "Startseite",
-          "Blitzortung"
+          "Österreich",
+          "Gewitter"
         ],
-        "h1": "Blitzortung – Gewitter live auf der Karte",
-        "title": "Blitzortung – Gewitter live auf der Karte | lightningmapgame",
-        "metaDescription": "Verfolge Gewitter in Österreich mit Blitzortung in Echtzeit. Sieh Blitzeinschläge jetzt auf der Karte – und rate, ob in der nächsten Minute mehr oder weniger Blitze einschlagen.",
-        "imageAlt": "Blitzortung – Blitzeinschläge auf der Karte von Österreich in Echtzeit",
+        "h1": "Gewitter live auf der Karte – wo es gerade blitzt",
+        "title": "Gewitter live auf der Karte – Blitze in Österreich",
+        "metaDescription": "Gewitter live in Österreich: sieh Blitze auf der Karte in Echtzeit und verfolge, wo es gerade blitzt und gewittert.",
+        "imageAlt": "Gewitter und Blitze auf der Karte von Österreich in Echtzeit",
         "sections": [
           {
-            "h2": "Wo gewittert es gerade?",
+            "h2": "Wo blitzt es gerade in Österreich?",
             "body": "Die Karte zeigt Blitzeinschläge in dem Moment, in dem sie erfasst werden. Rote und gelbe Bereiche zeigen, wo es gerade gewittert und in welche Richtung das Gewitter zieht. Erlaube den Standort und tippe auf «in meiner Nähe anzeigen», dann siehst du die nächsten Einschläge und die Zahl der Blitze der letzten 60 Minuten in deiner Umgebung."
           },
           {
@@ -1984,7 +1976,7 @@
       "pageType": "seo_map",
       "intentTier": "lightning",
       "primaryKeywordOriginal": "χάρτης κεραυνών",
-      "primaryKeyword": "κεραυνοι live",
+      "primaryKeyword": "χάρτης κεραυνών",
       "primaryVolume": 6600,
       "primaryKd": 22,
       "keywords": [
@@ -2082,11 +2074,11 @@
       "country": "Italy",
       "language": "Italian",
       "hreflang": "it-IT",
-      "slug": "/it/mappa-fulmini",
+      "slug": "/it/temporali-in-tempo-reale",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "una rete di rilevamento dei fulmini",
-      "primaryKeyword": "fulmine",
+      "primaryKeywordOriginal": "temporali in tempo reale",
+      "primaryKeyword": "temporali in tempo reale",
       "primaryVolume": 12100,
       "primaryKd": 26,
       "keywords": [
@@ -2124,32 +2116,32 @@
         }
       ],
       "leadSecondary": {
-        "term": "fulmini in tempo reale",
+        "term": "mappa dei fulmini",
         "kd": 32,
         "volume": 8100
       },
       "content": {
         "translated": true,
         "breadcrumb": [
-          "Home",
-          "Mappa dei fulmini"
+          "Italia",
+          "Temporali in tempo reale"
         ],
-        "h1": "Mappa dei fulmini – fulmini in tempo reale",
-        "title": "Mappa dei fulmini – Fulmini in tempo reale | lightningmapgame",
-        "metaDescription": "Segui i temporali con una mappa dei fulmini in tempo reale. Vedi i fulmini sulla mappa adesso – e indovina se nel prossimo minuto cadranno più o meno fulmini.",
-        "imageAlt": "Mappa dei fulmini – fulmini sulla mappa dell'Italia in tempo reale",
+        "h1": "Temporali in tempo reale – dove cadono i fulmini adesso",
+        "title": "Temporali in tempo reale – mappa dei fulmini",
+        "metaDescription": "Temporali in tempo reale: guarda dove cadono i fulmini adesso in Italia e segui la mappa dei fulmini live.",
+        "imageAlt": "Temporali e fulmini sulla mappa d’Italia in tempo reale",
         "sections": [
           {
-            "h2": "Dove sta cadendo un fulmine adesso?",
+            "h2": "Dove cadono i fulmini adesso?",
             "body": "La mappa mostra i fulmini nell'istante in cui vengono rilevati. Le aree rosse e gialle indicano dove c'è un temporale in questo momento e in che direzione si sta spostando. Consenti la posizione e tocca «mostra vicino a me» per vedere i fulmini più vicini e quanti ne sono caduti negli ultimi 60 minuti nella tua zona."
           },
           {
-            "h2": "Fulmini in tempo reale",
+            "h2": "Temporali live e mappa dei fulmini",
             "body": "La mappa dei fulmini si aggiorna automaticamente ogni secondo. Più i fulmini cadono fitti nella stessa zona, più la cella temporalesca è intensa. Osserva la densità dei fulmini e il movimento della cella per capire se il temporale si sta rafforzando o esaurendo."
           },
           {
             "h2": "Come funziona la mappa dei fulmini?",
-            "body": "I dati sui fulmini provengono da una rete di rilevamento dei fulmini, una rete di stazioni riceventi gestita da volontari. Le stazioni misurano quando arriva l'impulso radio del fulmine e la posizione viene calcolata per triangolazione da più stazioni. Più stazioni rilevano lo stesso fulmine, più precisa è la posizione. Il servizio è chiamato anche radar dei temporali o meteo radar, ma è la stessa mappa dei fulmini in tempo reale."
+            "body": "I dati sui fulmini provengono da una rete di rilevamento dei fulmini gestita da stazioni riceventi volontarie. Le stazioni misurano quando arriva l'impulso radio del fulmine e la posizione viene calcolata per triangolazione da più stazioni. Più stazioni rilevano lo stesso fulmine, più precisa è la posizione. Il servizio è chiamato anche radar dei temporali o meteo radar, ma è la stessa mappa dei fulmini in tempo reale."
           },
           {
             "h2": "Indovina i prossimi 30 secondi",
@@ -2171,7 +2163,7 @@
           },
           {
             "q": "Da dove provengono i dati?",
-            "a": "Dalla rete una rete di rilevamento dei fulmini, in cui stazioni riceventi gestite da volontari localizzano i fulmini per triangolazione."
+            "a": "Da una rete di rilevamento dei fulmini, in cui stazioni riceventi gestite da volontari localizzano i fulmini per triangolazione."
           },
           {
             "q": "Ogni quanto si aggiorna la mappa?",
@@ -2294,66 +2286,66 @@
       "country": "Lithuania",
       "language": "Lithuanian",
       "hreflang": "lt-LT",
-      "slug": "/lt/lighting-map",
+      "slug": "/lt/audra-zaibai",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "lightning map",
-      "primaryKeyword": "lightning map",
+      "primaryKeywordOriginal": "audra žaibai",
+      "primaryKeyword": "audra žaibai",
       "primaryVolume": 6600,
       "primaryKd": 41,
       "keywords": [
         {
-          "term": "lightning map",
-          "role": "primary",
-          "volume": 6600,
-          "kd": 41,
-          "tier": "lightning",
-          "isBrand": true
-        },
-        {
-          "term": "lighting map",
-          "role": "secondary",
-          "volume": 6600,
+          "term": "audra žaibai",
           "kd": 44,
-          "tier": "lightning",
-          "isBrand": true
+          "volume": 6600,
+          "tier": "storm"
         },
         {
           "term": "žaibų žemėlapis",
-          "role": "secondary",
-          "volume": null,
-          "kd": null,
-          "tier": null,
-          "isBrand": false
+          "kd": 44,
+          "volume": 6600,
+          "tier": "map"
+        },
+        {
+          "term": "žaibai",
+          "kd": 44,
+          "volume": 6600,
+          "tier": "map"
+        },
+        {
+          "term": "lightning map",
+          "kd": 44,
+          "volume": 6600,
+          "tier": "map"
         }
       ],
       "leadSecondary": {
-        "term": "lighting map",
+        "term": "žaibų žemėlapis",
         "kd": 44,
         "volume": 6600
       },
       "content": {
         "translated": true,
         "breadcrumb": [
-          "Pradžia",
-          "Žaibų žemėlapis"
+          "Lietuva",
+          "Audra ir žaibai"
         ],
-        "h1": "Žaibų žemėlapis – žaibai žemėlapyje realiu laiku",
-        "title": "Žaibų žemėlapis – lightning map realiu laiku | lightningmapgame",
-        "metaDescription": "Stebėk perkūniją su žaibų žemėlapiu realiu laiku. Matyk žaibus žemėlapyje dabar – ir atspėk, ar kitą minutę trenks daugiau ar mažiau žaibų.",
-        "imageAlt": "Žaibų žemėlapis – žaibai Lietuvos žemėlapyje realiu laiku",
+        "h1": "Audra ir žaibai realiu laiku – žaibų žemėlapis",
+        "title": "Audra ir žaibai realiu laiku – žaibų žemėlapis",
+        "metaDescription": "Audra ir žaibai realiu laiku: stebėk žaibų žemėlapį ir matyk, kur dabar žaibuoja Lietuvoje ir pasaulyje.",
+        "imageAlt": "Audra ir žaibai Lietuvos žemėlapyje realiu laiku",
         "sections": [
           {
-            "h2": "Kur dabar trenkia žaibai?",
+            "h2": "Kur dabar žaibuoja?",
             "body": "Žemėlapis rodo kiekvieną žaibą tą akimirką, kai jis aptinkamas – iškart matai, kur siaučia perkūnija ir kuria kryptimi ji juda. Raudonos ir geltonos sritys žymi stipriausias audros ląsteles. Leisk vietos nustatymą ir spustelėk «rodyti šalia manęs», kad pamatytum artimiausius žaibus ir kiek jų trenkė per pastarąsias 60 minučių tavo apylinkėse."
           },
           {
             "h2": "Žaibų žemėlapis realiu laiku",
-            "body": "Kuo tankiau žaibai trenkia toje pačioje srityje, tuo stipresnė audros ląstelė. Kai žaibų skaičius sparčiai auga, o ląstelė artėja, atslenka stipri perkūnija. Stebėk žaibų tankį ir ląstelės judėjimą. Paslauga dar vadinama lightning map arba lighting map – tai tas pats žaibų žemėlapis realiu laiku."
+            "body": "Kuo tankiau žaibai trenkia toje pačioje srityje, tuo stipresnė audros ląstelė. Kai žaibų skaičius sparčiai auga, o ląstelė artėja, atslenka stipri perkūnija. Stebėk žaibų tankį ir ląstelės judėjimą. Paslauga dar vadinama lightning map arba žaibų žemėlapis – tai tas pats žaibų žemėlapis realiu laiku."
           },
           {
             "h2": "Kaip veikia žaibų žemėlapis?",
-            "body": "Duomenys apie žaibus gaunami iš žaibų aptikimo tinklas tinklo – savanorių prižiūrimų imtuvų bendruomenės. Stotys matuoja, kada ateina žaibo radijo impulsas, o vieta nustatoma trianguliuojant iš kelių stočių. Kuo daugiau stočių aptinka tą patį žaibą, tuo tikslesnė vieta."
+            "body": "Duomenys apie žaibus gaunami iš žaibų aptikimo tinklo – savanorių prižiūrimų imtuvų bendruomenės. Stotys matuoja, kada ateina žaibo radijo impulsas, o vieta nustatoma trianguliuojant iš kelių stočių. Kuo daugiau stočių aptinka tą patį žaibą, tuo tikslesnė vieta."
           },
           {
             "h2": "Atspėk kitas 30 sekundžių",
@@ -2375,7 +2367,7 @@
           },
           {
             "q": "Iš kur gaunami duomenys?",
-            "a": "Iš žaibų aptikimo tinklas tinklo, kuriame savanorių prižiūrimos imtuvų stotys nustato žaibų vietą trianguliacija."
+            "a": "Iš žaibų aptikimo tinklo, kuriame savanorių prižiūrimos imtuvų stotys nustato žaibų vietą trianguliacija."
           },
           {
             "q": "Kaip dažnai atnaujinamas žemėlapis?",
@@ -2396,74 +2388,66 @@
       "country": "Slovakia",
       "language": "Slovak",
       "hreflang": "sk-SK",
-      "slug": "/sk/blesky",
+      "slug": "/sk/burka-nazivo",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "lighting map",
-      "primaryKeyword": "lighting map",
+      "primaryKeywordOriginal": "búrka naživo",
+      "primaryKeyword": "búrka naživo",
       "primaryVolume": 6600,
       "primaryKd": 41,
       "keywords": [
         {
-          "term": "lighting map",
-          "role": "primary",
-          "volume": 6600,
-          "kd": 41,
-          "tier": "lightning",
-          "isBrand": true
-        },
-        {
-          "term": "lighting maps",
-          "role": "secondary",
-          "volume": 6600,
-          "kd": 47,
-          "tier": "lightning",
-          "isBrand": true
-        },
-        {
-          "term": "lightningmaps",
-          "role": "secondary",
-          "volume": 6600,
+          "term": "búrka naživo",
           "kd": 45,
-          "tier": "lightning",
-          "isBrand": true
+          "volume": 6600,
+          "tier": "storm"
+        },
+        {
+          "term": "mapa bleskov",
+          "kd": 45,
+          "volume": 6600,
+          "tier": "map"
         },
         {
           "term": "blesky",
-          "role": "secondary",
-          "volume": null,
-          "kd": null,
-          "tier": null,
-          "isBrand": false
+          "kd": 45,
+          "volume": 6600,
+          "tier": "map"
+        },
+        {
+          "term": "lightning map",
+          "kd": 45,
+          "volume": 6600,
+          "tier": "map"
         }
       ],
       "leadSecondary": {
-        "term": "lightningmaps",
+        "term": "mapa bleskov",
         "kd": 45,
         "volume": 6600
       },
       "content": {
         "translated": true,
         "breadcrumb": [
-          "Domov",
-          "Blesky"
+          "Slovensko",
+          "Búrka naživo"
         ],
-        "h1": "Blesky naživo – mapa bleskov v reálnom čase",
-        "title": "Blesky naživo – mapa bleskov (lighting map) | lightningmapgame",
-        "metaDescription": "Sleduj blesky naživo na mape v reálnom čase. Pozri, kde práve je búrka – a hádaj, či v ďalšej minúte udrie viac, alebo menej bleskov.",
-        "imageAlt": "Blesky naživo – blesky na mape Slovenska v reálnom čase",
+        "h1": "Búrka naživo – mapa bleskov v reálnom čase",
+        "title": "Búrka naživo – mapa bleskov v reálnom čase",
+        "metaDescription": "Búrka naživo: sleduj mapu bleskov v reálnom čase a zisti, kde práve udierajú blesky na Slovensku a vo svete.",
+        "imageAlt": "Búrka naživo a mapa bleskov na Slovensku v reálnom čase",
         "sections": [
           {
-            "h2": "Kde práve udierajú blesky?",
+            "h2": "Kde je búrka práve teraz?",
             "body": "Mapa zobrazuje každý blesk vo chvíli, keď je zaznamenaný – hneď vidíš, kde je búrka a ktorým smerom sa pohybuje. Červené a žlté oblasti označujú najsilnejšie búrkové bunky. Povoľ polohu a ťukni na «zobraziť v okolí», aby si videl najbližšie blesky a koľko ich udrelo za posledných 60 minút vo tvojom okolí."
           },
           {
             "h2": "Mapa bleskov v reálnom čase",
-            "body": "Čím hustejšie blesky udierajú v tej istej oblasti, tým silnejšia je búrková bunka. Keď počet bleskov rýchlo rastie a bunka sa blíži k tebe, prichádza silná búrka. Sleduj hustotu bleskov a smer pohybu bunky. Služba sa nazýva aj lighting map, lighting maps alebo lightningmaps – je to tá istá mapa bleskov naživo."
+            "body": "Čím hustejšie blesky udierajú v tej istej oblasti, tým silnejšia je búrková bunka. Keď počet bleskov rýchlo rastie a bunka sa blíži k tebe, prichádza silná búrka. Sleduj hustotu bleskov a smer pohybu bunky. Služba sa nazýva aj lightning map alebo mapa bleskov – je to tá istá mapa bleskov naživo."
           },
           {
             "h2": "Ako mapa bleskov funguje?",
-            "body": "Dáta o bleskoch pochádzajú zo siete sieť detekcie bleskov – komunity prijímacích staníc prevádzkovaných dobrovoľníkmi. Stanice merajú, kedy dorazí rádiový impulz blesku, a poloha sa určí trianguláciou z viacerých staníc. Čím viac staníc zachytí ten istý blesk, tým presnejšia je poloha."
+            "body": "Dáta o bleskoch pochádzajú zo siete detekcie bleskov – komunity prijímacích staníc prevádzkovaných dobrovoľníkmi. Stanice merajú, kedy dorazí rádiový impulz blesku, a poloha sa určí trianguláciou z viacerých staníc. Čím viac staníc zachytí ten istý blesk, tým presnejšia je poloha."
           },
           {
             "h2": "Hádaj ďalších 30 sekúnd",
@@ -2485,7 +2469,7 @@
           },
           {
             "q": "Odkiaľ pochádzajú dáta o bleskoch?",
-            "a": "Zo siete sieť detekcie bleskov, kde prijímacie stanice prevádzkované dobrovoľníkmi lokalizujú blesky trianguláciou."
+            "a": "Zo siete detekcie bleskov, kde prijímacie stanice prevádzkované dobrovoľníkmi lokalizujú blesky trianguláciou."
           },
           {
             "q": "Ako často sa mapa aktualizuje?",
@@ -2509,8 +2493,8 @@
       "slug": "/es/mapa-de-rayos",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "lightning map",
-      "primaryKeyword": "lightning map",
+      "primaryKeywordOriginal": "mapa de rayos",
+      "primaryKeyword": "mapa de rayos",
       "primaryVolume": 1900,
       "primaryKd": 48,
       "keywords": [
@@ -2616,66 +2600,66 @@
       "country": "Serbia",
       "language": "Serbian",
       "hreflang": "sr-RS",
-      "slug": "/rs/lighting-map",
+      "slug": "/rs/nevreme-uzivo",
       "pageType": "seo_map",
       "intentTier": "lightning",
-      "primaryKeywordOriginal": "lighting map",
-      "primaryKeyword": "lighting map",
+      "primaryKeywordOriginal": "nevreme uživo",
+      "primaryKeyword": "nevreme uživo",
       "primaryVolume": 9900,
       "primaryKd": 43,
       "keywords": [
         {
-          "term": "lighting map",
-          "role": "primary",
-          "volume": 9900,
-          "kd": 43,
-          "tier": "lightning",
-          "isBrand": true
+          "term": "nevreme uživo",
+          "kd": 53,
+          "volume": 6600,
+          "tier": "storm"
+        },
+        {
+          "term": "karta munja",
+          "kd": 53,
+          "volume": 6600,
+          "tier": "map"
+        },
+        {
+          "term": "munje uživo",
+          "kd": 53,
+          "volume": 6600,
+          "tier": "map"
         },
         {
           "term": "lightning map",
-          "role": "secondary",
-          "volume": 6600,
           "kd": 53,
-          "tier": "lightning",
-          "isBrand": true
-        },
-        {
-          "term": "mreža za detekciju munja",
-          "role": "secondary",
-          "volume": 1600,
-          "kd": null,
-          "tier": null,
-          "isBrand": true
+          "volume": 6600,
+          "tier": "map"
         }
       ],
       "leadSecondary": {
-        "term": "lightning map",
+        "term": "karta munja",
         "kd": 53,
         "volume": 6600
       },
       "content": {
         "translated": true,
         "breadcrumb": [
-          "Početna",
-          "Karta munja"
+          "Srbija",
+          "Nevreme uživo"
         ],
-        "h1": "Karta munja – munje uživo na mapi",
-        "title": "Karta munja – lighting map uživo | lightningmapgame",
-        "metaDescription": "Prati oluju uživo na karti munja u realnom vremenu. Gledaj udare munja sada – i pogodi da li će u sledećem minutu udariti više ili manje munja.",
-        "imageAlt": "Karta munja – udari munja na mapi Srbije u realnom vremenu",
+        "h1": "Nevreme uživo – karta munja u realnom vremenu",
+        "title": "Nevreme uživo – karta munja u realnom vremenu",
+        "metaDescription": "Nevreme uživo: prati kartu munja u realnom vremenu i vidi gde trenutno sevaju munje u Srbiji i regionu.",
+        "imageAlt": "Nevreme uživo i karta munja u Srbiji u realnom vremenu",
         "sections": [
           {
-            "h2": "Gde sada udaraju munje?",
+            "h2": "Gde je nevreme trenutno?",
             "body": "Mapa prikazuje svaku munju u trenutku kada je zabeležena – odmah vidiš gde je oluja i u kom pravcu se kreće. Crvene i žute oblasti označavaju najjače olujne ćelije. Dozvoli lokaciju i pritisni «prikaži blizu mene» da vidiš najbliže udare i koliko ih je palo u poslednjih 60 minuta u tvojoj okolini."
           },
           {
             "h2": "Karta munja u realnom vremenu",
-            "body": "Što gušće munje udaraju u istoj oblasti, to je olujna ćelija jača. Kada broj udara brzo raste, a ćelija se približava, stiže jako nevreme. Prati gustinu munja i kretanje ćelije. Usluga se naziva i lighting map ili lightning map – to je ista karta munja uživo."
+            "body": "Što gušće munje udaraju u istoj oblasti, to je olujna ćelija jača. Kada broj udara brzo raste, a ćelija se približava, stiže jako nevreme. Prati gustinu munja i kretanje ćelije. Usluga se naziva i lightning map ili karta munja – to je ista karta munja uživo."
           },
           {
             "h2": "Kako karta munja radi?",
-            "body": "Podaci o munjama dolaze iz mreže mreža za detekciju munja – zajednice prijemnih stanica kojima upravljaju volonteri. Stanice mere kada stigne radio-impuls munje, a položaj se određuje triangulacijom iz više stanica. Što više stanica zabeleži istu munju, to je položaj tačniji."
+            "body": "Podaci o munjama dolaze iz mreže za detekciju munja – zajednice prijemnih stanica kojima upravljaju volonteri. Stanice mere kada stigne radio-impuls munje, a položaj se određuje triangulacijom iz više stanica. Što više stanica zabeleži istu munju, to je položaj tačniji."
           },
           {
             "h2": "Pogodi sledećih 30 sekundi",
@@ -2697,7 +2681,7 @@
           },
           {
             "q": "Odakle dolaze podaci?",
-            "a": "Iz mreže mreža za detekciju munja, gde prijemne stanice kojima upravljaju volonteri određuju položaj munja triangulacijom."
+            "a": "Iz mreže za detekciju munja, gde prijemne stanice kojima upravljaju volonteri određuju položaj munja triangulacijom."
           },
           {
             "q": "Koliko često se mapa osvežava?",

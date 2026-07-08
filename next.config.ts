@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/at/blitzortung",
+        destination: "/at/gewitter",
+        permanent: true,
+      },
+      {
         source: "/dk/lyn-radar",
         destination: "/dk/tordenvejr-kort",
         permanent: true,
@@ -28,13 +33,53 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: "/gr/blitzortung",
+        destination: "/gr/xartis-keravnon",
+        permanent: true,
+      },
+      {
+        source: "/hr/lighting-map",
+        destination: "/hr/nevrijeme-munje",
+        permanent: true,
+      },
+      {
+        source: "/it/mappa-fulmini",
+        destination: "/it/temporali-in-tempo-reale",
+        permanent: true,
+      },
+      {
+        source: "/lt/lighting-map",
+        destination: "/lt/audra-zaibai",
+        permanent: true,
+      },
+      {
         source: "/lv/lightning-map",
         destination: "/lv/zibens-karte",
         permanent: true,
       },
       {
+        source: "/pl/blitzortung",
+        destination: "/pl/mapa-wyladowan",
+        permanent: true,
+      },
+      {
         source: "/pl/gdzie-jest-burza",
         destination: "/pl/radar-burz",
+        permanent: true,
+      },
+      {
+        source: "/ro/blitzortung",
+        destination: "/ro/harta-fulgerelor",
+        permanent: true,
+      },
+      {
+        source: "/rs/lighting-map",
+        destination: "/rs/nevreme-uzivo",
+        permanent: true,
+      },
+      {
+        source: "/sk/blesky",
+        destination: "/sk/burka-nazivo",
         permanent: true,
       },
       {
