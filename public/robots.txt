@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://lightningmapgame.com
+
+# Sitemaps
+Sitemap: https://lightningmapgame.com/sitemap.xml
