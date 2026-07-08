@@ -7,26 +7,24 @@
 // SeoContent, which is server-rendered on the SEO routes (crawlable), so the
 // pushState URL and the real route at that URL always carry the same content.
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import GlobeWrapper from '@/components/Globe/GlobeWrapper';
 import LiveHUD from '@/components/live/LiveHUD';
 import SeoContent from '@/components/seo/SeoContent';
 import { useLiveStore } from '@/store/liveStore';
 import { buildCountryLinks } from '@/lib/globe/countryLinks';
-import { boundsForLocale } from '@/lib/map/countryBounds';
 import { primaryPageForLocale, pageBySlug } from '@/lib/content/content';
 import type { LocalePage } from '@/lib/content/content-types';
 
 const COUNTRY_LINKS = buildCountryLinks();
 
 export default function GlobeExperience({ initialPage }: { initialPage?: LocalePage }) {
+  const [globeReady, setGlobeReady] = useState(false);
   const selectedCountry = useLiveStore((s) => s.selectedCountry);
   const seoContentOpen = useLiveStore((s) => s.seoContentOpen);
   const mobileSheet = useLiveStore((s) => s.mobileSheet);
   const setSeoContentOpen = useLiveStore((s) => s.setSeoContentOpen);
   const setSelectedCountry = useLiveStore((s) => s.setSelectedCountry);
-
-  const initialBounds = initialPage ? boundsForLocale(initialPage.locale) : undefined;
 
   // The page whose text we show + URL we sync to. On a deep link it's the exact
   // page for the URL; on the homepage it's the primary page for the country the
@@ -48,20 +46,27 @@ export default function GlobeExperience({ initialPage }: { initialPage?: LocaleP
     return primaryPageForLocale(iso.toLowerCase())?.slug ?? '/';
   };
 
-  // SEO route: pre-select the country once on mount so the panel + highlight
-  // mirror the SPA state. (Camera framing comes from initialBounds.)
+  // SEO route: once the globe has loaded, select the country from the URL. The
+  // country-borders layer handles this like any other programmatic selection:
+  // highlight the country and fly to the same framing used by direct clicks.
   const didInit = useRef(false);
   useEffect(() => {
-    if (initialPage && !didInit.current) {
+    if (!initialPage || !globeReady || didInit.current) return;
+
+    const timer = window.setTimeout(() => {
+      if (didInit.current) return;
       didInit.current = true;
       setSelectedCountry({ name: initialPage.country, iso2: initialPage.locale.toUpperCase() });
-    }
-  }, [initialPage, setSelectedCountry]);
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [globeReady, initialPage, setSelectedCountry]);
 
   // Keep the address bar in sync without reloading. UX only — the canonical,
   // server-rendered route at the same URL is the SEO source of truth.
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (initialPage && !didInit.current) return;
     const target = targetSlug();
     if (window.location.pathname !== target) {
       window.history.pushState({}, '', target);
@@ -103,8 +108,10 @@ export default function GlobeExperience({ initialPage }: { initialPage?: LocaleP
             viewOnly
             fill
             enableZoom
+            autoRotate={initialPage ? false : undefined}
+            disableLandingIntro={Boolean(initialPage)}
             countryLinks={COUNTRY_LINKS}
-            initialBounds={initialBounds}
+            onReady={() => setGlobeReady(true)}
           />
           {!activePage && (
             <h1 className="sr-only">

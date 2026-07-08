@@ -2,7 +2,7 @@
 import { create } from 'zustand'
 import { DEFAULT_QUALITY, type GlobeQuality } from '@/lib/globe/quality'
 import { defaultLayerState, type GlobeLayerId } from '@/lib/globe/layers'
-import type { CountryStrike, CountryStrikeMeta } from '@/lib/api'
+import type { CountryStrike, CountryStrikeMeta, NearbyStrike } from '@/lib/api'
 import {
   trackModeChange,
   trackCountrySelected,
@@ -57,6 +57,10 @@ interface LiveStore {
   countryStrikes: CountryStrike[]
   countryStrikeMeta: CountryStrikeMeta | null
   setCountryStrikes: (rows: CountryStrike[], meta?: CountryStrikeMeta | null) => void
+  nearbyStrikes: NearbyStrike[]
+  nearbyOrigin: { lat: number; lon: number } | null
+  setNearbyStrikes: (rows: NearbyStrike[], origin: { lat: number; lon: number } | null) => void
+  clearNearbyStrikes: () => void
 
   // ── SEO text pane (slides up over the globe on a selected country) ──
   seoContentOpen: boolean
@@ -109,6 +113,10 @@ export const useLiveStore = create<LiveStore>((set) => ({
   countryStrikes: [],
   countryStrikeMeta: null,
   setCountryStrikes: (countryStrikes, countryStrikeMeta = null) => set({ countryStrikes, countryStrikeMeta }),
+  nearbyStrikes: [],
+  nearbyOrigin: null,
+  setNearbyStrikes: (nearbyStrikes, nearbyOrigin) => set({ nearbyStrikes, nearbyOrigin }),
+  clearNearbyStrikes: () => set({ nearbyStrikes: [], nearbyOrigin: null }),
 
   seoContentOpen: false,
   setSeoContentOpen: (seoContentOpen) => {

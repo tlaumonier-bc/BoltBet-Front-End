@@ -49,28 +49,12 @@ export const metadata: Metadata = {
 
 const structuredData = {
   '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'WebSite',
-      '@id': `${site.baseUrl}/#website`,
-      name: BRAND,
-      alternateName: 'LightningMapGame',
-      url: `${site.baseUrl}/`,
-    },
-    {
-      '@type': 'WebApplication',
-      name: BRAND,
-      applicationCategory: 'GameApplication',
-      description: 'Real-time lightning map with a 60-second prediction game',
-      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-      featureList: [
-        'Real-time lightning map',
-        'Live 3D globe',
-        'Localized lightning maps',
-        '60-second prediction game',
-      ],
-    },
-  ],
+  '@type': 'WebSite',
+  '@id': `${site.baseUrl}/#website`,
+  name: BRAND,
+  alternateName: 'LightningMapGame',
+  url: `${site.baseUrl}/`,
+  description: 'Real-time lightning map with a 30-second prediction game.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

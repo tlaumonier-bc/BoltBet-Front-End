@@ -3,6 +3,7 @@
 import { useLiveStore } from '@/store/liveStore'
 import { ORBIT_LOCATIONS } from '@/lib/live/locations'
 import { Section, coord } from './hudShared'
+import { useNearMeAction } from './useNearMeAction'
 
 export default function OrbitSection() {
   const mode = useLiveStore((s) => s.mode)
@@ -10,6 +11,7 @@ export default function OrbitSection() {
   const orbitTo = useLiveStore((s) => s.orbitTo)
   const clearOrbit = useLiveStore((s) => s.clearOrbit)
   const setSelectedCountry = useLiveStore((s) => s.setSelectedCountry)
+  const { nearMe, nearbyMessage, nearbyState, nearbyStrikes, resetNearby } = useNearMeAction()
   const focus = orbitTarget
     ? ORBIT_LOCATIONS.find((l) => l.id === orbitTarget.id) ?? null
     : null
@@ -17,6 +19,7 @@ export default function OrbitSection() {
   const onGlobe = orbitTarget?.id === 'globe'
   const backToGlobe = () => {
     if (mode === 'game') setSelectedCountry(null)
+    resetNearby()
     orbitTo({ id: 'globe', label: 'Whole globe', lat: 20, lon: 0, flyHeightM: 20_000_000 })
   }
 
@@ -35,6 +38,24 @@ export default function OrbitSection() {
         ) : null
       }
     >
+      <button
+        onClick={nearMe}
+        disabled={nearbyState === 'loading'}
+        className={`mb-2 flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-3 text-xs font-semibold transition ${
+          orbitTarget?.id === 'near-me'
+            ? 'border-bolt/50 bg-bolt/10 text-bolt'
+            : 'border-white/10 bg-white/4 text-white/85 hover:border-white/25 hover:bg-white/8'
+        } disabled:cursor-wait disabled:opacity-70`}
+      >
+        <span aria-hidden>📍</span>
+        {nearbyState === 'loading' ? 'Finding nearby strikes…' : 'Near me'}
+      </button>
+      {(nearbyMessage || nearbyStrikes.length > 0) && (
+        <p className={`mb-2 text-[10px] ${nearbyState === 'error' ? 'text-rose-300' : 'text-white/45'}`}>
+          {nearbyMessage || `${nearbyStrikes.length} nearby strikes`}
+        </p>
+      )}
+
       <button
         onClick={backToGlobe}
         className={`mb-2 flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-3 text-xs font-semibold transition ${

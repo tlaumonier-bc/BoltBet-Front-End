@@ -14,6 +14,7 @@ import GameAccount from '@/components/game/GameAccount'
 import { useStrikeGame, type StrikeGameVM } from '@/lib/game/useStrikeGame'
 import { useSessionStore } from '@/store/sessionStore'
 import { flagEmoji } from '@/lib/live/owm'
+import { useNearMeAction } from './useNearMeAction'
 
 function MobileActionButton({
   active,
@@ -39,6 +40,37 @@ function MobileActionButton({
   )
 }
 
+function MobileNearMeButton() {
+  const orbitTarget = useLiveStore((s) => s.orbitTarget)
+  const { nearMe, nearbyMessage, nearbyState, nearbyStrikes } = useNearMeAction()
+  const active = orbitTarget?.id === 'near-me'
+
+  return (
+    <div className="pointer-events-auto fixed left-1/2 top-[70px] z-40 w-[min(960px,94vw)] -translate-x-1/2 md:hidden">
+      <div className="glass rounded-2xl border border-white/10 p-1.5 shadow-2xl">
+        <button
+          type="button"
+          onClick={nearMe}
+          disabled={nearbyState === 'loading'}
+          className={`flex min-h-9 w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition ${
+            active
+              ? 'bg-bolt text-storm shadow-[0_0_18px_rgba(253,224,71,0.35)]'
+              : 'bg-white/8 text-white/80 hover:bg-white/12 hover:text-white'
+          } disabled:cursor-wait disabled:opacity-70`}
+        >
+          <span aria-hidden>📍</span>
+          {nearbyState === 'loading' ? 'Finding nearby strikes...' : 'Near me'}
+        </button>
+        {(nearbyMessage || nearbyStrikes.length > 0) && (
+          <p className={`px-2 pb-1 pt-1 text-center text-[10px] ${nearbyState === 'error' ? 'text-rose-300' : 'text-white/50'}`}>
+            {nearbyMessage || `${nearbyStrikes.length} nearby strikes`}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function MobileGameTopConsole({ vm }: { vm: StrikeGameVM }) {
   const [expanded, setExpanded] = useState(false)
   const yTicks = [vm.rollingTrendMax, Math.round(vm.rollingTrendMax / 2), 0]
@@ -49,7 +81,7 @@ function MobileGameTopConsole({ vm }: { vm: StrikeGameVM }) {
   }).join(' ')
 
   return (
-    <div className="pointer-events-auto fixed left-1/2 top-[70px] z-40 w-[min(960px,94vw)] -translate-x-1/2 md:hidden">
+    <div className="pointer-events-auto fixed left-1/2 top-[126px] z-40 w-[min(960px,94vw)] -translate-x-1/2 md:hidden">
       <div className="glass rounded-2xl border border-white/10 p-2 shadow-2xl">
         <div className="flex items-center gap-2">
           <p className="min-w-0 flex-1 text-xs font-semibold leading-snug text-white/80">
@@ -157,7 +189,7 @@ function MobileCountryTopConsole({ country }: { country: SelectedCountry }) {
   const lastStrikeLabel = stats ? ago(stats.lastAgeSec) : 'Loading'
 
   return (
-    <div className="pointer-events-auto fixed left-1/2 top-[70px] z-40 w-[min(960px,94vw)] -translate-x-1/2 md:hidden">
+    <div className="pointer-events-auto fixed left-1/2 top-[126px] z-40 w-[min(960px,94vw)] -translate-x-1/2 md:hidden">
       <div className="glass rounded-2xl border border-white/10 p-2 shadow-2xl">
         <div className="flex items-center gap-2">
           <span className="text-xl leading-none" aria-hidden>
@@ -236,6 +268,7 @@ export default function LiveHUD() {
       {/* Bottom-centre betting bar (Game mode only) */}
       {showGamePanels && <BetBar vm={vm} />}
 
+      <MobileNearMeButton />
       {mobileSheet === 'game' && showGamePanels && <MobileGameTopConsole vm={vm} />}
       {selectedCountry && !mobileSheet && !isGame && <MobileCountryTopConsole country={selectedCountry} />}
 

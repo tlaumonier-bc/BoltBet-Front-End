@@ -11,6 +11,7 @@ interface LightningGlobeProps {
   showZoomButtons?: boolean;
   autoRotate?: boolean;
   initialBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number };
+  disableLandingIntro?: boolean;
   /** Fired once the globe's first tiles are in. Supplied by GlobeWrapper. */
   onReady?: () => void;
   countryLinks?: CountryLink[];
@@ -46,7 +47,13 @@ export default function GlobeWrapper(props: LightningGlobeProps) {
 
   return (
     <>
-      <LightningGlobe {...props} onReady={() => setReady(true)} />
+      <LightningGlobe
+        {...props}
+        onReady={() => {
+          setReady(true);
+          props.onReady?.();
+        }}
+      />
       <GlobeLoader fill={props.fill} hidden={ready} />
     </>
   );

@@ -32,6 +32,7 @@ const SEL_REST = { width: 4.0, glow: 0.5, fill: 0.18 };
 const SEL_PEAK = { width: 7.0, glow: 1.0, fill: 0.42 };
 const PULSE_MS = 700;
 const COUNTRY_FLY_PADDING = 1.4; // breathing room around the country on zoom
+const MIN_COUNTRY_FLY_SPAN_DEG = 7.5; // avoid over-zooming small countries
 
 export interface CountryLink {
   iso: string;
@@ -117,6 +118,23 @@ function expandRect(rect: Cesium.Rectangle, factor: number): Cesium.Rectangle {
     Math.max(-HALF_PI, rect.south - h),
     Math.min(PI, rect.east + w),
     Math.min(HALF_PI, rect.north + h),
+  );
+}
+
+function frameCountryRect(rect: Cesium.Rectangle): Cesium.Rectangle {
+  const padded = expandRect(rect, COUNTRY_FLY_PADDING);
+  const center = Cesium.Rectangle.center(padded);
+  const minSpan = Cesium.Math.toRadians(MIN_COUNTRY_FLY_SPAN_DEG);
+  const width = Math.max(padded.width, minSpan);
+  const height = Math.max(padded.height, minSpan);
+  const HALF_PI = Math.PI / 2;
+  const PI = Math.PI;
+
+  return new Cesium.Rectangle(
+    Math.max(-PI, center.longitude - width / 2),
+    Math.max(-HALF_PI, center.latitude - height / 2),
+    Math.min(PI, center.longitude + width / 2),
+    Math.min(HALF_PI, center.latitude + height / 2),
   );
 }
 
@@ -428,14 +446,14 @@ export function loadCountryBorders(
         // map parts span overseas territories (France→Guiana, etc.).
         const mainland = framingBoundsForIso(meta.iso2);
         if (mainland) {
-          const lonPad = ((mainland.maxLon - mainland.minLon) * (COUNTRY_FLY_PADDING - 1)) / 2;
-          const latPad = ((mainland.maxLat - mainland.minLat) * (COUNTRY_FLY_PADDING - 1)) / 2;
           camera.flyTo({
-            destination: Cesium.Rectangle.fromDegrees(
-              mainland.minLon - lonPad,
-              mainland.minLat - latPad,
-              mainland.maxLon + lonPad,
-              mainland.maxLat + latPad,
+            destination: frameCountryRect(
+              Cesium.Rectangle.fromDegrees(
+                mainland.minLon,
+                mainland.minLat,
+                mainland.maxLon,
+                mainland.maxLat,
+              ),
             ),
             duration: 1.4,
           });
@@ -449,7 +467,7 @@ export function loadCountryBorders(
             duration: 1.4,
           });
         } else {
-          camera.flyTo({ destination: expandRect(meta.rect, COUNTRY_FLY_PADDING), duration: 1.4 });
+          camera.flyTo({ destination: frameCountryRect(meta.rect), duration: 1.4 });
         }
       };
 
@@ -503,8 +521,8 @@ export function loadCountryBorders(
       };
 
       // If a country is already selected when the borders finish loading
-      // (e.g. /fi/ukkostutka deep link), light it up now. Camera framing is
-      // handled by initialBounds on cold-land, so we only apply the highlight.
+      // (e.g. /fi/ukkostutka deep link), light it up and fly in now. This uses
+      // the same framing path as direct clicks.
       const initialSel = useLiveStore.getState().selectedCountry;
       let lastSelName = initialSel?.name ?? null;
       if (initialSel?.iso2) {
@@ -513,6 +531,8 @@ export function loadCountryBorders(
           selected = id0;
           applyMode(id0, 'selected');
           startPulse();
+          const meta = metaById.get(id0);
+          if (meta) flyToMeta(meta);
         }
       }
 

@@ -60,6 +60,20 @@ export interface RecentStrikesResponse {
   strikes: RecentStrike[];
 }
 
+export interface NearbyStrike extends RecentStrike {
+  distance_km: number;
+}
+
+export interface NearbyStrikesResponse {
+  lat: number;
+  lon: number;
+  minutes: number;
+  limit: number;
+  radius_km: number;
+  count: number;
+  strikes: NearbyStrike[];
+}
+
 export interface MinuteBucket {
   minute: string;
   count: number;
@@ -130,6 +144,25 @@ export async function getRecentStrikes(
   if (opts.downsample && opts.downsample > 1) q.set('downsample', String(opts.downsample));
   const res = await fetch(`${STRIKES_API}/api/strikes/recent/?${q}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`recent strikes ${res.status}`);
+  return res.json();
+}
+
+export async function getNearbyStrikes(params: {
+  lat: number;
+  lon: number;
+  minutes?: number;
+  limit?: number;
+  radiusKm?: number;
+}): Promise<NearbyStrikesResponse> {
+  const q = new URLSearchParams({
+    lat: String(params.lat),
+    lon: String(params.lon),
+    minutes: String(params.minutes ?? 60),
+    limit: String(params.limit ?? 30),
+    radius_km: String(params.radiusKm ?? 2500),
+  });
+  const res = await fetch(`${STRIKES_API}/api/strikes/nearby/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`nearby strikes ${res.status}`);
   return res.json();
 }
 

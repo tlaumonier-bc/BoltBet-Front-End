@@ -24,6 +24,7 @@ import { GlobeZoomButtons, TileLoadingPill } from './GlobeOverlays';
 import { attachAtmosphereGlow } from '@/lib/globe/atmosphereGlow';
 import { attachLayers } from '@/lib/globe/layerManager';
 import { attachCountryStrikes } from '@/lib/globe/countryStrikesLayer';
+import { attachNearbyStrikes } from '@/lib/globe/nearbyStrikesLayer';
 
 const FRANCE_INTRO_LON = 2.2;
 const FRANCE_INTRO_LAT = 46.2;
@@ -36,6 +37,7 @@ interface LightningGlobeProps {
   showZoomButtons?: boolean;
   autoRotate?: boolean;
   initialBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number };
+  disableLandingIntro?: boolean;
   onReady?: () => void;
   countryLinks?: CountryLink[];
   onPickCountry?: (slug: string) => void;
@@ -48,6 +50,7 @@ export default function LightningGlobe({
   showZoomButtons = false,
   autoRotate,
   initialBounds,
+  disableLandingIntro = false,
   onReady,
   countryLinks,
   onPickCountry,
@@ -177,6 +180,7 @@ export default function LightningGlobe({
       boundsMinLat == null &&
       boundsMaxLon == null &&
       boundsMaxLat == null &&
+      !disableLandingIntro &&
       !interaction.stopped &&
       !useLiveStore.getState().selectedCountry;
     const runLandingIntro = () => {
@@ -284,6 +288,7 @@ export default function LightningGlobe({
     if (viewOnly) {
       disposers.push(attachOrbitFlights({ camera, interaction }));
       disposers.push(attachCountryStrikes(scene));
+      disposers.push(attachNearbyStrikes(scene));
     }
 
     return () => {
@@ -299,6 +304,7 @@ export default function LightningGlobe({
     boundsMinLat,
     boundsMaxLon,
     boundsMaxLat,
+    disableLandingIntro,
   ]);
 
   return (
