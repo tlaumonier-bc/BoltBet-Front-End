@@ -19,6 +19,9 @@ type Copy = {
   strikes: string;
   latestStrikes: (count: number) => string;
   radius: string;
+  densityLegend: string;
+  low: string;
+  high: string;
   attribution: string;
 };
 
@@ -35,6 +38,9 @@ const COPY: Record<string, Copy> = {
     strikes: 'strikes',
     latestStrikes: (count) => `${count.toLocaleString()} latest strikes`,
     radius: '20 km city radius',
+    densityLegend: 'Strike density',
+    low: 'low',
+    high: 'high',
     attribution: 'Map tiles © CARTO © OpenStreetMap contributors',
   },
   fr: {
@@ -49,6 +55,9 @@ const COPY: Record<string, Copy> = {
     strikes: 'impacts',
     latestStrikes: (count) => `${count.toLocaleString()} derniers impacts`,
     radius: 'rayon ville 20 km',
+    densityLegend: 'Densité des impacts',
+    low: 'faible',
+    high: 'forte',
     attribution: 'Tuiles © CARTO © contributeurs OpenStreetMap',
   },
   es: {
@@ -63,6 +72,9 @@ const COPY: Record<string, Copy> = {
     strikes: 'rayos',
     latestStrikes: (count) => `${count.toLocaleString()} últimos rayos`,
     radius: 'radio urbano 20 km',
+    densityLegend: 'Densidad de rayos',
+    low: 'baja',
+    high: 'alta',
     attribution: 'Map tiles © CARTO © OpenStreetMap contributors',
   },
   de: {
@@ -77,6 +89,9 @@ const COPY: Record<string, Copy> = {
     strikes: 'Blitze',
     latestStrikes: (count) => `${count.toLocaleString()} neueste Blitze`,
     radius: '20 km Stadtradius',
+    densityLegend: 'Blitzdichte',
+    low: 'niedrig',
+    high: 'hoch',
     attribution: 'Kartendaten © CARTO © OpenStreetMap-Mitwirkende',
   },
 };
@@ -181,24 +196,62 @@ function mapTiles(bounds: Bounds, aspect: number) {
   return tiles;
 }
 
-function heatCells(stats: CountryMapStatsResponse | null, bounds: Bounds, aspect: number) {
-  if (!stats) return [];
-  const cells = new Map<string, { x: number; y: number; count: number }>();
-  for (const strike of stats.strikes) {
-    const p = project(bounds, aspect, strike.lat, strike.lon);
-    if (p.x < -5 || p.x > 105 || p.y < -5 || p.y > 105) continue;
-    const gx = Math.floor(p.x / 4);
-    const gy = Math.floor(p.y / 4);
-    const key = `${gx}:${gy}`;
-    const cell = cells.get(key) ?? { x: gx * 4 + 2, y: gy * 4 + 2, count: 0 };
-    cell.count += 1;
-    cells.set(key, cell);
+function heatColor(ratio: number, alphaBoost = 0) {
+  const r = Math.max(0, Math.min(1, ratio));
+  if (r < 0.5) {
+    const t = r / 0.5;
+    return `rgba(250, ${Math.round(204 - t * 92)}, ${Math.round(21 - t * 5)}, ${0.12 + alphaBoost + r * 0.34})`;
   }
-  const max = Math.max(1, ...Array.from(cells.values(), (cell) => cell.count));
-  return Array.from(cells.values()).map((cell) => ({
-    ...cell,
-    ratio: cell.count / max,
-  }));
+  const t = (r - 0.5) / 0.5;
+  return `rgba(${Math.round(249 - t * 120)}, ${Math.round(115 - t * 86)}, ${Math.round(22 - t * 13)}, ${0.28 + alphaBoost + r * 0.34})`;
+}
+
+function quantile(values: number[], q: number) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const idx = Math.min(sorted.length - 1, Math.max(0, Math.floor((sorted.length - 1) * q)));
+  return sorted[idx];
+}
+
+function heatCells(stats: CountryMapStatsResponse | null, bounds: Bounds, aspect: number) {
+  const cols = 28;
+  const rows = Math.max(16, Math.round(cols / Math.max(0.7, aspect || 1.4)));
+  const cells = new Map<string, { col: number; row: number; count: number }>();
+  for (let col = 0; col < cols; col += 1) {
+    for (let row = 0; row < rows; row += 1) {
+      cells.set(`${col}:${row}`, { col, row, count: 0 });
+    }
+  }
+
+  if (stats) {
+    for (const strike of stats.strikes) {
+      const p = project(bounds, aspect, strike.lat, strike.lon);
+      if (p.x < 0 || p.x > 100 || p.y < 0 || p.y > 100) continue;
+      const col = Math.min(cols - 1, Math.max(0, Math.floor((p.x / 100) * cols)));
+      const row = Math.min(rows - 1, Math.max(0, Math.floor((p.y / 100) * rows)));
+      const cell = cells.get(`${col}:${row}`);
+      if (cell) cell.count += 1;
+    }
+  }
+
+  const positiveCounts = Array.from(cells.values(), (cell) => cell.count).filter((count) => count > 0);
+  const p50 = quantile(positiveCounts, 0.5);
+  const p90 = Math.max(1, quantile(positiveCounts, 0.9));
+  const max = Math.max(1, ...positiveCounts);
+  return {
+    cells: Array.from(cells.values()).map((cell) => {
+      const ratio = cell.count <= 0 ? 0 : Math.min(1, Math.log1p(cell.count) / Math.log1p(p90));
+      return {
+        x: (cell.col / cols) * 100,
+        y: (cell.row / rows) * 100,
+        width: 100 / cols,
+        height: 100 / rows,
+        count: cell.count,
+        ratio,
+      };
+    }),
+    legend: { p50, p90, max },
+  };
 }
 
 export default function CountryLightningMapCard({ page, translated = false }: { page: LocalePage; translated?: boolean }) {
@@ -299,18 +352,17 @@ export default function CountryLightningMapCard({ page, translated = false }: { 
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(250,204,21,0.08),transparent_42%),linear-gradient(to_bottom,rgba(2,6,23,0.04),rgba(2,6,23,0.38))]" />
 
           {mode === 'heat' && (
-            <div className="absolute inset-0">
-              {heat.map((cell) => (
+            <div className="absolute inset-0 opacity-95 blur-[0.5px]">
+              {heat.cells.map((cell) => (
                 <span
                   key={`${cell.x}:${cell.y}`}
-                  className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full blur-md"
+                  className="absolute"
                   style={{
                     left: `${cell.x}%`,
                     top: `${cell.y}%`,
-                    width: `${18 + cell.ratio * 54}px`,
-                    height: `${18 + cell.ratio * 54}px`,
-                    background: `rgba(250, ${Math.round(120 + cell.ratio * 120)}, 21, ${0.14 + cell.ratio * 0.46})`,
-                    boxShadow: `0 0 ${18 + cell.ratio * 28}px rgba(250, 204, 21, ${0.22 + cell.ratio * 0.3})`,
+                    width: `${cell.width}%`,
+                    height: `${cell.height}%`,
+                    background: heatColor(cell.ratio),
                   }}
                   title={`${cell.count} ${copy.strikes}`}
                 />
@@ -385,13 +437,30 @@ export default function CountryLightningMapCard({ page, translated = false }: { 
               ))}
             </div>
           ) : (
-            <div className="mt-4 rounded-2xl bg-white/[0.04] p-4">
-              <div className="font-display text-3xl font-extrabold text-bolt">
-                {stats.strikeCount.toLocaleString()}
+            <div className="mt-4 space-y-4">
+              <div className="rounded-2xl bg-white/[0.04] p-4">
+                <div className="font-display text-3xl font-extrabold text-bolt">
+                  {stats.strikeCount.toLocaleString()}
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-white/55">
+                  {copy.latestStrikes(stats.strikeCount)} projected as density clusters across {bounds.label}.
+                </p>
               </div>
-              <p className="mt-2 text-sm leading-relaxed text-white/55">
-                {copy.latestStrikes(stats.strikeCount)} projected as density clusters across {bounds.label}.
-              </p>
+
+              <div className="rounded-2xl bg-white/[0.04] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-white/55">
+                    {copy.densityLegend}
+                  </span>
+                  <span className="text-[10px] text-white/35">p90 {heat.legend.p90.toLocaleString()}</span>
+                </div>
+                <div className="mt-3 h-3 rounded-full border border-white/10 bg-linear-to-r from-yellow-300/35 via-orange-500/55 to-red-900/80" />
+                <div className="mt-2 flex justify-between text-[10px] text-white/40">
+                  <span>{copy.low} · 0</span>
+                  <span>p50 · {heat.legend.p50.toLocaleString()}</span>
+                  <span>{copy.high} · {heat.legend.max.toLocaleString()}</span>
+                </div>
+              </div>
             </div>
           )}
         </aside>

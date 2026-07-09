@@ -518,7 +518,7 @@ export default function CountryLiveSeoCard({ page, translated = false }: { page:
       </div>
 
       <div className="grid items-stretch gap-4 p-4 sm:gap-5 sm:p-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="flex min-h-[360px] flex-col">
+        <div className="flex min-h-[220px] flex-col">
           {state === 'loading' && (
             <div className="grid gap-2 sm:grid-cols-3">
               {[copy.lastHour, copy.latestStrike, copy.weatherUnavailable].map((label) => (
@@ -553,7 +553,7 @@ export default function CountryLiveSeoCard({ page, translated = false }: { page:
           )}
         </div>
 
-        <aside className="min-h-[360px] rounded-2xl border border-white/10 bg-black/10 p-4">
+        <aside className="rounded-2xl border border-white/10 bg-black/10 p-4">
           <h3 className="font-display text-sm font-bold">{copy.latestNews}</h3>
           {articles.length ? (
             <div className="mt-3 space-y-3">
