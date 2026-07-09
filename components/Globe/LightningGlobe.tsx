@@ -284,7 +284,7 @@ export default function LightningGlobe({
     // live lightning strikes
     disposers.push(attachLightningStrikes(scene));
 
-    // "orbit to" flights + per-country "latest 5000 strikes" layer (view-only)
+    // "orbit to" flights + per-country "latest 10000 strikes" layer (view-only)
     if (viewOnly) {
       disposers.push(attachOrbitFlights({ camera, interaction }));
       disposers.push(attachCountryStrikes(scene));

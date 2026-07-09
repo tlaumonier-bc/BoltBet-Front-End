@@ -444,7 +444,7 @@ export default function CountryLiveSeoCard({ page, translated = false }: { page:
     let alive = true;
 
     Promise.allSettled([
-      getCountryStrikesResult(page.locale, 5000),
+      getCountryStrikesResult(page.locale, 10000),
       getWeatherNow(center.lat, center.lon),
       getCountryNews({
         country: page.locale,
@@ -517,8 +517,8 @@ export default function CountryLiveSeoCard({ page, translated = false }: { page:
         </div>
       </div>
 
-      <div className="grid gap-4 p-4 sm:gap-5 sm:p-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div>
+      <div className="grid items-stretch gap-4 p-4 sm:gap-5 sm:p-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="flex min-h-[360px] flex-col">
           {state === 'loading' && (
             <div className="grid gap-2 sm:grid-cols-3">
               {[copy.lastHour, copy.latestStrike, copy.weatherUnavailable].map((label) => (
@@ -528,7 +528,7 @@ export default function CountryLiveSeoCard({ page, translated = false }: { page:
           )}
 
           {state !== 'loading' && (
-            <>
+            <div className="flex min-h-0 flex-1 flex-col">
               <div className="grid gap-2 sm:grid-cols-3">
                 <MiniStat value={lastHourLabel} label={copy.lastHour} highlight />
                 <MiniStat value={stats?.lastStrike ?? '—'} label={copy.latestStrike} />
@@ -546,13 +546,14 @@ export default function CountryLiveSeoCard({ page, translated = false }: { page:
                   barLabel={copy.eachBar}
                   nowLabel={copy.now}
                   ariaLabel={copy.strikeHistoryAria}
+                  fill
                 />
               )}
-            </>
+            </div>
           )}
         </div>
 
-        <aside className="rounded-2xl border border-white/10 bg-black/10 p-4">
+        <aside className="min-h-[360px] rounded-2xl border border-white/10 bg-black/10 p-4">
           <h3 className="font-display text-sm font-bold">{copy.latestNews}</h3>
           {articles.length ? (
             <div className="mt-3 space-y-3">

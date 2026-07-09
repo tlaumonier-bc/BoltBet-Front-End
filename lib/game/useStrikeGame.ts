@@ -235,7 +235,7 @@ export function useStrikeGame(): StrikeGameVM {
     let alive = true;
     (async () => {
       try {
-        const rows = await getCountryStrikes(iso, 5000);
+        const rows = await getCountryStrikes(iso, 10000);
         if (!alive || !rows.length) return;
         useGameStore.getState().seedStrikes(
           rows.map((s) => ({

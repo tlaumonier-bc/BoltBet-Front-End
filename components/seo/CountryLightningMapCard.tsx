@@ -104,6 +104,18 @@ function zoomForBounds(bounds: Bounds): number {
   return 8;
 }
 
+function paddedBounds(bounds: Bounds): Bounds {
+  const lonPad = Math.max(0.8, Math.abs(bounds.maxLon - bounds.minLon) * 0.18);
+  const latPad = Math.max(0.5, Math.abs(bounds.maxLat - bounds.minLat) * 0.18);
+  return {
+    ...bounds,
+    minLon: Math.max(-180, bounds.minLon - lonPad),
+    maxLon: Math.min(180, bounds.maxLon + lonPad),
+    minLat: Math.max(-85, bounds.minLat - latPad),
+    maxLat: Math.min(85, bounds.maxLat + latPad),
+  };
+}
+
 function worldPoint(lat: number, lon: number, zoom: number) {
   const scale = TILE_SIZE * 2 ** zoom;
   const x = ((lon + 180) / 360) * scale;
@@ -112,37 +124,49 @@ function worldPoint(lat: number, lon: number, zoom: number) {
   return { x, y };
 }
 
-function project(bounds: Bounds, lat: number, lon: number) {
-  const zoom = zoomForBounds(bounds);
-  const nw = worldPoint(bounds.maxLat, bounds.minLon, zoom);
-  const se = worldPoint(bounds.minLat, bounds.maxLon, zoom);
-  const p = worldPoint(lat, lon, zoom);
+function viewport(bounds: Bounds) {
+  const padded = paddedBounds(bounds);
+  const zoom = zoomForBounds(padded);
+  const nw = worldPoint(padded.maxLat, padded.minLon, zoom);
+  const se = worldPoint(padded.minLat, padded.maxLon, zoom);
+  const width = Math.max(1, se.x - nw.x);
+  const height = Math.max(1, se.y - nw.y);
+  const side = Math.max(width, height);
+  const centerX = (nw.x + se.x) / 2;
+  const centerY = (nw.y + se.y) / 2;
   return {
-    x: ((p.x - nw.x) / Math.max(1, se.x - nw.x)) * 100,
-    y: ((p.y - nw.y) / Math.max(1, se.y - nw.y)) * 100,
+    zoom,
+    left: centerX - side / 2,
+    top: centerY - side / 2,
+    size: side,
+  };
+}
+
+function project(bounds: Bounds, lat: number, lon: number) {
+  const view = viewport(bounds);
+  const p = worldPoint(lat, lon, view.zoom);
+  return {
+    x: ((p.x - view.left) / view.size) * 100,
+    y: ((p.y - view.top) / view.size) * 100,
   };
 }
 
 function mapTiles(bounds: Bounds) {
-  const zoom = zoomForBounds(bounds);
-  const nw = worldPoint(bounds.maxLat, bounds.minLon, zoom);
-  const se = worldPoint(bounds.minLat, bounds.maxLon, zoom);
-  const minX = Math.floor(nw.x / TILE_SIZE);
-  const maxX = Math.floor(se.x / TILE_SIZE);
-  const minY = Math.floor(nw.y / TILE_SIZE);
-  const maxY = Math.floor(se.y / TILE_SIZE);
-  const width = Math.max(1, se.x - nw.x);
-  const height = Math.max(1, se.y - nw.y);
+  const view = viewport(bounds);
+  const minX = Math.floor(view.left / TILE_SIZE);
+  const maxX = Math.floor((view.left + view.size) / TILE_SIZE);
+  const minY = Math.floor(view.top / TILE_SIZE);
+  const maxY = Math.floor((view.top + view.size) / TILE_SIZE);
   const tiles = [];
   for (let x = minX; x <= maxX; x++) {
     for (let y = minY; y <= maxY; y++) {
       tiles.push({
-        key: `${zoom}-${x}-${y}`,
-        src: `https://basemaps.cartocdn.com/light_all/${zoom}/${x}/${y}.png`,
-        left: ((x * TILE_SIZE - nw.x) / width) * 100,
-        top: ((y * TILE_SIZE - nw.y) / height) * 100,
-        width: (TILE_SIZE / width) * 100,
-        height: (TILE_SIZE / height) * 100,
+        key: `${view.zoom}-${x}-${y}`,
+        src: `https://basemaps.cartocdn.com/light_all/${view.zoom}/${x}/${y}.png`,
+        left: ((x * TILE_SIZE - view.left) / view.size) * 100,
+        top: ((y * TILE_SIZE - view.top) / view.size) * 100,
+        width: (TILE_SIZE / view.size) * 100,
+        height: (TILE_SIZE / view.size) * 100,
       });
     }
   }
@@ -226,9 +250,9 @@ export default function CountryLightningMapCard({ page, translated = false }: { 
         </div>
       </div>
 
-      <div className="grid gap-4 p-4 sm:p-6 lg:grid-cols-[1fr_280px]">
-        <div className="relative h-[360px] overflow-hidden rounded-2xl border border-white/10 bg-slate-950 md:h-[440px]">
-          <div className="absolute inset-0 scale-[1.03] opacity-95 saturate-[0.9]">
+      <div className="grid items-stretch gap-4 p-4 sm:p-6 lg:grid-cols-[1fr_280px]">
+        <div className="relative min-h-[420px] overflow-hidden rounded-2xl border border-white/10 bg-slate-950 lg:h-auto">
+          <div className="absolute inset-0 opacity-95 saturate-[0.9]">
             {tiles.map((tile) => (
               <img
                 key={tile.key}
@@ -296,7 +320,7 @@ export default function CountryLightningMapCard({ page, translated = false }: { 
           </div>
         </div>
 
-        <aside className="rounded-2xl border border-white/10 bg-black/10 p-4">
+        <aside className="min-h-[420px] rounded-2xl border border-white/10 bg-black/10 p-4">
           <div className="flex items-center justify-between gap-3">
             <h3 className="font-display text-sm font-bold">
               {mode === 'cities' ? copy.topCities : copy.heat}

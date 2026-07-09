@@ -201,7 +201,7 @@ export async function getStrikesPerMinute(minutes = 15): Promise<StrikesPerMinut
   return res.json();
 }
 
-export async function getCountryStrikesResult(country: string, limit = 5000): Promise<CountryStrikesResult> {
+export async function getCountryStrikesResult(country: string, limit = 10000): Promise<CountryStrikesResult> {
   const q = new URLSearchParams({ country, limit: String(limit) });
   const res = await fetch(`${API}/api/strikes/by-country/?${q}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`country strikes ${res.status}`);
@@ -214,7 +214,7 @@ export async function getCountryStrikesResult(country: string, limit = 5000): Pr
   };
 }
 
-export async function getCountryStrikes(country: string, limit = 5000): Promise<CountryStrike[]> {
+export async function getCountryStrikes(country: string, limit = 10000): Promise<CountryStrike[]> {
   const result = await getCountryStrikesResult(country, limit);
   return result.strikes;
 }
