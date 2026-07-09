@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CountryNewsArticle, CountryStrike, CountryStrikeMeta, WeatherNow } from '@/lib/api';
 import { getCountryNews, getCountryStrikesResult, getWeatherNow } from '@/lib/api';
 import type { LocalePage } from '@/lib/content/content-types';
@@ -428,6 +428,9 @@ export default function CountryLiveSeoCard({ page, translated = false }: { page:
   const [weather, setWeather] = useState<WeatherNow | null>(null);
   const [articles, setArticles] = useState<CountryNewsArticle[]>([]);
   const [now, setNow] = useState(() => Date.now());
+  const [chartHeight, setChartHeight] = useState<number | null>(null);
+  const statsBlockRef = useRef<HTMLDivElement | null>(null);
+  const newsBlockRef = useRef<HTMLElement | null>(null);
 
   const bounds = useMemo(() => boundsForLocale(page.locale), [page.locale]);
   const lang = translated ? 'en' : page.hreflang.split('-')[0].toLowerCase();
@@ -473,6 +476,35 @@ export default function CountryLiveSeoCard({ page, translated = false }: { page:
     const timer = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const updateChartHeight = () => {
+      if (window.innerWidth < 1024) {
+        setChartHeight(null);
+        return;
+      }
+
+      const newsHeight = newsBlockRef.current?.getBoundingClientRect().height ?? 0;
+      const statsHeight = statsBlockRef.current?.getBoundingClientRect().height ?? 0;
+      if (!newsHeight || !statsHeight) {
+        setChartHeight(null);
+        return;
+      }
+
+      const next = Math.max(120, Math.round(newsHeight - statsHeight));
+      setChartHeight((current) => (current === next ? current : next));
+    };
+
+    updateChartHeight();
+    const observer = new ResizeObserver(updateChartHeight);
+    if (statsBlockRef.current) observer.observe(statsBlockRef.current);
+    if (newsBlockRef.current) observer.observe(newsBlockRef.current);
+    window.addEventListener('resize', updateChartHeight);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateChartHeight);
+    };
+  }, [articles.length, state, strikes.length, weather]);
 
   const stats = useMemo(() => {
     if (!strikes.length) return null;
@@ -529,7 +561,7 @@ export default function CountryLiveSeoCard({ page, translated = false }: { page:
 
           {state !== 'loading' && (
             <div className="flex min-h-0 flex-1 flex-col">
-              <div className="grid gap-2 sm:grid-cols-3">
+              <div ref={statsBlockRef} className="grid gap-2 sm:grid-cols-3">
                 <MiniStat value={lastHourLabel} label={copy.lastHour} highlight />
                 <MiniStat value={stats?.lastStrike ?? '—'} label={copy.latestStrike} />
                 <MiniStat
@@ -539,21 +571,26 @@ export default function CountryLiveSeoCard({ page, translated = false }: { page:
               </div>
 
               {strikes.length > 2 && (
-                <StrikeHistoryChart
-                  rows={strikes}
-                  now={now}
-                  title={copy.strikeHistory}
-                  barLabel={copy.eachBar}
-                  nowLabel={copy.now}
-                  ariaLabel={copy.strikeHistoryAria}
-                  fill
-                />
+                <div
+                  className={chartHeight ? 'flex min-h-0 flex-col' : 'flex min-h-[120px] flex-1 flex-col'}
+                  style={chartHeight ? { height: chartHeight } : undefined}
+                >
+                  <StrikeHistoryChart
+                    rows={strikes}
+                    now={now}
+                    title={copy.strikeHistory}
+                    barLabel={copy.eachBar}
+                    nowLabel={copy.now}
+                    ariaLabel={copy.strikeHistoryAria}
+                    fill
+                  />
+                </div>
               )}
             </div>
           )}
         </div>
 
-        <aside className="rounded-2xl border border-white/10 bg-black/10 p-4">
+        <aside ref={newsBlockRef} className="rounded-2xl border border-white/10 bg-black/10 p-4">
           <h3 className="font-display text-sm font-bold">{copy.latestNews}</h3>
           {articles.length ? (
             <div className="mt-3 space-y-3">
