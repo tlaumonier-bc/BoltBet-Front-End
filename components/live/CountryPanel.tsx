@@ -105,7 +105,7 @@ export default function CountryPanel() {
     : (strikeMeta?.lastHour ?? stats?.lastHour ?? 0).toLocaleString()
 
   return (
-    <div className="glass pointer-events-auto flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl p-4">
+    <div className="glass panel-scroll pointer-events-auto min-h-0 w-full overflow-y-auto rounded-2xl p-4">
       {/* header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
@@ -166,7 +166,7 @@ export default function CountryPanel() {
           Loading recent strikes…
         </div>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col">
+        <>
           {/* hero: last-hour count + intensity */}
           <div className="mt-4 rounded-xl border border-white/10 bg-linear-to-br from-white/8 to-transparent px-4 py-3">
             <div className="flex items-end justify-between">
@@ -195,12 +195,12 @@ export default function CountryPanel() {
           </div>
 
           {/* strike history chart (replaces signal quality) */}
-          <StrikeHistoryChart rows={rows} now={now} fill />
+          <StrikeHistoryChart rows={rows} now={now} />
 
-          <p className="mt-3 shrink-0 text-[10px] leading-relaxed text-white/30">
+          <p className="mt-3 text-[10px] leading-relaxed text-white/30">
             Latest {stats.total.toLocaleString()} strikes · {span(stats.spanMin)} window
           </p>
-        </div>
+        </>
       )}
     </div>
   )

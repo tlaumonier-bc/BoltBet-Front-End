@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LocalePage } from '@/lib/content/content-types';
 import { boundsForLocale, type Bounds } from '@/lib/map/countryBounds';
 import { getCountryMapStats, type CountryMapStatsResponse } from '@/lib/api';
@@ -124,60 +124,68 @@ function worldPoint(lat: number, lon: number, zoom: number) {
   return { x, y };
 }
 
-function viewport(bounds: Bounds) {
+function viewport(bounds: Bounds, aspect: number) {
   const padded = paddedBounds(bounds);
   const zoom = zoomForBounds(padded);
   const nw = worldPoint(padded.maxLat, padded.minLon, zoom);
   const se = worldPoint(padded.minLat, padded.maxLon, zoom);
   const width = Math.max(1, se.x - nw.x);
   const height = Math.max(1, se.y - nw.y);
-  const side = Math.max(width, height);
+  const targetAspect = Math.max(0.65, Math.min(2.4, aspect || 1.45));
+  let viewWidth = width;
+  let viewHeight = height;
+  if (viewWidth / viewHeight < targetAspect) {
+    viewWidth = viewHeight * targetAspect;
+  } else {
+    viewHeight = viewWidth / targetAspect;
+  }
   const centerX = (nw.x + se.x) / 2;
   const centerY = (nw.y + se.y) / 2;
   return {
     zoom,
-    left: centerX - side / 2,
-    top: centerY - side / 2,
-    size: side,
+    left: centerX - viewWidth / 2,
+    top: centerY - viewHeight / 2,
+    width: viewWidth,
+    height: viewHeight,
   };
 }
 
-function project(bounds: Bounds, lat: number, lon: number) {
-  const view = viewport(bounds);
+function project(bounds: Bounds, aspect: number, lat: number, lon: number) {
+  const view = viewport(bounds, aspect);
   const p = worldPoint(lat, lon, view.zoom);
   return {
-    x: ((p.x - view.left) / view.size) * 100,
-    y: ((p.y - view.top) / view.size) * 100,
+    x: ((p.x - view.left) / view.width) * 100,
+    y: ((p.y - view.top) / view.height) * 100,
   };
 }
 
-function mapTiles(bounds: Bounds) {
-  const view = viewport(bounds);
+function mapTiles(bounds: Bounds, aspect: number) {
+  const view = viewport(bounds, aspect);
   const minX = Math.floor(view.left / TILE_SIZE);
-  const maxX = Math.floor((view.left + view.size) / TILE_SIZE);
+  const maxX = Math.floor((view.left + view.width) / TILE_SIZE);
   const minY = Math.floor(view.top / TILE_SIZE);
-  const maxY = Math.floor((view.top + view.size) / TILE_SIZE);
+  const maxY = Math.floor((view.top + view.height) / TILE_SIZE);
   const tiles = [];
   for (let x = minX; x <= maxX; x++) {
     for (let y = minY; y <= maxY; y++) {
       tiles.push({
         key: `${view.zoom}-${x}-${y}`,
         src: `https://basemaps.cartocdn.com/light_all/${view.zoom}/${x}/${y}.png`,
-        left: ((x * TILE_SIZE - view.left) / view.size) * 100,
-        top: ((y * TILE_SIZE - view.top) / view.size) * 100,
-        width: (TILE_SIZE / view.size) * 100,
-        height: (TILE_SIZE / view.size) * 100,
+        left: ((x * TILE_SIZE - view.left) / view.width) * 100,
+        top: ((y * TILE_SIZE - view.top) / view.height) * 100,
+        width: (TILE_SIZE / view.width) * 100,
+        height: (TILE_SIZE / view.height) * 100,
       });
     }
   }
   return tiles;
 }
 
-function heatCells(stats: CountryMapStatsResponse | null, bounds: Bounds) {
+function heatCells(stats: CountryMapStatsResponse | null, bounds: Bounds, aspect: number) {
   if (!stats) return [];
   const cells = new Map<string, { x: number; y: number; count: number }>();
   for (const strike of stats.strikes) {
-    const p = project(bounds, strike.lat, strike.lon);
+    const p = project(bounds, aspect, strike.lat, strike.lon);
     if (p.x < -5 || p.x > 105 || p.y < -5 || p.y > 105) continue;
     const gx = Math.floor(p.x / 4);
     const gy = Math.floor(p.y / 4);
@@ -197,11 +205,29 @@ export default function CountryLightningMapCard({ page, translated = false }: { 
   const [mode, setMode] = useState<MapMode>('cities');
   const [stats, setStats] = useState<CountryMapStatsResponse | null>(null);
   const [error, setError] = useState(false);
+  const [mapSize, setMapSize] = useState({ width: 1, height: 1 });
+  const mapRef = useRef<HTMLDivElement | null>(null);
   const copy = copyFor(page, translated);
   const bounds = boundsForLocale(page.locale);
-  const tiles = useMemo(() => mapTiles(bounds), [bounds]);
-  const heat = useMemo(() => heatCells(stats, bounds), [stats, bounds]);
+  const mapAspect = mapSize.width / Math.max(1, mapSize.height);
+  const tiles = useMemo(() => mapTiles(bounds, mapAspect), [bounds, mapAspect]);
+  const heat = useMemo(() => heatCells(stats, bounds, mapAspect), [stats, bounds, mapAspect]);
   const maxCityStrikes = Math.max(1, ...(stats?.cities ?? []).map((city) => city.strikes));
+
+  useEffect(() => {
+    const el = mapRef.current;
+    if (!el) return;
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setMapSize({ width: rect.width, height: rect.height });
+      }
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -251,7 +277,7 @@ export default function CountryLightningMapCard({ page, translated = false }: { 
       </div>
 
       <div className="grid items-stretch gap-4 p-4 sm:p-6 lg:grid-cols-[1fr_280px]">
-        <div className="relative min-h-[420px] overflow-hidden rounded-2xl border border-white/10 bg-slate-950 lg:h-auto">
+        <div ref={mapRef} className="relative min-h-[420px] overflow-hidden rounded-2xl border border-white/10 bg-slate-950 lg:h-auto">
           <div className="absolute inset-0 opacity-95 saturate-[0.9]">
             {tiles.map((tile) => (
               <img
@@ -293,7 +319,7 @@ export default function CountryLightningMapCard({ page, translated = false }: { 
           )}
 
           {mode === 'cities' && stats?.cities.map((city, index) => {
-            const p = project(bounds, city.lat, city.lon);
+            const p = project(bounds, mapAspect, city.lat, city.lon);
             const ratio = city.strikes / maxCityStrikes;
             return (
               <div
