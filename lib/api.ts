@@ -129,6 +129,34 @@ export interface CountryNewsResponse {
   articles: CountryNewsArticle[];
 }
 
+export interface CountryMapCity {
+  city_id: string;
+  city_name: string;
+  country: string;
+  lat: number;
+  lon: number;
+  population: number;
+  strikes: number;
+}
+
+export interface CountryMapStrike {
+  lat: number;
+  lon: number;
+  quality: string;
+  received_at: string;
+}
+
+export interface CountryMapStatsResponse {
+  country: string;
+  period: 'all' | 'year' | 'month' | 'day';
+  cityRadiusKm: number;
+  cityCount: number;
+  strikeLimit: number;
+  strikeCount: number;
+  cities: CountryMapCity[];
+  strikes: CountryMapStrike[];
+}
+
 export async function getRecentStrikes(
   minutes: number,
   limit = 5000,
@@ -212,6 +240,21 @@ export async function getCountryNews(params: {
   });
   const res = await fetch(`${API}/api/news/country/?${q}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`country news ${res.status}`);
+  return res.json();
+}
+
+export async function getCountryMapStats(params: {
+  country: string;
+  strikeLimit?: number;
+  period?: 'all' | 'year' | 'month' | 'day';
+}): Promise<CountryMapStatsResponse> {
+  const q = new URLSearchParams({
+    country: params.country,
+    strike_limit: String(params.strikeLimit ?? 10000),
+    period: params.period ?? 'all',
+  });
+  const res = await fetch(`${API}/api/stats/country-map/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`country map stats ${res.status}`);
   return res.json();
 }
 

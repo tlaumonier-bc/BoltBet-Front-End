@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { englishTranslationTemplateFor } from '@/lib/content/content';
 import type { ContentSection, FaqItem, LocalePage, PageContent } from '@/lib/content/content-types';
 import CountryLiveSeoCard from './CountryLiveSeoCard';
+import CountryLightningMapCard from './CountryLightningMapCard';
 import PlayCta from './PlayCta';
 
 function replaceCountry(text: string, sourceCountry: string, targetCountry: string): string {
@@ -109,6 +110,7 @@ export default function SeoContent({ page }: { page: LocalePage }) {
       )}
 
       <CountryLiveSeoCard page={page} translated={translated && canTranslate} />
+      <CountryLightningMapCard page={page} translated={translated && canTranslate} />
 
       {/* localized content sections */}
       <div className="mt-8 space-y-8 sm:mt-12 sm:space-y-12">
