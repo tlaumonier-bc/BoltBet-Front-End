@@ -4,6 +4,7 @@ import { useLiveStore } from '@/store/liveStore'
 import { ORBIT_LOCATIONS } from '@/lib/live/locations'
 import { Section, coord } from './hudShared'
 import { useNearMeAction } from './useNearMeAction'
+import { useT } from '@/lib/i18n/ui'
 
 export default function OrbitSection() {
   const mode = useLiveStore((s) => s.mode)
@@ -12,6 +13,7 @@ export default function OrbitSection() {
   const clearOrbit = useLiveStore((s) => s.clearOrbit)
   const setSelectedCountry = useLiveStore((s) => s.setSelectedCountry)
   const { nearMe, nearbyMessage, nearbyState, nearbyStrikes, resetNearby } = useNearMeAction()
+  const { t } = useT()
   const focus = orbitTarget
     ? ORBIT_LOCATIONS.find((l) => l.id === orbitTarget.id) ?? null
     : null
@@ -20,12 +22,12 @@ export default function OrbitSection() {
   const backToGlobe = () => {
     if (mode === 'game') setSelectedCountry(null)
     resetNearby()
-    orbitTo({ id: 'globe', label: 'Whole globe', lat: 20, lon: 0, flyHeightM: 20_000_000 })
+    orbitTo({ id: 'globe', label: t('live.wholeGlobe'), lat: 20, lon: 0, flyHeightM: 20_000_000 })
   }
 
   return (
     <Section
-      title="Orbit to"
+      title={t('live.orbitTo')}
       badge={
         focus ? (
           <button
@@ -48,11 +50,11 @@ export default function OrbitSection() {
         } disabled:cursor-wait disabled:opacity-70`}
       >
         <span aria-hidden>📍</span>
-        {nearbyState === 'loading' ? 'Finding nearby strikes…' : 'Near me'}
+        {nearbyState === 'loading' ? t('live.findingNearby') : t('live.nearMe')}
       </button>
       {(nearbyMessage || nearbyStrikes.length > 0) && (
         <p className={`mb-2 text-[10px] ${nearbyState === 'error' ? 'text-rose-300' : 'text-white/45'}`}>
-          {nearbyMessage || `${nearbyStrikes.length} nearby strikes`}
+          {nearbyMessage || t('live.nearbyStrikes', { count: nearbyStrikes.length })}
         </p>
       )}
 
@@ -65,7 +67,7 @@ export default function OrbitSection() {
         }`}
       >
         <span aria-hidden>🌍</span>
-        Back to globe
+        {t('live.backToGlobe')}
       </button>
 
       <div className="grid grid-cols-2 gap-1.5">

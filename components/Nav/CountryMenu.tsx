@@ -5,12 +5,14 @@
 // so crawlers always see them.
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useT } from '@/lib/i18n/ui';
 
 type Item = { slug: string; country: string; primaryKeyword: string };
 
 export default function CountryMenu({ countries }: { countries: Item[] }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { t } = useT();
 
   useEffect(() => {
     if (!open) return;
@@ -44,9 +46,9 @@ export default function CountryMenu({ countries }: { countries: Item[] }) {
         aria-haspopup="true"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1 rounded-lg px-3 py-1.5 transition hover:bg-white/10 hover:text-white"
+        className="flex items-center gap-1 whitespace-nowrap rounded-lg px-3 py-1.5 transition hover:bg-white/10 hover:text-white"
       >
-        By country
+        {t('nav.byCountry')}
         <span className={`text-[10px] transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
       </button>
 

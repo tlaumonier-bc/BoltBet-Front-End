@@ -7,6 +7,7 @@ import type { LocalePage } from '@/lib/content/content-types';
 import { boundsForLocale } from '@/lib/map/countryBounds';
 import { flagEmoji } from '@/lib/live/owm';
 import StrikeHistoryChart from '@/components/live/StrikeHistoryChart';
+import { useUiLanguage } from '@/lib/i18n/ui';
 
 type LoadState = 'loading' | 'ready' | 'empty';
 
@@ -421,7 +422,7 @@ function statLabel(perMin: number, copy: LiveCopy): string {
   return copy.status.calm;
 }
 
-export default function CountryLiveSeoCard({ page, translated = false }: { page: LocalePage; translated?: boolean }) {
+export default function CountryLiveSeoCard({ page }: { page: LocalePage }) {
   const [state, setState] = useState<LoadState>('loading');
   const [strikes, setStrikes] = useState<CountryStrike[]>([]);
   const [strikeMeta, setStrikeMeta] = useState<CountryStrikeMeta | null>(null);
@@ -431,9 +432,10 @@ export default function CountryLiveSeoCard({ page, translated = false }: { page:
   const [chartHeight, setChartHeight] = useState<number | null>(null);
   const statsBlockRef = useRef<HTMLDivElement | null>(null);
   const newsBlockRef = useRef<HTMLElement | null>(null);
+  const { language } = useUiLanguage();
 
   const bounds = useMemo(() => boundsForLocale(page.locale), [page.locale]);
-  const lang = translated ? 'en' : page.hreflang.split('-')[0].toLowerCase();
+  const lang = language;
   const copy = LIVE_COPY[lang] ?? LIVE_COPY.en;
   const center = useMemo(
     () => ({
@@ -535,7 +537,7 @@ export default function CountryLiveSeoCard({ page, translated = false }: { page:
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-bolt/80 sm:text-xs sm:tracking-[0.22em]">
-              {copy.liveIn(translated ? page.country : localCountryName(page))}
+              {copy.liveIn(localCountryName(page))}
             </p>
             <h2 className="font-display mt-1 text-lg font-bold sm:text-xl">
               {flagEmoji(page.locale)} {copy.activityNow}

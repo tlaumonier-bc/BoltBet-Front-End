@@ -1,17 +1,18 @@
 'use client'
 // components/live/ModeBar.tsx — Day/Night imagery toggle + Free/Beginner/Pro/Game switch.
 import { useLiveStore, type LiveViewMode, type GlobeMapStyle } from '@/store/liveStore'
+import { useT } from '@/lib/i18n/ui'
 
-const MODES: { id: LiveViewMode; label: string }[] = [
-  { id: 'free', label: 'Free' },
-  { id: 'beginner', label: 'Beginner' },
-  { id: 'pro', label: 'Pro' },
-  { id: 'game', label: 'Game' },
+const MODES: { id: LiveViewMode; labelKey: string }[] = [
+  { id: 'free', labelKey: 'live.free' },
+  { id: 'beginner', labelKey: 'live.beginner' },
+  { id: 'pro', labelKey: 'live.pro' },
+  { id: 'game', labelKey: 'live.game' },
 ]
 
-const MAP_STYLES: { id: GlobeMapStyle; label: string }[] = [
-  { id: 'day', label: 'Day' },
-  { id: 'night', label: 'Night' },
+const MAP_STYLES: { id: GlobeMapStyle; labelKey: string }[] = [
+  { id: 'day', labelKey: 'live.day' },
+  { id: 'night', labelKey: 'live.night' },
 ]
 
 export default function ModeBar({ showModeSwitch = true }: { showModeSwitch?: boolean }) {
@@ -19,6 +20,7 @@ export default function ModeBar({ showModeSwitch = true }: { showModeSwitch?: bo
   const setMode = useLiveStore((s) => s.setMode)
   const mapStyle = useLiveStore((s) => s.mapStyle)
   const setMapStyle = useLiveStore((s) => s.setMapStyle)
+  const { t } = useT()
 
   return (
     <>
@@ -34,7 +36,7 @@ export default function ModeBar({ showModeSwitch = true }: { showModeSwitch?: bo
                 : 'text-white/60 hover:text-white'
             }`}
           >
-            {m.label}
+            {t(m.labelKey)}
           </button>
         ))}
       </div>
@@ -51,7 +53,7 @@ export default function ModeBar({ showModeSwitch = true }: { showModeSwitch?: bo
                   : 'text-white/60 hover:text-white'
               }`}
             >
-              {m.label}
+              {t(m.labelKey)}
             </button>
           ))}
         </div>

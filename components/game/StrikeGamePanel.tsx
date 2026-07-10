@@ -8,6 +8,7 @@ import { Section } from '@/components/live/hudShared';
 import StrikeGameGraph from './StrikeGameGraph';
 import type { StrikeGameVM } from '@/lib/game/useStrikeGame';
 import { getLeaderboardContext, type LeaderboardContext, type LeaderboardEntry, type Trophy } from '@/lib/api';
+import { useT } from '@/lib/i18n/ui';
 
 function fmtNet(n: number): string {
   return n > 0 ? `+${n}` : `${n}`;
@@ -62,10 +63,12 @@ function LeaderboardRow({ row, current }: { row: LeaderboardEntry; current: bool
 }
 
 function MiniLeaderboard({ context, username, tokens }: { context: LeaderboardContext | null; username: string; tokens: number }) {
+  const { t } = useT();
+
   if (!context) {
     return (
-      <Section title="Leaderboard">
-        <div className="rounded-xl bg-white/4 px-4 py-3 text-sm text-white/45">Loading ranking...</div>
+      <Section title={t('gamePanel.leaderboard')}>
+        <div className="rounded-xl bg-white/4 px-4 py-3 text-sm text-white/45">{t('gamePanel.loadingRanking')}</div>
       </Section>
     );
   }
@@ -77,14 +80,14 @@ function MiniLeaderboard({ context, username, tokens }: { context: LeaderboardCo
     : 100;
 
   return (
-    <Section title="Leaderboard">
+    <Section title={t('gamePanel.leaderboard')}>
       <div className="rounded-xl border border-white/10 bg-linear-to-br from-white/8 to-transparent p-3">
         <div className="flex items-center gap-3">
           <TrophyImage trophy={next} size={38} />
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-wider text-white/40">Next trophy</div>
+            <div className="text-[10px] uppercase tracking-wider text-white/40">{t('gamePanel.nextTrophy')}</div>
             <div className="truncate text-sm font-semibold text-white/85">
-              {next ? `${next.label} at ${next.points.toLocaleString()} points` : 'All trophies unlocked'}
+              {next ? `${next.label} at ${next.points.toLocaleString()} ${t('gamePanel.points').toLowerCase()}` : t('gamePanel.allTrophiesUnlocked')}
             </div>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
               <div className="h-full rounded-full bg-bolt" style={{ width: `${progress}%` }} />
@@ -106,6 +109,7 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
   const username = useStrikeGameStore((s) => s.username);
   const history = useStrikeGameStore((s) => s.history);
   const [leaderboardContext, setLeaderboardContext] = useState<LeaderboardContext | null>(null);
+  const { t } = useT();
 
   const isCountry = vm.scope.kind === 'country';
   const iso2 = isCountry ? vm.scope.id : null;
@@ -148,13 +152,12 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
           <span className="text-3xl leading-none">{flagEmoji(iso2)}</span>
           <div>
             <div className="font-display text-base font-bold leading-tight">{vm.scope.label}</div>
-            <div className="mt-0.5 text-[11px] uppercase tracking-wider text-white/45">Not playable</div>
+            <div className="mt-0.5 text-[11px] uppercase tracking-wider text-white/45">{t('gamePanel.notPlayable')}</div>
           </div>
         </div>
 
         <p className="mt-4 text-sm leading-relaxed text-white/60">
-          No strikes detected here in the last 30 seconds, so there&rsquo;s nothing to predict yet.
-          Pick a country with live activity, or take on the whole globe.
+          {t('gamePanel.notPlayableBody')}
         </p>
 
         <button
@@ -163,29 +166,29 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
           }}
           className="btn-glow mt-5 w-full cursor-pointer rounded-xl px-4 py-3 text-sm font-bold"
         >
-          ⚡ Find a playable country
+          ⚡ {t('gamePanel.findPlayableCountry')}
         </button>
-        <div className="my-3 text-center text-[11px] uppercase tracking-wider text-white/30">— or —</div>
+        <div className="my-3 text-center text-[11px] uppercase tracking-wider text-white/30">— {t('gamePanel.or')} —</div>
         <button
           onClick={vm.playGlobe}
           className="w-full cursor-pointer rounded-xl border border-electric/40 bg-electric/10 px-4 py-3 text-sm font-bold text-electric transition hover:bg-electric/20"
         >
-          🌍 Play the whole globe
+          🌍 {t('gamePanel.playWholeGlobe')}
         </button>
       </div>
     );
   }
 
   const countdown = vm.pending
-    ? `${Math.ceil(vm.msUntilResolve / 1000)}s to result`
-    : 'play anytime';
+    ? t('gamePanel.secondsToResult', { value: Math.ceil(vm.msUntilResolve / 1000) })
+    : t('gamePanel.playAnytime');
 
   return (
     <div className="glass panel-scroll pointer-events-auto min-h-0 w-full overflow-y-auto rounded-2xl p-4">
       {/* header */}
       <div className="flex items-center justify-between gap-3">
         <span className="font-display text-[11px] font-bold uppercase tracking-[0.25em] text-white/80">
-          Strike game
+          {t('gamePanel.strikeGame')}
         </span>
         <span className="flex min-w-0 items-center gap-1.5 text-sm">
           <span className="text-lg leading-none">{isCountry ? flagEmoji(iso2) : '🌍'}</span>
@@ -200,7 +203,7 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
             <div className="font-display text-4xl font-extrabold tabular-nums text-bolt">
               {Math.round(vm.tokens)}
             </div>
-            <div className="text-[10px] uppercase tracking-wider text-white/40">Points</div>
+            <div className="text-[10px] uppercase tracking-wider text-white/40">{t('gamePanel.points')}</div>
           </div>
           {streak >= 2 && (
             <span className="rounded-full bg-orange-400/15 px-2.5 py-1 text-xs font-bold text-orange-300">
@@ -220,7 +223,7 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
       <MiniLeaderboard context={leaderboardContext} username={username} tokens={Math.round(vm.tokens)} />
 
       {/* graph */}
-      <Section title={`Activity · ${countdown}`}>
+      <Section title={`${t('gamePanel.activity')} · ${countdown}`}>
         <StrikeGameGraph
           series={vm.series}
           seriesMax={vm.seriesMax}
@@ -232,7 +235,7 @@ export default function StrikeGamePanel({ vm }: { vm: StrikeGameVM }) {
 
       {/* last 3 games */}
       {history.length > 0 && (
-        <Section title="Last 3 games">
+        <Section title={t('gamePanel.lastGames')}>
           <div className="space-y-1">
             {history.slice(0, 3).map((h) => (
               <div key={h.id} className="flex items-center justify-between text-xs">

@@ -8,9 +8,11 @@ import StrikesSection from './StrikesSection'
 import RecentStrikesSection from './RecentStrikesSection'
 import TelemetrySection from './TelemetrySection'
 import ProTelemetry from './ProTelemetry'
+import { useT } from '@/lib/i18n/ui'
 
 export default function GlobeInfoPanel({ pro }: { pro: boolean }) {
   const stats = useLiveStats()
+  const { t } = useT()
 
   return (
     <div
@@ -19,7 +21,7 @@ export default function GlobeInfoPanel({ pro }: { pro: boolean }) {
       }`}
     >
       <span className="shrink-0 font-display text-[11px] font-bold uppercase tracking-[0.25em] text-white/80">
-        Globe activity
+        {t('live.globeActivity')}
       </span>
 
       <div className="shrink-0">

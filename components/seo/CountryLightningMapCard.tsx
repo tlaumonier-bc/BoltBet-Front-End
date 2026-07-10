@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LocalePage } from '@/lib/content/content-types';
 import { boundsForLocale, type Bounds } from '@/lib/map/countryBounds';
 import { getCountryMapStats, type CountryMapStatsResponse } from '@/lib/api';
+import { useUiLanguage } from '@/lib/i18n/ui';
 
 type MapMode = 'cities' | 'heat';
 
@@ -98,9 +99,8 @@ const COPY: Record<string, Copy> = {
 
 const TILE_SIZE = 256;
 
-function copyFor(page: LocalePage, translated: boolean): Copy {
-  if (translated) return COPY.en;
-  return COPY[page.locale.toLowerCase()] ?? COPY.en;
+function copyFor(language: string): Copy {
+  return COPY[language] ?? COPY.en;
 }
 
 function clampLat(lat: number): number {
@@ -254,13 +254,14 @@ function heatCells(stats: CountryMapStatsResponse | null, bounds: Bounds, aspect
   };
 }
 
-export default function CountryLightningMapCard({ page, translated = false }: { page: LocalePage; translated?: boolean }) {
+export default function CountryLightningMapCard({ page }: { page: LocalePage }) {
   const [mode, setMode] = useState<MapMode>('cities');
   const [stats, setStats] = useState<CountryMapStatsResponse | null>(null);
   const [error, setError] = useState(false);
   const [mapSize, setMapSize] = useState({ width: 1, height: 1 });
   const mapRef = useRef<HTMLDivElement | null>(null);
-  const copy = copyFor(page, translated);
+  const { language } = useUiLanguage();
+  const copy = copyFor(language);
   const bounds = boundsForLocale(page.locale);
   const mapAspect = mapSize.width / Math.max(1, mapSize.height);
   const tiles = useMemo(() => mapTiles(bounds, mapAspect), [bounds, mapAspect]);
@@ -306,7 +307,7 @@ export default function CountryLightningMapCard({ page, translated = false }: { 
               {copy.eyebrow}
             </p>
             <h2 className="font-display mt-1 text-xl font-bold sm:text-2xl">
-              {copy.title(translated ? page.country : bounds.label)}
+              {copy.title(bounds.label)}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/55">
               {copy.description}
