@@ -34,6 +34,22 @@ const ACTIVE_COUNTRY_CANDIDATES = [
 ];
 
 type Phase = 'selecting' | 'finding' | 'preparing' | 'active' | 'settled';
+type LonLat = [number, number];
+type CountryPolygon = LonLat[][];
+
+interface CountryFeature {
+  type: 'Feature';
+  properties?: Record<string, string | number | null | undefined>;
+  geometry?: {
+    type: 'Polygon' | 'MultiPolygon';
+    coordinates: LonLat[][] | LonLat[][][];
+  };
+}
+
+interface CountryFeatureCollection {
+  type: 'FeatureCollection';
+  features: CountryFeature[];
+}
 
 function clampLat(lat: number) {
   return Math.max(-85, Math.min(85, lat));
@@ -94,6 +110,38 @@ function project(bounds: Bounds, aspect: number, lat: number, lon: number) {
     x: ((p.x - view.left) / view.width) * 100,
     y: ((p.y - view.top) / view.height) * 100,
   };
+}
+
+function pathForPolygons(polygons: CountryPolygon[], bounds: Bounds, aspect: number) {
+  return polygons
+    .map((polygon) =>
+      polygon
+        .map((ring) => {
+          const points = ring
+            .map(([lon, lat], index) => {
+              const p = project(bounds, aspect, lat, lon);
+              return `${index === 0 ? 'M' : 'L'} ${p.x.toFixed(3)} ${p.y.toFixed(3)}`;
+            })
+            .join(' ');
+          return `${points} Z`;
+        })
+        .join(' '),
+    )
+    .join(' ');
+}
+
+function featureIso(feature: CountryFeature) {
+  const props = feature.properties ?? {};
+  const raw = props.ISO_A2_EH ?? props.ISO_A2 ?? props.iso_a2;
+  return typeof raw === 'string' ? raw.toUpperCase() : '';
+}
+
+function featurePolygons(feature: CountryFeature): CountryPolygon[] {
+  const geometry = feature.geometry;
+  if (!geometry) return [];
+  if (geometry.type === 'Polygon') return [geometry.coordinates as CountryPolygon];
+  if (geometry.type === 'MultiPolygon') return geometry.coordinates as CountryPolygon[];
+  return [];
 }
 
 function mapTiles(bounds: Bounds, aspect: number) {
@@ -348,12 +396,64 @@ function ControlPanel({
   );
 }
 
+function GameLayersPanel({ country }: { country: GridActiveCountry }) {
+  return (
+    <aside className="glass min-h-[620px] rounded-[2rem] p-4 shadow-2xl transition-all duration-700">
+      <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-100/50">Game layers</div>
+      <h2 className="font-display mt-2 text-xl font-black text-white">{flagEmoji(country.country)} {countryName(country.country)}</h2>
+      <p className="mt-3 text-sm leading-relaxed text-white/50">
+        Tactical layers will appear here: live storm paths, multipliers, strike density and player zones.
+      </p>
+      <div className="mt-5 space-y-2">
+        {['Strike density', 'Multiplier zones', 'Opponent heat', 'Storm movement'].map((label) => (
+          <div key={label} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.045] px-3 py-3">
+            <span className="text-sm font-semibold text-white/70">{label}</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/35">Soon</span>
+          </div>
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+function GameBottomHud({ match, phase, country }: { match: GridMatchState | null; phase: Phase; country: GridActiveCountry }) {
+  const timeLabel = match
+    ? phase === 'preparing'
+      ? `${secondsUntil(match.timing.startedAt)}s`
+      : phase === 'active'
+        ? `${secondsUntil(match.timing.endsAt)}s`
+        : 'Done'
+    : '...';
+  return (
+    <div className="pointer-events-auto absolute inset-x-4 bottom-5 z-30 mx-auto max-w-[620px] rounded-3xl border border-white/10 bg-slate-950/75 p-3 shadow-2xl backdrop-blur-xl transition-all duration-700">
+      <div className="grid grid-cols-3 items-center gap-3 text-center">
+        <div className="rounded-2xl bg-white/[0.055] px-3 py-2">
+          <div className="text-[10px] uppercase tracking-wider text-white/35">You</div>
+          <div className="font-display text-2xl font-black text-electric">{match?.player.score ?? 0}</div>
+        </div>
+        <div>
+          <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-bolt/70">
+            {phase === 'preparing' ? 'Prepare' : phase === 'active' ? 'Live round' : phase === 'settled' ? 'Result' : 'Finding'}
+          </div>
+          <div className="font-display mt-1 text-3xl font-black text-white">{timeLabel}</div>
+          <div className="mt-1 text-[11px] text-white/45">{country.strikes30s.toLocaleString()} strikes · last 30s</div>
+        </div>
+        <div className="rounded-2xl bg-white/[0.055] px-3 py-2">
+          <div className="text-[10px] uppercase tracking-wider text-white/35">Bot</div>
+          <div className="font-display text-2xl font-black text-rose-300">{match?.opponent.score ?? 0}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SatelliteCountryMap({
   country,
   strikes,
   match,
   phase,
   now,
+  gameStarted,
   selectedCell,
   vanishedCell,
   onCellClick,
@@ -363,16 +463,21 @@ function SatelliteCountryMap({
   match: GridMatchState | null;
   phase: Phase;
   now: number;
+  gameStarted: boolean;
   selectedCell: number | null;
   vanishedCell: number | null;
   onCellClick: (cell: number) => void;
 }) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ width: 1, height: 1 });
+  const [polygons, setPolygons] = useState<CountryPolygon[]>([]);
   const bounds = useMemo(() => countryBounds(country.country), [country.country]);
   const aspect = size.width / Math.max(1, size.height);
   const tiles = useMemo(() => mapTiles(bounds, aspect), [bounds, aspect]);
+  const countryPath = useMemo(() => pathForPolygons(polygons, bounds, aspect), [polygons, bounds, aspect]);
   const grid = match?.grid ?? { cols: 8, rows: 10 };
+  const clipId = `grid-country-clip-${country.country.toLowerCase()}`;
+  const outsideMaskId = `grid-country-mask-${country.country.toLowerCase()}`;
 
   useEffect(() => {
     const el = mapRef.current;
@@ -386,6 +491,23 @@ function SatelliteCountryMap({
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    let alive = true;
+    fetch('/geo/countries.geojson')
+      .then((response) => response.json() as Promise<CountryFeatureCollection>)
+      .then((data) => {
+        if (!alive) return;
+        const feature = data.features.find((item) => featureIso(item) === country.country.toUpperCase());
+        setPolygons(feature ? featurePolygons(feature) : []);
+      })
+      .catch(() => {
+        if (alive) setPolygons([]);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [country.country]);
 
   const cells = [];
   for (let row = 0; row < grid.rows; row += 1) {
@@ -436,32 +558,54 @@ function SatelliteCountryMap({
         );
       })}
 
-      {(phase === 'preparing' || phase === 'active') && (
-        <div
-          className="absolute inset-0 grid"
-          style={{ gridTemplateColumns: `repeat(${grid.cols}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${grid.rows}, minmax(0, 1fr))` }}
-        >
-          {cells.map((cell) => (
-            <button
-              key={cell.index}
-              type="button"
-              disabled={phase !== 'active' || vanishedCell === cell.index}
-              onClick={() => onCellClick(cell.index)}
-              className={`relative border border-white/10 transition ${
-                selectedCell === cell.index
-                  ? 'bg-bolt/30 shadow-[inset_0_0_22px_rgba(250,204,21,0.35)]'
-                  : vanishedCell === cell.index
-                    ? 'bg-black/55 opacity-20'
-                    : 'bg-white/[0.018] hover:bg-cyan-200/15'
-              }`}
-              aria-label={`Grid cell ${cell.index + 1}`}
-            >
-              {phase === 'active' && vanishedCell !== cell.index && (
-                <span className="absolute left-1.5 top-1.5 rounded-full bg-black/35 px-1.5 py-0.5 text-[9px] font-black text-white/55">x1</span>
-              )}
-            </button>
-          ))}
-        </div>
+      {gameStarted && countryPath && (
+        <svg className="pointer-events-none absolute inset-0 z-[8] h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+          <defs>
+            <clipPath id={clipId}>
+              <path d={countryPath} fillRule="evenodd" clipRule="evenodd" />
+            </clipPath>
+            <mask id={outsideMaskId}>
+              <rect x="0" y="0" width="100" height="100" fill="white" />
+              <path d={countryPath} fill="black" fillRule="evenodd" />
+            </mask>
+          </defs>
+          <rect x="0" y="0" width="100" height="100" fill="rgba(0,0,0,0.84)" mask={`url(#${outsideMaskId})`} />
+          <g clipPath={`url(#${clipId})`} className="pointer-events-auto">
+            {cells.map((cell) => {
+              const disabled = phase !== 'active' || vanishedCell === cell.index;
+              const selected = selectedCell === cell.index;
+              const vanished = vanishedCell === cell.index;
+              return (
+                <rect
+                  key={cell.index}
+                  x={(cell.col / grid.cols) * 100}
+                  y={(cell.row / grid.rows) * 100}
+                  width={100 / grid.cols}
+                  height={100 / grid.rows}
+                  rx="0.8"
+                  vectorEffect="non-scaling-stroke"
+                  className={`transition ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
+                  fill={selected ? 'rgba(250,204,21,0.26)' : vanished ? 'rgba(0,0,0,0.5)' : 'rgba(148,163,184,0.16)'}
+                  stroke={selected ? 'rgba(250,204,21,0.65)' : 'rgba(226,232,240,0.26)'}
+                  strokeWidth={selected ? 0.28 : 0.16}
+                  opacity={vanished ? 0.25 : 1}
+                  onClick={() => {
+                    if (!disabled) onCellClick(cell.index);
+                  }}
+                />
+              );
+            })}
+          </g>
+          <path
+            d={countryPath}
+            fill="rgba(56,189,248,0.045)"
+            stroke="rgba(125,211,252,0.92)"
+            strokeWidth="0.28"
+            vectorEffect="non-scaling-stroke"
+            fillRule="evenodd"
+            className="drop-shadow-[0_0_14px_rgba(56,189,248,0.65)]"
+          />
+        </svg>
       )}
 
       {phase === 'selecting' && (
@@ -486,6 +630,7 @@ export default function GridGameClient() {
   const [nowMs, setNowMs] = useState(() => Date.now());
   const lastStrikeRef = useRef<string | null>(null);
   const phase = loading && !match ? 'finding' : phaseFor(match);
+  const gameStarted = phase !== 'selecting';
   const matchId = match?.matchId ?? null;
   const matchStatus = match?.status ?? null;
   const selectedCountry = countries[Math.min(countryIndex, countries.length - 1)] ?? DEFAULT_COUNTRIES[0];
@@ -624,23 +769,35 @@ export default function GridGameClient() {
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-[1500px] gap-4 lg:grid-cols-[1fr_360px]">
-        <div className="relative min-h-[620px]">
+      <div
+        className={`mx-auto grid max-w-[1500px] gap-4 transition-[grid-template-columns] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          gameStarted ? 'lg:grid-cols-[300px_minmax(0,1fr)]' : 'lg:grid-cols-[minmax(0,1fr)_360px]'
+        }`}
+      >
+        {gameStarted && (
+          <div className="animate-[fade-up_0.45s_cubic-bezier(0.22,1,0.36,1)_both]">
+            <GameLayersPanel country={selectedCountry} />
+          </div>
+        )}
+
+        <div className={`relative min-h-[620px] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${gameStarted ? 'lg:translate-x-2' : ''}`}>
           <SatelliteCountryMap
             country={selectedCountry}
             strikes={strikes}
             match={match}
             phase={phase}
             now={nowMs}
+            gameStarted={gameStarted}
             selectedCell={selectedCell}
             vanishedCell={vanishedCell}
             onCellClick={onCellClick}
           />
+          {gameStarted && <GameBottomHud match={match} phase={phase} country={selectedCountry} />}
           <button
             type="button"
             onClick={selectPrevious}
             disabled={phase !== 'selecting'}
-            className="absolute left-4 top-1/2 z-20 grid size-12 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/40 text-3xl text-white backdrop-blur transition hover:bg-black/60 disabled:opacity-35"
+            className={`absolute left-4 top-1/2 z-20 grid size-12 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/40 text-3xl text-white backdrop-blur transition hover:bg-black/60 disabled:opacity-35 ${gameStarted ? 'pointer-events-none opacity-0' : ''}`}
             aria-label="Previous active country"
           >
             ‹
@@ -649,21 +806,29 @@ export default function GridGameClient() {
             type="button"
             onClick={selectNext}
             disabled={phase !== 'selecting'}
-            className="absolute right-4 top-1/2 z-20 grid size-12 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/40 text-3xl text-white backdrop-blur transition hover:bg-black/60 disabled:opacity-35"
+            className={`absolute right-4 top-1/2 z-20 grid size-12 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/40 text-3xl text-white backdrop-blur transition hover:bg-black/60 disabled:opacity-35 ${gameStarted ? 'pointer-events-none opacity-0' : ''}`}
             aria-label="Next active country"
           >
             ›
           </button>
         </div>
 
-        <ControlPanel
-          country={selectedCountry}
-          match={match}
-          phase={phase}
-          loading={loading}
-          error={error}
-          onPlay={onPlay}
-        />
+        <div
+          className={`transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            gameStarted
+              ? 'pointer-events-none fixed right-4 top-24 z-40 w-[360px] translate-x-[125%] opacity-0'
+              : 'opacity-100'
+          }`}
+        >
+          <ControlPanel
+            country={selectedCountry}
+            match={match}
+            phase={phase}
+            loading={loading}
+            error={error}
+            onPlay={onPlay}
+          />
+        </div>
       </div>
     </main>
   );
