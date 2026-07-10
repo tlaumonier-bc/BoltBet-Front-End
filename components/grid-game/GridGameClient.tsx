@@ -10,6 +10,7 @@ import {
   getGridActiveCountries,
   getGridMatchState,
   getProfile,
+  registerUsername,
   startGridMatch,
   type CountryStrike,
   type GridActiveCountry,
@@ -175,6 +176,20 @@ async function activeCountriesFromStrikeFeed(): Promise<GridActiveCountry[]> {
     .filter((row) => row.strikes30s > 0 || row.strikes5m > 0)
     .sort((a, b) => (b.strikes30s - a.strikes30s) || (b.strikes5m - a.strikes5m))
     .slice(0, 10);
+}
+
+async function ensureGameSession() {
+  const store = useSessionStore.getState();
+  if (store.token) {
+    try {
+      await getProfile();
+      return;
+    } catch {
+      // The saved token can belong to another backend DB (local reset/dev/prod).
+    }
+  }
+  const session = await registerUsername();
+  useSessionStore.getState().setGuest(session.username, session.token, session);
 }
 
 function PlayerCard({ match }: { match: GridMatchState | null }) {
@@ -449,6 +464,7 @@ export default function GridGameClient() {
   useEffect(() => {
     const init = useSessionStore.getState().init;
     if (useSessionStore.getState().status === 'loading') init();
+    ensureGameSession().catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -551,7 +567,8 @@ export default function GridGameClient() {
     setSelectedCell(null);
     setVanishedCell(null);
     window.setTimeout(() => {
-      startGridMatch(selectedCountry.country)
+      ensureGameSession()
+        .then(() => startGridMatch(selectedCountry.country))
         .then((state) => setMatch(state))
         .catch((err) => setError(err instanceof Error ? err.message : 'Could not start match'))
         .finally(() => setLoading(false));
