@@ -3,9 +3,13 @@ import { getCountryMapStats, type CountryMapCity } from '@/lib/api';
 import { useLiveStore } from '@/store/liveStore';
 import { COUNTRY_BOUNDS, type Bounds } from '@/lib/map/countryBounds';
 
-const MAX_CITIES = 5;
+const MAX_CITIES = 10;
+const DEFAULT_VISIBLE_CITIES = 5;
+const MID_ZOOM_VISIBLE_CITIES = 8;
 const SELECTED_SHOW_BELOW_HEIGHT_M = 12_000_000;
 const FREE_ZOOM_SHOW_BELOW_HEIGHT_M = 1_500_000;
+const MID_ZOOM_HEIGHT_M = 3_000_000;
+const CLOSE_ZOOM_HEIGHT_M = 1_200_000;
 const LABEL_HEIGHT_M = 8_000;
 
 export function attachCityLabels(scene: Cesium.Scene): () => void {
@@ -14,6 +18,7 @@ export function attachCityLabels(scene: Cesium.Scene): () => void {
   let inFlight = false;
   let requestedIso = '';
   let queuedIso = '';
+  let loadedCities: CountryMapCity[] = [];
 
   const ensure = (): Cesium.LabelCollection => {
     if (!labels) {
@@ -56,14 +61,25 @@ export function attachCityLabels(scene: Cesium.Scene): () => void {
     if (!labels) return;
     const selected = Boolean(useLiveStore.getState().selectedCountry?.iso2);
     const limit = selected ? SELECTED_SHOW_BELOW_HEIGHT_M : FREE_ZOOM_SHOW_BELOW_HEIGHT_M;
-    labels.show = Boolean(currentIso) && cameraHeight() <= limit;
+    const height = cameraHeight();
+    labels.show = Boolean(currentIso) && height <= limit;
+
+    const visibleCount = height <= CLOSE_ZOOM_HEIGHT_M
+      ? MAX_CITIES
+      : height <= MID_ZOOM_HEIGHT_M
+      ? MID_ZOOM_VISIBLE_CITIES
+      : DEFAULT_VISIBLE_CITIES;
+    for (let i = 0; i < labels.length; i += 1) {
+      labels.get(i).show = i < visibleCount;
+    }
   };
 
   const render = (cities: CountryMapCity[]) => {
     const col = ensure();
     col.removeAll();
+    loadedCities = cities.slice(0, MAX_CITIES);
 
-    for (const city of cities.slice(0, MAX_CITIES)) {
+    for (const city of loadedCities) {
       col.add({
         text: city.city_name,
         position: Cesium.Cartesian3.fromDegrees(city.lon, city.lat, LABEL_HEIGHT_M),
@@ -117,6 +133,7 @@ export function attachCityLabels(scene: Cesium.Scene): () => void {
 
     currentIso = iso2;
     clear();
+    loadedCities = [];
     if (iso2) load(iso2);
     updateVisibility();
   };

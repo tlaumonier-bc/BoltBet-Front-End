@@ -173,7 +173,7 @@ export default function CountryPanel() {
           <div className="mt-4 rounded-xl border border-white/10 bg-linear-to-br from-white/8 to-transparent px-4 py-3">
             <div className="flex items-end justify-between">
               <div>
-                <div className="font-display text-4xl font-extrabold tabular-nums leading-none text-bolt">
+                <div className="font-display text-3xl font-extrabold tabular-nums leading-none text-bolt">
                   {lastHourLabel}
                 </div>
                 <div className="mt-1.5 text-[10px] uppercase tracking-wider text-white/40">

@@ -430,6 +430,7 @@ export default function CountryLiveSeoCard({ page }: { page: LocalePage }) {
   const [articles, setArticles] = useState<CountryNewsArticle[]>([]);
   const [now, setNow] = useState(() => Date.now());
   const [chartHeight, setChartHeight] = useState<number | null>(null);
+  const liveColumnRef = useRef<HTMLDivElement | null>(null);
   const statsBlockRef = useRef<HTMLDivElement | null>(null);
   const newsBlockRef = useRef<HTMLElement | null>(null);
   const { language } = useUiLanguage();
@@ -487,18 +488,21 @@ export default function CountryLiveSeoCard({ page }: { page: LocalePage }) {
       }
 
       const newsHeight = newsBlockRef.current?.getBoundingClientRect().height ?? 0;
-      const statsHeight = statsBlockRef.current?.getBoundingClientRect().height ?? 0;
-      if (!newsHeight || !statsHeight) {
+      const liveColumnTop = liveColumnRef.current?.getBoundingClientRect().top ?? 0;
+      const statsBottom = statsBlockRef.current?.getBoundingClientRect().bottom ?? 0;
+      if (!newsHeight || !liveColumnTop || !statsBottom) {
         setChartHeight(null);
         return;
       }
 
-      const next = Math.max(120, Math.round(newsHeight - statsHeight));
+      const contentBeforeChart = Math.max(0, statsBottom - liveColumnTop);
+      const next = Math.max(120, Math.round(newsHeight - contentBeforeChart - 8));
       setChartHeight((current) => (current === next ? current : next));
     };
 
     updateChartHeight();
     const observer = new ResizeObserver(updateChartHeight);
+    if (liveColumnRef.current) observer.observe(liveColumnRef.current);
     if (statsBlockRef.current) observer.observe(statsBlockRef.current);
     if (newsBlockRef.current) observer.observe(newsBlockRef.current);
     window.addEventListener('resize', updateChartHeight);
@@ -552,7 +556,7 @@ export default function CountryLiveSeoCard({ page }: { page: LocalePage }) {
       </div>
 
       <div className="grid items-stretch gap-4 p-4 sm:gap-5 sm:p-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="flex min-h-[220px] flex-col">
+        <div ref={liveColumnRef} className="flex min-h-[220px] flex-col">
           {state === 'loading' && (
             <div className="grid gap-2 sm:grid-cols-3">
               {[copy.lastHour, copy.latestStrike, copy.weatherUnavailable].map((label) => (
