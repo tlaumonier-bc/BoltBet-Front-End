@@ -253,7 +253,7 @@ export async function getCountryMapStats(params: {
     strike_limit: String(params.strikeLimit ?? 10000),
     period: params.period ?? 'all',
   });
-  const res = await fetch(`${API}/api/stats/country-map/?${q}`, { cache: 'no-store' });
+  const res = await fetch(`${STRIKES_API}/api/stats/country-map/?${q}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`country map stats ${res.status}`);
   return res.json();
 }
