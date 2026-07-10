@@ -27,6 +27,10 @@ const DEFAULT_COUNTRIES: GridActiveCountry[] = [
   { country: 'IN', strikes30s: 0, strikes5m: 0 },
   { country: 'FR', strikes30s: 0, strikes5m: 0 },
 ];
+const ACTIVE_COUNTRY_CANDIDATES = [
+  'US', 'BR', 'IN', 'ID', 'CD', 'CO', 'VE', 'MX', 'AR', 'AU', 'ZA', 'FR',
+  'IT', 'ES', 'DE', 'GB', 'PL', 'RO', 'HR', 'RS',
+];
 
 type Phase = 'selecting' | 'finding' | 'preparing' | 'active' | 'settled';
 
@@ -138,6 +142,39 @@ function phaseFor(match: GridMatchState | null): Phase {
   if (match.status === 'settled') return 'settled';
   if (Date.now() < new Date(match.timing.startedAt).getTime()) return 'preparing';
   return 'active';
+}
+
+function strikeCountSince(strikes: CountryStrike[], sinceMs: number) {
+  let count = 0;
+  for (const strike of strikes) {
+    const receivedAt = Date.parse(strike.received_at);
+    if (!Number.isFinite(receivedAt)) continue;
+    if (receivedAt >= sinceMs) count += 1;
+    else break;
+  }
+  return count;
+}
+
+async function activeCountriesFromStrikeFeed(): Promise<GridActiveCountry[]> {
+  const rows = await Promise.all(
+    ACTIVE_COUNTRY_CANDIDATES.map(async (country) => {
+      try {
+        const result = await getCountryStrikesResult(country, 5000);
+        const now = Date.now();
+        return {
+          country,
+          strikes30s: strikeCountSince(result.strikes, now - 30_000),
+          strikes5m: strikeCountSince(result.strikes, now - 5 * 60_000),
+        };
+      } catch {
+        return { country, strikes30s: 0, strikes5m: 0 };
+      }
+    }),
+  );
+  return rows
+    .filter((row) => row.strikes30s > 0 || row.strikes5m > 0)
+    .sort((a, b) => (b.strikes30s - a.strikes30s) || (b.strikes5m - a.strikes5m))
+    .slice(0, 10);
 }
 
 function PlayerCard({ match }: { match: GridMatchState | null }) {
@@ -416,17 +453,20 @@ export default function GridGameClient() {
 
   useEffect(() => {
     let alive = true;
-    const load = () => {
-      getGridActiveCountries(10)
-        .then((data) => {
-          if (!alive) return;
-          const supported = data.countries.length ? data.countries : DEFAULT_COUNTRIES;
-          setCountries(supported);
-          setCountryIndex((index) => Math.min(index, supported.length - 1));
-        })
-        .catch(() => {
-          if (alive) setCountries(DEFAULT_COUNTRIES);
-        });
+    const load = async () => {
+      let supported: GridActiveCountry[] = [];
+      try {
+        const data = await getGridActiveCountries(10);
+        supported = data.countries;
+      } catch {
+        supported = [];
+      }
+      if (!supported.some((country) => country.strikes30s > 0 || country.strikes5m > 0)) {
+        supported = await activeCountriesFromStrikeFeed();
+      }
+      if (!alive) return;
+      setCountries(supported.length ? supported : DEFAULT_COUNTRIES);
+      setCountryIndex((index) => Math.min(index, Math.max(0, (supported.length || DEFAULT_COUNTRIES.length) - 1)));
     };
     load();
     const timer = window.setInterval(load, 10_000);
