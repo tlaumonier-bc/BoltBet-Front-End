@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Backdrop from '@/components/Backdrop/Backdrop'
-import LiveStrikeRanking from '@/components/how-it-works/LiveStrikeRanking'
 import { site } from '@/lib/content/content'
+import HowItWorksContent from './HowItWorksContent'
 
 export const metadata: Metadata = {
   title: 'How It Works — Live Lightning Globe & Prediction Game',
@@ -13,13 +13,6 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: '/how-it-works' },
 }
-
-const MODES = [
-  { name: 'Free', icon: '🌍', blurb: 'Just the globe — strikes flashing worldwide, nothing else on screen.' },
-  { name: 'Beginner', icon: '⚡', blurb: 'Adds a live console: orbit shortcuts, strikes in the last hour, clouds and rain layers, and a running activity readout.' },
-  { name: 'Pro', icon: '📡', blurb: 'Everything in Beginner plus 3h / 6h strike trails, temperature and wind layers, feed health, latency and signal-quality telemetry.' },
-  { name: 'Game', icon: '🎯', blurb: 'Predict whether the next 30 seconds bring more or fewer strikes than the last — for free virtual points.' },
-]
 
 const faq = {
   '@context': 'https://schema.org',
@@ -68,118 +61,12 @@ const faq = {
   ],
 }
 
-function PlayTimeline() {
-  return (
-    <div className="mt-4 sm:mt-5">
-      <div className="flex overflow-hidden rounded-xl border border-white/10 text-center text-[10px] font-semibold sm:text-[11px]">
-        <div className="bg-electric/15 px-2 py-2.5 text-electric sm:px-3 sm:py-3" style={{ flex: 1 }}>
-          Previous 30s
-          <span className="mt-1 block text-[10px] font-normal text-white/50">strikes counted</span>
-        </div>
-        <div className="bg-bolt/15 px-2 py-2.5 text-bolt sm:px-3 sm:py-3" style={{ flex: 1 }}>
-          Your play · next 30s
-          <span className="mt-1 block text-[10px] font-normal text-white/50">strikes counted</span>
-        </div>
-      </div>
-      <p className="mt-2 text-xs leading-relaxed text-white/40">
-        There is no shared round timer. Your 30-second window starts the moment your play is accepted.
-      </p>
-    </div>
-  )
-}
-
 export default function HowItWorksPage() {
   return (
     <main className="relative min-h-screen">
       <Backdrop />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faq) }} />
-
-      <div className="mx-auto w-[90vw] pb-20 pt-24 text-sm sm:w-[70vw] sm:pb-24 sm:pt-32 sm:text-base">
-        <p className="text-[10px] uppercase tracking-[0.24em] text-electric/70 sm:text-xs sm:tracking-[0.3em]">How it works</p>
-        <h1 className="font-display mt-3 text-3xl font-extrabold leading-tight sm:text-5xl">
-          Watch real <span className="text-gradient">lightning</span>. Then predict it.
-        </h1>
-        <p className="mt-3 leading-relaxed text-white/55">
-          {site.brand} is a live 3D globe of real lightning strikes worldwide, plus a quick prediction game. Click any country to fly in and open a panel with its strike count over the last hour, how active it is right now, and a history chart.
-        </p>
-
-        {/* Modes */}
-        <div className="mt-8 sm:mt-10">
-          <h2 className="font-display text-xl font-bold sm:text-2xl">Four ways to explore</h2>
-          <p className="mt-2 leading-relaxed text-white/55">
-            Switch between modes from the mode bar, plus a Day / Night imagery toggle.
-          </p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {MODES.map((m) => (
-              <div key={m.name} className="glass rounded-2xl p-4 sm:p-5">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-lg leading-none sm:text-xl" aria-hidden>{m.icon}</span>
-                  <span className="font-display text-base font-bold">{m.name}</span>
-                </div>
-                <p className="mt-2 text-sm leading-relaxed text-white/60">{m.blurb}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-4 text-sm leading-relaxed text-white/45">
-            In Beginner and Pro you can layer live weather over the globe — clouds, rain, temperature and wind — and switch on
-            strike trails from the last 1, 3 or 6 hours.
-          </p>
-        </div>
-
-        {/* The game */}
-        <div className="glass mt-8 rounded-2xl p-4 sm:mt-10 sm:p-6">
-          <h2 className="font-display text-lg font-bold sm:text-xl">Play: Higher or Lower</h2>
-          <p className="mt-2 leading-relaxed text-white/65 sm:mt-3">
-            Game mode turns the globe into a fast prediction game. Play whenever you want, as long as you do not already
-            have one in progress. The game snapshots the last 30 seconds, then you call whether the next 30 seconds will bring{' '}
-            <span className="font-semibold text-emerald-300">Higher</span> (more) or{' '}
-            <span className="font-semibold text-rose-300">Lower</span> (fewer) strikes.
-          </p>
-          <p className="mt-3 leading-relaxed text-white/65">
-            Get it right and you win <span className="font-semibold text-bolt">2×</span> your points. A tie returns your points (a
-            push); a wrong call loses it.
-          </p>
-
-          <PlayTimeline />
-
-          <div className="mt-4 grid gap-3 sm:mt-5 sm:grid-cols-3">
-            <div className="rounded-xl bg-white/4 p-3 sm:p-4">
-              <div className="text-[10px] uppercase tracking-wider text-electric/70">Scope</div>
-              <p className="mt-1.5 text-sm text-white/65">
-                Play the whole globe, or click a country to predict just its strikes (it needs recent activity to be playable).
-              </p>
-            </div>
-            <div className="rounded-xl bg-white/4 p-3 sm:p-4">
-              <div className="text-[10px] uppercase tracking-wider text-electric/70">Points</div>
-              <p className="mt-1.5 text-sm text-white/65">
-                Start with 100 free virtual points and claim 100 more whenever you run out. There is no real money.
-              </p>
-            </div>
-            <div className="rounded-xl bg-white/4 p-3 sm:p-4">
-              <div className="text-[10px] uppercase tracking-wider text-electric/70">Leaderboard</div>
-              <p className="mt-1.5 text-sm text-white/65">
-                Sign in with Google to keep your points across devices and climb the leaderboard, ranked by points won.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Live ranking */}
-        <div className="mt-10 sm:mt-12">
-          <h2 className="font-display text-xl font-bold sm:text-2xl">
-            Where is lightning striking <span className="text-gradient">right now</span>?
-          </h2>
-          <p className="mt-2 leading-relaxed text-white/55">
-            A live ranking of where strikes are landing right now, built from the same feed that powers the globe.
-          </p>
-          <LiveStrikeRanking />
-          <p className="mt-4 text-sm leading-relaxed text-white/45">
-            Over the long run, the most lightning-prone place on Earth is Lake Maracaibo in Venezuela, where storms flash almost
-            every night of the year. But the ranking above is live — it shows where bolts are actually landing right now.
-          </p>
-        </div>
-
-      </div>
+      <HowItWorksContent brand={site.brand} />
     </main>
   )
 }

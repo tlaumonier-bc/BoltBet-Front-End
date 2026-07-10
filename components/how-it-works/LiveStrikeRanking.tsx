@@ -12,6 +12,7 @@ import { getRecentStrikes } from '@/lib/api'
 import { regionName } from '@/lib/grid'
 import { flagEmoji, countryName } from '@/lib/live/owm'
 import type { LightningStrike } from '@/types'
+import { useT } from '@/lib/i18n/ui'
 
 const SEED_MIN = 20
 const SEED_LIMIT = 8000
@@ -68,6 +69,7 @@ function aggregate(strikes: LightningStrike[]): Snapshot {
 
 export default function LiveStrikeRanking() {
   useLightningSocket() // open the live feed for this page
+  const { t } = useT()
 
   const [snap, setSnap] = useState<Snapshot | null>(null)
   const [timedOut, setTimedOut] = useState(false)
@@ -121,7 +123,7 @@ export default function LiveStrikeRanking() {
   if (!ready && timedOut) {
     return (
       <div className="glass mt-6 rounded-2xl p-5 text-center text-sm text-white/55 sm:p-8 sm:text-base">
-        The live strike feed is offline right now. The ranking will appear here once it reconnects.
+        {t('how.rankingOffline')}
       </div>
     )
   }
@@ -130,7 +132,7 @@ export default function LiveStrikeRanking() {
     return (
       <div className="glass mt-6 flex items-center gap-3 rounded-2xl p-5 text-sm text-white/55 sm:p-8">
         <span className="globe-loading-spinner" />
-        Connecting to the live strike feed…
+        {t('how.rankingConnecting')}
       </div>
     )
   }
@@ -142,7 +144,7 @@ export default function LiveStrikeRanking() {
       <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-white/45">
         <span className="live-dot inline-block h-2 w-2 rounded-full bg-bolt" />
         <span className="font-semibold text-bolt">{snap.total.toLocaleString()}</span>
-        <span>strikes tracked live · most active {snap.mode === 'country' ? 'countries' : 'regions'} right now</span>
+        <span>{t('how.rankingSummary', { mode: snap.mode === 'country' ? t('how.activeCountries') : t('how.activeRegions') })}</span>
       </div>
 
       <ol className="glass overflow-hidden rounded-2xl">
@@ -169,8 +171,8 @@ export default function LiveStrikeRanking() {
 
       <p className="mt-2.5 text-[11px] text-white/30">
         {snap.mode === 'region'
-          ? 'Regions are derived from each strike’s coordinates, so the board fills even when the feed does not tag a country.'
-          : 'Countries come tagged on the live strike feed; territories without an ISO code are not ranked.'}
+          ? t('how.rankingRegionNote')
+          : t('how.rankingCountryNote')}
       </p>
     </div>
   )
