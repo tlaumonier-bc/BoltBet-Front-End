@@ -62,10 +62,10 @@ function worldPoint(lat: number, lon: number, zoom: number) {
 function viewport(bounds: Bounds, aspect: number) {
   const padded = paddedBounds(bounds);
   let bestZoom = 5;
-  for (let zoom = 3; zoom <= 9; zoom += 1) {
+  for (let zoom = 3; zoom <= 13; zoom += 1) {
     const nw = worldPoint(padded.maxLat, padded.minLon, zoom);
     const se = worldPoint(padded.minLat, padded.maxLon, zoom);
-    if (se.x - nw.x <= 1100 && se.y - nw.y <= 820) bestZoom = zoom;
+    if (se.x - nw.x <= 2600 && se.y - nw.y <= 1900) bestZoom = zoom;
   }
   const nw = worldPoint(padded.maxLat, padded.minLon, bestZoom);
   const se = worldPoint(padded.minLat, padded.maxLon, bestZoom);
@@ -116,6 +116,21 @@ function mapTiles(bounds: Bounds, aspect: number) {
     }
   }
   return tiles;
+}
+
+function strikeVisual(strike: CountryStrike, now: number) {
+  const receivedAt = Date.parse(strike.received_at);
+  const age = Number.isFinite(receivedAt) ? Math.max(0, now - receivedAt) : 60_000;
+  const fresh = age < 2600;
+  const recent = age < 30_000;
+  const life = fresh ? Math.max(0, 1 - age / 2600) : 0;
+  return {
+    age,
+    fresh,
+    recent,
+    opacity: fresh ? 0.35 + life * 0.65 : recent ? 0.35 : 0.16,
+    scale: fresh ? 0.75 + life * 0.55 : 0.7,
+  };
 }
 
 function countryBounds(iso: string): Bounds {
@@ -338,6 +353,7 @@ function SatelliteCountryMap({
   strikes,
   match,
   phase,
+  now,
   selectedCell,
   vanishedCell,
   onCellClick,
@@ -346,6 +362,7 @@ function SatelliteCountryMap({
   strikes: CountryStrike[];
   match: GridMatchState | null;
   phase: Phase;
+  now: number;
   selectedCell: number | null;
   vanishedCell: number | null;
   onCellClick: (cell: number) => void;
@@ -380,7 +397,7 @@ function SatelliteCountryMap({
 
   return (
     <div ref={mapRef} className="relative h-full min-h-[620px] flex-1 overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950 shadow-2xl">
-      <div className="absolute inset-0 opacity-95 saturate-[1.12]">
+      <div className="absolute inset-0 opacity-100 saturate-[1.18] contrast-[1.05]">
         {tiles.map((tile) => (
           <img
             key={tile.key}
@@ -393,17 +410,29 @@ function SatelliteCountryMap({
           />
         ))}
       </div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(250,204,21,0.08),transparent_42%),linear-gradient(to_bottom,rgba(2,6,23,0.10),rgba(2,6,23,0.55))]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(250,204,21,0.06),transparent_42%),linear-gradient(to_bottom,rgba(2,6,23,0.02),rgba(2,6,23,0.36))]" />
 
-      {strikes.slice(0, 120).map((strike, index) => {
+      {strikes.slice(0, 90).map((strike, index) => {
         const p = project(bounds, aspect, strike.lat, strike.lon);
         if (p.x < 0 || p.x > 100 || p.y < 0 || p.y > 100) return null;
+        const visual = strikeVisual(strike, now);
         return (
           <span
             key={`${strike.received_at}-${index}`}
-            className="pointer-events-none absolute size-2 rounded-full bg-bolt shadow-[0_0_18px_rgba(250,204,21,0.9)]"
-            style={{ left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%, -50%)' }}
-          />
+            className="grid-strike pointer-events-none absolute"
+            style={{
+              left: `${p.x}%`,
+              top: `${p.y}%`,
+              opacity: visual.opacity,
+              transform: `translate(-50%, -50%) scale(${visual.scale})`,
+              zIndex: visual.fresh ? 14 : 6,
+            }}
+          >
+            {visual.fresh && <span className="grid-strike-bolt" />}
+            {visual.fresh && <span className="grid-strike-ring grid-strike-ring-a" />}
+            {visual.fresh && <span className="grid-strike-ring grid-strike-ring-b" />}
+            <span className={`grid-strike-core ${visual.fresh ? 'grid-strike-core-fresh' : ''}`} />
+          </span>
         );
       })}
 
@@ -454,7 +483,7 @@ export default function GridGameClient() {
   const [error, setError] = useState<string | null>(null);
   const [selectedCell, setSelectedCell] = useState<number | null>(null);
   const [vanishedCell, setVanishedCell] = useState<number | null>(null);
-  const [tick, setTick] = useState(0);
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const lastStrikeRef = useRef<string | null>(null);
   const phase = loading && !match ? 'finding' : phaseFor(match);
   const matchId = match?.matchId ?? null;
@@ -509,7 +538,7 @@ export default function GridGameClient() {
         .catch(() => undefined);
     };
     load();
-    const timer = window.setInterval(load, phase === 'active' ? 1500 : 5000);
+    const timer = window.setInterval(load, phase === 'active' ? 900 : 2500);
     return () => {
       alive = false;
       window.clearInterval(timer);
@@ -534,17 +563,16 @@ export default function GridGameClient() {
   }, [match, matchId, matchStatus]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setTick((value) => value + 1), 250);
+    const timer = window.setInterval(() => setNowMs(Date.now()), 250);
     return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
-    void tick;
     if (!match || match.status === 'settled') return;
     if (Date.now() >= new Date(match.timing.endsAt).getTime()) {
       getGridMatchState(match.matchId).then(setMatch).catch(() => undefined);
     }
-  }, [tick, match]);
+  }, [nowMs, match]);
 
   const selectPrevious = () => {
     if (phase !== 'selecting') return;
@@ -603,6 +631,7 @@ export default function GridGameClient() {
             strikes={strikes}
             match={match}
             phase={phase}
+            now={nowMs}
             selectedCell={selectedCell}
             vanishedCell={vanishedCell}
             onCellClick={onCellClick}

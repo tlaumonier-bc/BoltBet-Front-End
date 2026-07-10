@@ -125,6 +125,78 @@ body {
 }
 .live-dot { animation: live-pulse 1.4s ease-in-out infinite; }
 
+/* 2D Grid Game lightning impacts */
+.grid-strike {
+  width: 46px;
+  height: 46px;
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+.grid-strike-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #eaf4ff;
+  box-shadow:
+    0 0 10px rgba(234, 244, 255, 0.95),
+    0 0 24px rgba(56, 189, 248, 0.75),
+    0 0 42px rgba(253, 224, 71, 0.5);
+  transform: translate(-50%, -50%);
+}
+.grid-strike-core-fresh {
+  animation: grid-strike-core 0.42s ease-out both;
+}
+.grid-strike-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  border: 2px solid rgba(125, 211, 252, 0.8);
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.45);
+  transform: translate(-50%, -50%);
+}
+.grid-strike-ring-a {
+  animation: grid-strike-ring 1.05s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.grid-strike-ring-b {
+  border-color: rgba(253, 224, 71, 0.65);
+  animation: grid-strike-ring 1.45s 0.12s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.grid-strike-bolt {
+  position: absolute;
+  left: 50%;
+  top: -26px;
+  width: 3px;
+  height: 38px;
+  border-radius: 9999px;
+  background: linear-gradient(to bottom, rgba(234, 244, 255, 0), #eaf4ff 22%, #38bdf8 58%, rgba(56, 189, 248, 0));
+  box-shadow:
+    0 0 12px rgba(234, 244, 255, 0.9),
+    0 0 24px rgba(56, 189, 248, 0.65);
+  clip-path: polygon(45% 0, 72% 28%, 55% 28%, 88% 100%, 28% 46%, 47% 46%);
+  transform: translateX(-50%);
+  animation: grid-strike-bolt 0.36s ease-out both;
+}
+@keyframes grid-strike-core {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+  18% { opacity: 1; transform: translate(-50%, -50%) scale(1.65); }
+  100% { opacity: 0.75; transform: translate(-50%, -50%) scale(0.85); }
+}
+@keyframes grid-strike-ring {
+  from { opacity: 0.95; transform: translate(-50%, -50%) scale(0.35); }
+  to { opacity: 0; transform: translate(-50%, -50%) scale(2.8); }
+}
+@keyframes grid-strike-bolt {
+  0%, 100% { opacity: 0; }
+  10% { opacity: 1; transform: translateX(-50%) scaleY(1.05); }
+  45% { opacity: 0.95; transform: translateX(-50%) scaleY(0.85); }
+}
+
 /* slim scrollbar for the /live console panels */
 .panel-scroll {
   scrollbar-width: thin;
