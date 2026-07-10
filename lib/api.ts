@@ -267,6 +267,7 @@ export interface Session {
   username: string;
   token: string;
   tokens: number; // starting balance
+  gridElo: number;
   verified: boolean;
   country: string;
   canChangeUsername: boolean;
@@ -308,6 +309,7 @@ export type ScopeKind = 'globe' | 'country';
 export interface PlayerProfile {
   username: string;
   tokens: number;
+  gridElo: number;
   verified: boolean;
   country: string;
   canChangeUsername: boolean;
@@ -367,6 +369,49 @@ export interface LeaderboardSummary {
   entries: LeaderboardEntry[];
   trophies: Trophy[];
   totalPlayers: number;
+}
+
+export interface GridActiveCountry {
+  country: string;
+  strikes30s: number;
+  strikes5m: number;
+}
+
+export interface GridActiveCountriesResponse {
+  countries: GridActiveCountry[];
+  windowSeconds: number;
+  fallbackWindowSeconds: number;
+}
+
+export type GridMatchStatus = 'preparing' | 'active' | 'settled';
+
+export interface GridMatchState {
+  matchId: string;
+  status: GridMatchStatus;
+  country: string;
+  grid: { cols: number; rows: number };
+  player: {
+    username: string;
+    score: number;
+    eloBefore: number;
+    eloAfter: number | null;
+  };
+  opponent: {
+    username: string;
+    score: number;
+    elo: number;
+    eloAfter: number | null;
+    bot: boolean;
+  };
+  timing: {
+    createdAt: string;
+    prepareEndsAt: string;
+    startedAt: string;
+    endsAt: string;
+    serverNow: string;
+  };
+  strikes30sAtStart: number;
+  eloDelta: number | null;
 }
 
 function trophyFor(tokens: number): Trophy | null {
@@ -489,4 +534,28 @@ export async function changeUsername(username: string): Promise<PlayerProfile> {
 
 export async function changeCountry(countryCode: string): Promise<PlayerProfile> {
   return postJson<PlayerProfile>('/api/game/country/change/', { countryCode });
+}
+
+export async function getGridActiveCountries(limit = 8): Promise<GridActiveCountriesResponse> {
+  const q = new URLSearchParams({ limit: String(limit) });
+  const res = await fetch(`${API}/api/game/grid/active-countries/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`grid active countries ${res.status}`);
+  return res.json();
+}
+
+export async function startGridMatch(country: string): Promise<GridMatchState> {
+  return postJson<GridMatchState>('/api/game/grid/match/', { country });
+}
+
+export async function getGridMatchState(matchId: string): Promise<GridMatchState> {
+  const res = await fetch(`${API}/api/game/grid/match/${matchId}/`, {
+    cache: 'no-store',
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(`grid match ${res.status}`);
+  return res.json();
+}
+
+export async function clickGridMatchCell(matchId: string, cell: number): Promise<GridMatchState> {
+  return postJson<GridMatchState>(`/api/game/grid/match/${matchId}/click/`, { cell });
 }
