@@ -1,9 +1,9 @@
 // lib/api.ts — REST client for the BoltBet strike-prediction game backend.
 import { sessionToken } from '@/store/sessionStore';
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
-const STRIKES_API = process.env.NEXT_PUBLIC_STRIKES_API_URL ?? API;
-export const LEADERBOARD_API = process.env.NEXT_PUBLIC_LEADERBOARD_API_URL ?? API;
+const API = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '');
+const STRIKES_API = (process.env.NEXT_PUBLIC_STRIKES_API_URL || API).replace(/\/$/, '');
+export const LEADERBOARD_API = (process.env.NEXT_PUBLIC_LEADERBOARD_API_URL || API).replace(/\/$/, '');
 export const TROPHIES: Trophy[] = [
   { key: 'bolt-tracker', points: 200, image: 'trophy-200.png', label: 'Bolt Tracker Trophy' },
   { key: 'could-reader', points: 500, image: 'trophy-500.png', label: 'Could Reader Trophy' },
