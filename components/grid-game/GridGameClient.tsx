@@ -36,6 +36,8 @@ const ACTIVE_COUNTRY_CANDIDATES = [
 type Phase = 'selecting' | 'finding' | 'preparing' | 'active' | 'settled';
 type LonLat = [number, number];
 type CountryPolygon = LonLat[][];
+type OpponentPlay = { id: string; cell: number; at: number };
+type PreparedPolygon = { polygon: CountryPolygon; bounds: Bounds; area: number; centerLon: number };
 
 interface CountryFeature {
   type: 'Feature';
@@ -60,11 +62,68 @@ function paddedBounds(bounds: Bounds): Bounds {
   const latPad = Math.max(0.5, Math.abs(bounds.maxLat - bounds.minLat) * 0.14);
   return {
     ...bounds,
-    minLon: Math.max(-180, bounds.minLon - lonPad),
-    maxLon: Math.min(180, bounds.maxLon + lonPad),
+    minLon: bounds.minLon - lonPad,
+    maxLon: bounds.maxLon + lonPad,
     minLat: Math.max(-85, bounds.minLat - latPad),
     maxLat: Math.min(85, bounds.maxLat + latPad),
   };
+}
+
+function mod360(lon: number) {
+  return ((lon % 360) + 360) % 360;
+}
+
+function unwrapStartForRing(ring: LonLat[]) {
+  const sorted = ring.map(([lon]) => mod360(lon)).sort((a, b) => a - b);
+  if (sorted.length < 2) return 0;
+  let bestGap = -1;
+  let start = sorted[0];
+  for (let i = 0; i < sorted.length; i += 1) {
+    const current = sorted[i];
+    const next = i === sorted.length - 1 ? sorted[0] + 360 : sorted[i + 1];
+    const gap = next - current;
+    if (gap > bestGap) {
+      bestGap = gap;
+      start = i === sorted.length - 1 ? sorted[0] : sorted[i + 1];
+    }
+  }
+  return start;
+}
+
+function unwrapLonFromStart(lon: number, start: number) {
+  let next = mod360(lon);
+  if (next < start) next += 360;
+  return next;
+}
+
+function unwrapPolygon(polygon: CountryPolygon): CountryPolygon {
+  const start = unwrapStartForRing(polygon[0] ?? []);
+  return polygon.map((ring) => ring.map(([lon, lat]) => [unwrapLonFromStart(lon, start), lat] as LonLat));
+}
+
+function boundsForPolygon(polygon: CountryPolygon, fallbackLabel: string): Bounds {
+  let minLon = Infinity;
+  let maxLon = -Infinity;
+  let minLat = Infinity;
+  let maxLat = -Infinity;
+  for (const ring of polygon) {
+    for (const [lon, lat] of ring) {
+      minLon = Math.min(minLon, lon);
+      maxLon = Math.max(maxLon, lon);
+      minLat = Math.min(minLat, lat);
+      maxLat = Math.max(maxLat, lat);
+    }
+  }
+  if (!Number.isFinite(minLon)) return { ...WORLD_BOUNDS, label: fallbackLabel };
+  return { minLon, minLat, maxLon, maxLat, label: fallbackLabel };
+}
+
+function normalizeLonToBounds(lon: number, bounds: Bounds) {
+  const center = (bounds.minLon + bounds.maxLon) / 2;
+  let next = lon;
+  while (next - center > 180) next -= 360;
+  while (next - center < -180) next += 360;
+  return next;
 }
 
 function worldPoint(lat: number, lon: number, zoom: number) {
@@ -103,23 +162,23 @@ function viewport(bounds: Bounds, aspect: number) {
   };
 }
 
-function project(bounds: Bounds, aspect: number, lat: number, lon: number) {
-  const view = viewport(bounds, aspect);
-  const p = worldPoint(lat, lon, view.zoom);
+function projectPx(bounds: Bounds, width: number, height: number, lat: number, lon: number) {
+  const view = viewport(bounds, width / Math.max(1, height));
+  const p = worldPoint(lat, normalizeLonToBounds(lon, bounds), view.zoom);
   return {
-    x: ((p.x - view.left) / view.width) * 100,
-    y: ((p.y - view.top) / view.height) * 100,
+    x: ((p.x - view.left) / view.width) * width,
+    y: ((p.y - view.top) / view.height) * height,
   };
 }
 
-function pathForPolygons(polygons: CountryPolygon[], bounds: Bounds, aspect: number) {
+function pathForPolygons(polygons: CountryPolygon[], bounds: Bounds, width: number, height: number) {
   return polygons
     .map((polygon) =>
       polygon
         .map((ring) => {
           const points = ring
             .map(([lon, lat], index) => {
-              const p = project(bounds, aspect, lat, lon);
+              const p = projectPx(bounds, width, height, lat, lon);
               return `${index === 0 ? 'M' : 'L'} ${p.x.toFixed(3)} ${p.y.toFixed(3)}`;
             })
             .join(' ');
@@ -144,8 +203,60 @@ function featurePolygons(feature: CountryFeature): CountryPolygon[] {
   return [];
 }
 
+function pointInRing(lon: number, lat: number, ring: LonLat[]) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
+    const xi = ring[i][0];
+    const yi = ring[i][1];
+    const xj = ring[j][0];
+    const yj = ring[j][1];
+    const intersect = yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function pointInPolygon(lon: number, lat: number, prepared: PreparedPolygon) {
+  const normalizedLon = normalizeLonToBounds(lon, prepared.bounds);
+  const [outer, ...holes] = prepared.polygon;
+  if (!outer || !pointInRing(normalizedLon, lat, outer)) return false;
+  return !holes.some((hole) => pointInRing(normalizedLon, lat, hole));
+}
+
+function preparePolygons(polygons: CountryPolygon[], label: string): PreparedPolygon[] {
+  return polygons.map((polygon) => {
+    const unwrapped = unwrapPolygon(polygon);
+    const bounds = boundsForPolygon(unwrapped, label);
+    return {
+      polygon: unwrapped,
+      bounds,
+      area: Math.max(0, bounds.maxLon - bounds.minLon) * Math.max(0, bounds.maxLat - bounds.minLat),
+      centerLon: (bounds.minLon + bounds.maxLon) / 2,
+    };
+  });
+}
+
+function selectCountryRender(polygons: CountryPolygon[], strikes: CountryStrike[], fallback: Bounds) {
+  const prepared = preparePolygons(polygons, fallback.label);
+  if (!prepared.length) return { polygons: [] as CountryPolygon[], bounds: fallback };
+
+  let best = prepared[0];
+  let bestScore = -1;
+  for (const candidate of prepared) {
+    const score = strikes.reduce((count, strike) => (
+      pointInPolygon(strike.lon, strike.lat, candidate) ? count + 1 : count
+    ), 0);
+    if (score > bestScore || (score === bestScore && candidate.area > best.area)) {
+      best = candidate;
+      bestScore = score;
+    }
+  }
+  return { polygons: [best.polygon], bounds: best.bounds };
+}
+
 function mapTiles(bounds: Bounds, aspect: number) {
   const view = viewport(bounds, aspect);
+  const tileCount = 2 ** view.zoom;
   const minX = Math.floor(view.left / TILE_SIZE);
   const maxX = Math.floor((view.left + view.width) / TILE_SIZE);
   const minY = Math.floor(view.top / TILE_SIZE);
@@ -155,7 +266,7 @@ function mapTiles(bounds: Bounds, aspect: number) {
     for (let y = minY; y <= maxY; y += 1) {
       tiles.push({
         key: `${view.zoom}-${x}-${y}`,
-        src: `${ESRI_TILE}/${view.zoom}/${y}/${x}`,
+        src: `${ESRI_TILE}/${view.zoom}/${y}/${((x % tileCount) + tileCount) % tileCount}`,
         left: ((x * TILE_SIZE - view.left) / view.width) * 100,
         top: ((y * TILE_SIZE - view.top) / view.height) * 100,
         width: (TILE_SIZE / view.width) * 100,
@@ -199,6 +310,25 @@ function msUntil(iso: string) {
 
 function secondsUntil(iso: string) {
   return Math.ceil(msUntil(iso) / 1000);
+}
+
+function formatMatchOffset(timestamp: string, match: GridMatchState | null) {
+  if (!match) return '-';
+  const start = Date.parse(match.timing.startedAt);
+  const at = Date.parse(timestamp);
+  if (!Number.isFinite(start) || !Number.isFinite(at)) return '-';
+  const seconds = (at - start) / 1000;
+  return `${seconds >= 0 ? '+' : ''}${seconds.toFixed(2)}s`;
+}
+
+function opponentCellFor(matchId: string, score: number, grid: { cols: number; rows: number }) {
+  let hash = 2166136261;
+  const key = `${matchId}:${score}`;
+  for (let i = 0; i < key.length; i += 1) {
+    hash ^= key.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return Math.abs(hash) % (grid.cols * grid.rows);
 }
 
 function phaseFor(match: GridMatchState | null): Phase {
@@ -396,21 +526,65 @@ function ControlPanel({
   );
 }
 
-function GameLayersPanel({ country }: { country: GridActiveCountry }) {
+function GameLayersPanel({
+  country,
+  match,
+  strikes,
+}: {
+  country: GridActiveCountry;
+  match: GridMatchState | null;
+  strikes: CountryStrike[];
+}) {
+  const visibleStrikes = useMemo(() => {
+    if (!match) return [];
+    const startedAt = Date.parse(match.timing.startedAt);
+    return strikes
+      .filter((strike) => {
+        const receivedAt = Date.parse(strike.received_at);
+        return Number.isFinite(receivedAt) && receivedAt >= startedAt;
+      })
+      .slice(0, 5);
+  }, [match, strikes]);
+
   return (
-    <aside className="glass min-h-[620px] rounded-[2rem] p-4 shadow-2xl transition-all duration-700">
-      <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-100/50">Game layers</div>
-      <h2 className="font-display mt-2 text-xl font-black text-white">{flagEmoji(country.country)} {countryName(country.country)}</h2>
-      <p className="mt-3 text-sm leading-relaxed text-white/50">
-        Tactical layers will appear here: live storm paths, multipliers, strike density and player zones.
-      </p>
-      <div className="mt-5 space-y-2">
-        {['Strike density', 'Multiplier zones', 'Opponent heat', 'Storm movement'].map((label) => (
-          <div key={label} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.045] px-3 py-3">
-            <span className="text-sm font-semibold text-white/70">{label}</span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/35">Soon</span>
-          </div>
-        ))}
+    <aside className="glass flex min-h-[620px] flex-col rounded-[2rem] p-4 shadow-2xl transition-all duration-700">
+      <div>
+        <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-100/50">Game layers</div>
+        <h2 className="font-display mt-2 text-xl font-black text-white">{flagEmoji(country.country)} {countryName(country.country)}</h2>
+        <p className="mt-3 text-sm leading-relaxed text-white/50">
+          Tactical layers will appear here: live storm paths, multipliers, strike density and player zones.
+        </p>
+        <div className="mt-5 space-y-2">
+          {['Strike density', 'Multiplier zones', 'Opponent heat', 'Storm movement'].map((label) => (
+            <div key={label} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.045] px-3 py-3">
+              <span className="text-sm font-semibold text-white/70">{label}</span>
+              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/35">Soon</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-auto rounded-2xl border border-white/10 bg-black/25 p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">Strike console</span>
+          <span className="text-[10px] text-white/30">last 5</span>
+        </div>
+        <div className="grid grid-cols-[2.2rem_4.4rem_1fr] gap-2 border-b border-white/10 pb-1 text-[10px] font-bold uppercase tracking-wider text-white/35">
+          <span>Strike</span>
+          <span>Time</span>
+          <span>Loc</span>
+        </div>
+        <div className="mt-1 space-y-1">
+          {visibleStrikes.length ? visibleStrikes.map((strike, index) => (
+            <div key={`${strike.received_at}-${strike.lat}-${strike.lon}`} className="grid grid-cols-[2.2rem_4.4rem_1fr] gap-2 rounded-lg bg-white/[0.035] px-2 py-1.5 text-[11px] text-white/65">
+              <span className="font-bold text-bolt">{visibleStrikes.length - index}</span>
+              <span className="tabular-nums text-white/75">{formatMatchOffset(strike.received_at, match)}</span>
+              <span className="truncate tabular-nums">{strike.lat.toFixed(3)}, {strike.lon.toFixed(3)}</span>
+            </div>
+          )) : (
+            <div className="rounded-lg bg-white/[0.03] px-2 py-2 text-xs text-white/35">Waiting for match strikes...</div>
+          )}
+        </div>
       </div>
     </aside>
   );
@@ -425,7 +599,7 @@ function GameBottomHud({ match, phase, country }: { match: GridMatchState | null
         : 'Done'
     : '...';
   return (
-    <div className="pointer-events-auto absolute inset-x-4 bottom-5 z-30 mx-auto max-w-[620px] rounded-3xl border border-white/10 bg-slate-950/75 p-3 shadow-2xl backdrop-blur-xl transition-all duration-700">
+    <div className="pointer-events-auto mx-auto mt-3 max-w-[620px] rounded-3xl border border-white/10 bg-slate-950/75 p-3 shadow-2xl backdrop-blur-xl transition-all duration-700">
       <div className="grid grid-cols-3 items-center gap-3 text-center">
         <div className="rounded-2xl bg-white/[0.055] px-3 py-2">
           <div className="text-[10px] uppercase tracking-wider text-white/35">You</div>
@@ -443,6 +617,11 @@ function GameBottomHud({ match, phase, country }: { match: GridMatchState | null
           <div className="font-display text-2xl font-black text-rose-300">{match?.opponent.score ?? 0}</div>
         </div>
       </div>
+      {phase === 'preparing' && (
+        <p className="mt-3 text-center text-xs leading-relaxed text-white/55">
+          Click cells inside the country to score. Each cell is x1 for now, and your selected zone resets when a new strike appears.
+        </p>
+      )}
     </div>
   );
 }
@@ -454,6 +633,7 @@ function SatelliteCountryMap({
   phase,
   now,
   gameStarted,
+  opponentPlays,
   selectedCell,
   vanishedCell,
   onCellClick,
@@ -464,6 +644,7 @@ function SatelliteCountryMap({
   phase: Phase;
   now: number;
   gameStarted: boolean;
+  opponentPlays: OpponentPlay[];
   selectedCell: number | null;
   vanishedCell: number | null;
   onCellClick: (cell: number) => void;
@@ -471,10 +652,18 @@ function SatelliteCountryMap({
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ width: 1, height: 1 });
   const [polygons, setPolygons] = useState<CountryPolygon[]>([]);
-  const bounds = useMemo(() => countryBounds(country.country), [country.country]);
+  const baseBounds = useMemo(() => countryBounds(country.country), [country.country]);
+  const countryRender = useMemo(
+    () => selectCountryRender(polygons, strikes, baseBounds),
+    [polygons, strikes, baseBounds],
+  );
+  const bounds = countryRender.bounds;
   const aspect = size.width / Math.max(1, size.height);
   const tiles = useMemo(() => mapTiles(bounds, aspect), [bounds, aspect]);
-  const countryPath = useMemo(() => pathForPolygons(polygons, bounds, aspect), [polygons, bounds, aspect]);
+  const countryPath = useMemo(
+    () => pathForPolygons(countryRender.polygons, bounds, size.width, size.height),
+    [countryRender.polygons, bounds, size.width, size.height],
+  );
   const grid = match?.grid ?? { cols: 8, rows: 10 };
   const clipId = `grid-country-clip-${country.country.toLowerCase()}`;
   const outsideMaskId = `grid-country-mask-${country.country.toLowerCase()}`;
@@ -535,16 +724,16 @@ function SatelliteCountryMap({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(250,204,21,0.06),transparent_42%),linear-gradient(to_bottom,rgba(2,6,23,0.02),rgba(2,6,23,0.36))]" />
 
       {strikes.slice(0, 90).map((strike, index) => {
-        const p = project(bounds, aspect, strike.lat, strike.lon);
-        if (p.x < 0 || p.x > 100 || p.y < 0 || p.y > 100) return null;
+        const p = projectPx(bounds, size.width, size.height, strike.lat, strike.lon);
+        if (p.x < 0 || p.x > size.width || p.y < 0 || p.y > size.height) return null;
         const visual = strikeVisual(strike, now);
         return (
           <span
             key={`${strike.received_at}-${index}`}
             className="grid-strike pointer-events-none absolute"
             style={{
-              left: `${p.x}%`,
-              top: `${p.y}%`,
+              left: `${p.x}px`,
+              top: `${p.y}px`,
               opacity: visual.opacity,
               transform: `translate(-50%, -50%) scale(${visual.scale})`,
               zIndex: visual.fresh ? 14 : 6,
@@ -559,17 +748,22 @@ function SatelliteCountryMap({
       })}
 
       {gameStarted && countryPath && (
-        <svg className="pointer-events-none absolute inset-0 z-[8] h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+        <svg
+          className="pointer-events-none absolute inset-0 z-[8] h-full w-full"
+          viewBox={`0 0 ${size.width} ${size.height}`}
+          preserveAspectRatio="none"
+          aria-hidden
+        >
           <defs>
             <clipPath id={clipId}>
               <path d={countryPath} fillRule="evenodd" clipRule="evenodd" />
             </clipPath>
             <mask id={outsideMaskId}>
-              <rect x="0" y="0" width="100" height="100" fill="white" />
+              <rect x="0" y="0" width={size.width} height={size.height} fill="white" />
               <path d={countryPath} fill="black" fillRule="evenodd" />
             </mask>
           </defs>
-          <rect x="0" y="0" width="100" height="100" fill="rgba(0,0,0,0.84)" mask={`url(#${outsideMaskId})`} />
+          <rect x="0" y="0" width={size.width} height={size.height} fill="rgba(0,0,0,0.84)" mask={`url(#${outsideMaskId})`} />
           <g clipPath={`url(#${clipId})`} className="pointer-events-auto">
             {cells.map((cell) => {
               const disabled = phase !== 'active' || vanishedCell === cell.index;
@@ -578,10 +772,10 @@ function SatelliteCountryMap({
               return (
                 <rect
                   key={cell.index}
-                  x={(cell.col / grid.cols) * 100}
-                  y={(cell.row / grid.rows) * 100}
-                  width={100 / grid.cols}
-                  height={100 / grid.rows}
+                  x={(cell.col / grid.cols) * size.width}
+                  y={(cell.row / grid.rows) * size.height}
+                  width={size.width / grid.cols}
+                  height={size.height / grid.rows}
                   rx="0.8"
                   vectorEffect="non-scaling-stroke"
                   className={`transition ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
@@ -592,6 +786,25 @@ function SatelliteCountryMap({
                   onClick={() => {
                     if (!disabled) onCellClick(cell.index);
                   }}
+                />
+              );
+            })}
+            {opponentPlays.slice(-12).map((play) => {
+              const col = play.cell % grid.cols;
+              const row = Math.floor(play.cell / grid.cols);
+              return (
+                <rect
+                  key={play.id}
+                  x={(col / grid.cols) * size.width}
+                  y={(row / grid.rows) * size.height}
+                  width={size.width / grid.cols}
+                  height={size.height / grid.rows}
+                  rx="0.8"
+                  vectorEffect="non-scaling-stroke"
+                  fill="rgba(244,63,94,0.24)"
+                  stroke="rgba(251,113,133,0.75)"
+                  strokeWidth="0.3"
+                  className="animate-pulse"
                 />
               );
             })}
@@ -627,8 +840,10 @@ export default function GridGameClient() {
   const [error, setError] = useState<string | null>(null);
   const [selectedCell, setSelectedCell] = useState<number | null>(null);
   const [vanishedCell, setVanishedCell] = useState<number | null>(null);
+  const [opponentPlays, setOpponentPlays] = useState<OpponentPlay[]>([]);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const lastStrikeRef = useRef<string | null>(null);
+  const lastOpponentScoreRef = useRef(0);
   const phase = loading && !match ? 'finding' : phaseFor(match);
   const gameStarted = phase !== 'selecting';
   const matchId = match?.matchId ?? null;
@@ -708,6 +923,29 @@ export default function GridGameClient() {
   }, [match, matchId, matchStatus]);
 
   useEffect(() => {
+    if (!match) {
+      lastOpponentScoreRef.current = 0;
+      return;
+    }
+    const previous = lastOpponentScoreRef.current;
+    const next = match.opponent.score;
+    if (next <= previous) {
+      lastOpponentScoreRef.current = next;
+      return;
+    }
+    const plays: OpponentPlay[] = [];
+    for (let score = previous + 1; score <= next; score += 1) {
+      plays.push({
+        id: `${match.matchId}:${score}`,
+        cell: opponentCellFor(match.matchId, score, match.grid),
+        at: Date.now(),
+      });
+    }
+    lastOpponentScoreRef.current = next;
+    setOpponentPlays((current) => [...current, ...plays].slice(-30));
+  }, [match]);
+
+  useEffect(() => {
     const timer = window.setInterval(() => setNowMs(Date.now()), 250);
     return () => window.clearInterval(timer);
   }, []);
@@ -739,6 +977,8 @@ export default function GridGameClient() {
     setMatch(null);
     setSelectedCell(null);
     setVanishedCell(null);
+    setOpponentPlays([]);
+    lastOpponentScoreRef.current = 0;
     window.setTimeout(() => {
       ensureGameSession()
         .then(() => startGridMatch(selectedCountry.country))
@@ -776,7 +1016,7 @@ export default function GridGameClient() {
       >
         {gameStarted && (
           <div className="animate-[fade-up_0.45s_cubic-bezier(0.22,1,0.36,1)_both]">
-            <GameLayersPanel country={selectedCountry} />
+            <GameLayersPanel country={selectedCountry} match={match} strikes={strikes} />
           </div>
         )}
 
@@ -788,6 +1028,7 @@ export default function GridGameClient() {
             phase={phase}
             now={nowMs}
             gameStarted={gameStarted}
+            opponentPlays={opponentPlays}
             selectedCell={selectedCell}
             vanishedCell={vanishedCell}
             onCellClick={onCellClick}
