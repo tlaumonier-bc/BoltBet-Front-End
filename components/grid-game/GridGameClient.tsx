@@ -32,12 +32,29 @@ const ACTIVE_COUNTRY_CANDIDATES = [
   'US', 'BR', 'IN', 'ID', 'CD', 'CO', 'VE', 'MX', 'AR', 'AU', 'ZA', 'FR',
   'IT', 'ES', 'DE', 'GB', 'PL', 'RO', 'HR', 'RS',
 ];
+const AREA_GRID_COLS = 10;
+const AREA_GRID_ROWS = 8;
+const AREA_WINDOW_MS = 30_000;
+const AREA_FALLBACK_WINDOW_MS = 2 * 60_000;
+const AREA_MIN_TRIGGERED_RATIO = 0.3;
+const AREA_MIN_TRIGGERED_CELLS = 3;
+const AREA_MIN_STRIKES = 3;
 
 type Phase = 'selecting' | 'finding' | 'preparing' | 'active' | 'settled';
+type PlayScope = 'country' | 'area';
 type LonLat = [number, number];
 type CountryPolygon = LonLat[][];
 type OpponentPlay = { id: string; cell: number; at: number };
 type PreparedPolygon = { polygon: CountryPolygon; bounds: Bounds; area: number; centerLon: number };
+type AreaCandidate = {
+  id: string;
+  bounds: Bounds;
+  strikeCount: number;
+  triggeredCells: number;
+  boxCells: number;
+  triggeredRatio: number;
+  score: number;
+};
 
 interface CountryFeature {
   type: 'Feature';
@@ -349,6 +366,94 @@ function strikeCountSince(strikes: CountryStrike[], sinceMs: number) {
   return count;
 }
 
+function boundsForAreaCells(bounds: Bounds, minCol: number, maxCol: number, minRow: number, maxRow: number): Bounds {
+  const lonStep = (bounds.maxLon - bounds.minLon) / AREA_GRID_COLS;
+  const latStep = (bounds.maxLat - bounds.minLat) / AREA_GRID_ROWS;
+  const padLon = lonStep * 0.75;
+  const padLat = latStep * 0.75;
+  return {
+    label: `${bounds.label} active area`,
+    minLon: Math.max(bounds.minLon, bounds.minLon + minCol * lonStep - padLon),
+    maxLon: Math.min(bounds.maxLon, bounds.minLon + (maxCol + 1) * lonStep + padLon),
+    minLat: Math.max(bounds.minLat, bounds.maxLat - (maxRow + 1) * latStep - padLat),
+    maxLat: Math.min(bounds.maxLat, bounds.maxLat - minRow * latStep + padLat),
+  };
+}
+
+function buildAreaCandidates(strikes: CountryStrike[], bounds: Bounds, now: number, windowMs = AREA_WINDOW_MS): AreaCandidate[] {
+  const since = now - windowMs;
+  const counts = Array.from({ length: AREA_GRID_ROWS }, () => Array.from({ length: AREA_GRID_COLS }, () => 0));
+  const recentStrikes = strikes.filter((strike) => {
+    const receivedAt = Date.parse(strike.received_at);
+    if (!Number.isFinite(receivedAt) || receivedAt < since) return false;
+    const lon = normalizeLonToBounds(strike.lon, bounds);
+    return lon >= bounds.minLon && lon <= bounds.maxLon && strike.lat >= bounds.minLat && strike.lat <= bounds.maxLat;
+  });
+
+  for (const strike of recentStrikes) {
+    const lon = normalizeLonToBounds(strike.lon, bounds);
+    const col = Math.max(0, Math.min(AREA_GRID_COLS - 1, Math.floor(((lon - bounds.minLon) / Math.max(0.0001, bounds.maxLon - bounds.minLon)) * AREA_GRID_COLS)));
+    const row = Math.max(0, Math.min(AREA_GRID_ROWS - 1, Math.floor(((bounds.maxLat - strike.lat) / Math.max(0.0001, bounds.maxLat - bounds.minLat)) * AREA_GRID_ROWS)));
+    counts[row][col] += 1;
+  }
+
+  const visited = Array.from({ length: AREA_GRID_ROWS }, () => Array.from({ length: AREA_GRID_COLS }, () => false));
+  const candidates: AreaCandidate[] = [];
+  for (let row = 0; row < AREA_GRID_ROWS; row += 1) {
+    for (let col = 0; col < AREA_GRID_COLS; col += 1) {
+      if (visited[row][col] || counts[row][col] === 0) continue;
+      const stack = [{ row, col }];
+      const cells: { row: number; col: number }[] = [];
+      visited[row][col] = true;
+      while (stack.length) {
+        const current = stack.pop()!;
+        cells.push(current);
+        for (const next of [
+          { row: current.row - 1, col: current.col },
+          { row: current.row + 1, col: current.col },
+          { row: current.row, col: current.col - 1 },
+          { row: current.row, col: current.col + 1 },
+        ]) {
+          if (
+            next.row < 0 || next.row >= AREA_GRID_ROWS ||
+            next.col < 0 || next.col >= AREA_GRID_COLS ||
+            visited[next.row][next.col] ||
+            counts[next.row][next.col] === 0
+          ) continue;
+          visited[next.row][next.col] = true;
+          stack.push(next);
+        }
+      }
+
+      const minRow = Math.min(...cells.map((cell) => cell.row));
+      const maxRow = Math.max(...cells.map((cell) => cell.row));
+      const minCol = Math.min(...cells.map((cell) => cell.col));
+      const maxCol = Math.max(...cells.map((cell) => cell.col));
+      const boxCells = (maxRow - minRow + 1) * (maxCol - minCol + 1);
+      const triggeredCells = cells.length;
+      const strikeCount = cells.reduce((sum, cell) => sum + counts[cell.row][cell.col], 0);
+      const triggeredRatio = triggeredCells / Math.max(1, boxCells);
+      if (
+        triggeredRatio < AREA_MIN_TRIGGERED_RATIO ||
+        triggeredCells < AREA_MIN_TRIGGERED_CELLS ||
+        strikeCount < AREA_MIN_STRIKES
+      ) continue;
+
+      candidates.push({
+        id: `${minCol}-${minRow}-${maxCol}-${maxRow}`,
+        bounds: boundsForAreaCells(bounds, minCol, maxCol, minRow, maxRow),
+        strikeCount,
+        triggeredCells,
+        boxCells,
+        triggeredRatio,
+        score: strikeCount * 4 + triggeredCells * 2 + triggeredRatio * 10,
+      });
+    }
+  }
+
+  return candidates.sort((a, b) => b.score - a.score);
+}
+
 async function activeCountriesFromStrikeFeed(): Promise<GridActiveCountry[]> {
   const rows = await Promise.all(
     ACTIVE_COUNTRY_CANDIDATES.map(async (country) => {
@@ -420,12 +525,49 @@ function PlayerCard({ match }: { match: GridMatchState | null }) {
   );
 }
 
+function GameScopeSwitch({ value, onChange, disabled }: { value: PlayScope; onChange: (value: PlayScope) => void; disabled: boolean }) {
+  return (
+    <div className="flex items-center rounded-full border border-white/10 bg-white/[0.045] p-1 text-xs font-black text-white/50">
+      <button
+        type="button"
+        onClick={() => onChange('country')}
+        disabled={disabled}
+        className={`rounded-full px-3.5 py-2 transition disabled:cursor-not-allowed ${
+          value === 'country'
+            ? 'bg-bolt text-slate-950 shadow-[0_0_24px_rgba(250,204,21,0.18)]'
+            : 'hover:bg-white/8 hover:text-white'
+        }`}
+      >
+        Countries
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange('area')}
+        disabled={disabled}
+        title="Play inside the most active storm area"
+        className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 transition disabled:cursor-not-allowed ${
+          value === 'area'
+            ? 'bg-cyan-200/15 text-cyan-100 shadow-[0_0_24px_rgba(56,189,248,0.14)]'
+            : 'hover:bg-white/8 hover:text-white'
+        }`}
+      >
+        <span>Areas</span>
+        <span className="rounded-full border border-cyan-200/15 bg-cyan-200/10 px-1.5 py-0.5 text-[8px] uppercase tracking-wider text-cyan-100/70">
+          Beta
+        </span>
+      </button>
+    </div>
+  );
+}
+
 function ControlPanel({
   country,
   match,
   phase,
   loading,
   error,
+  playScope,
+  area,
   onPlay,
 }: {
   country: GridActiveCountry;
@@ -433,10 +575,14 @@ function ControlPanel({
   phase: Phase;
   loading: boolean;
   error: string | null;
+  playScope: PlayScope;
+  area: AreaCandidate | null;
   onPlay: () => void;
 }) {
   const name = countryName(country.country);
   const eloDelta = match?.eloDelta ?? null;
+  const areaReady = playScope === 'country' || Boolean(area);
+  const playDisabled = loading || country.strikes30s <= 0 || !areaReady;
   return (
     <aside className="glass pointer-events-auto z-10 w-full max-w-[360px] rounded-3xl p-4 shadow-2xl">
       <GameAccount variant="inline" />
@@ -459,6 +605,14 @@ function ControlPanel({
           </div>
         </div>
       </div>
+
+      {phase === 'selecting' && playScope === 'area' && (
+        <div className="mt-4 rounded-2xl border border-cyan-200/15 bg-cyan-200/10 p-3 text-xs leading-relaxed text-cyan-50/75">
+          {area
+            ? `${area.strikeCount} strikes · ${Math.round(area.triggeredRatio * 100)}% of cells active in the selected storm area`
+            : 'Waiting for a storm area where at least 30% of local cells were triggered recently.'}
+        </div>
+      )}
 
       <div className="mt-4">
         <PlayerCard match={match} />
@@ -488,10 +642,16 @@ function ControlPanel({
         <button
           type="button"
           onClick={onPlay}
-          disabled={loading || country.strikes30s <= 0}
+          disabled={playDisabled}
           className="btn-glow mt-4 w-full rounded-2xl px-5 py-4 text-base font-black disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? 'Finding match...' : country.strikes30s > 0 ? 'Play on this country' : 'Waiting for live strikes'}
+          {loading
+            ? 'Finding match...'
+            : country.strikes30s <= 0
+              ? 'Waiting for live strikes'
+              : playScope === 'area'
+                ? area ? 'Play this area' : 'Waiting for active area'
+                : 'Play on this country'}
         </button>
       )}
       {phase === 'finding' && (
@@ -631,6 +791,8 @@ function SatelliteCountryMap({
   strikes,
   match,
   phase,
+  playScope,
+  area,
   now,
   gameStarted,
   opponentPlays,
@@ -642,6 +804,8 @@ function SatelliteCountryMap({
   strikes: CountryStrike[];
   match: GridMatchState | null;
   phase: Phase;
+  playScope: PlayScope;
+  area: AreaCandidate | null;
   now: number;
   gameStarted: boolean;
   opponentPlays: OpponentPlay[];
@@ -657,14 +821,14 @@ function SatelliteCountryMap({
     () => selectCountryRender(polygons, strikes, baseBounds),
     [polygons, strikes, baseBounds],
   );
-  const bounds = countryRender.bounds;
+  const bounds = playScope === 'area' && area ? area.bounds : countryRender.bounds;
   const aspect = size.width / Math.max(1, size.height);
   const tiles = useMemo(() => mapTiles(bounds, aspect), [bounds, aspect]);
   const countryPath = useMemo(
     () => pathForPolygons(countryRender.polygons, bounds, size.width, size.height),
     [countryRender.polygons, bounds, size.width, size.height],
   );
-  const grid = match?.grid ?? { cols: 8, rows: 10 };
+  const grid = playScope === 'area' ? { cols: AREA_GRID_COLS, rows: AREA_GRID_ROWS } : match?.grid ?? { cols: 8, rows: 10 };
   const clipId = `grid-country-clip-${country.country.toLowerCase()}`;
   const outsideMaskId = `grid-country-mask-${country.country.toLowerCase()}`;
 
@@ -823,8 +987,16 @@ function SatelliteCountryMap({
 
       {phase === 'selecting' && (
         <div className="absolute inset-x-6 bottom-6 rounded-3xl border border-white/10 bg-black/45 p-5 backdrop-blur">
-          <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/40">Grid Game</div>
-          <div className="mt-1 text-lg font-bold text-white sm:text-xl">Pick the active country you want and start playing.</div>
+          <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/40">
+            {playScope === 'area' ? 'Area Game · Beta' : 'Grid Game'}
+          </div>
+          <div className="mt-1 text-lg font-bold text-white sm:text-xl">
+            {playScope === 'area'
+              ? area
+                ? 'A hot storm area is ready. Play the smaller grid.'
+                : 'Searching for a storm area with enough active cells.'
+              : 'Pick the active country you want and start playing.'}
+          </div>
         </div>
       )}
     </div>
@@ -834,6 +1006,7 @@ function SatelliteCountryMap({
 export default function GridGameClient() {
   const [countries, setCountries] = useState<GridActiveCountry[]>(DEFAULT_COUNTRIES);
   const [countryIndex, setCountryIndex] = useState(0);
+  const [playScope, setPlayScope] = useState<PlayScope>('country');
   const [match, setMatch] = useState<GridMatchState | null>(null);
   const [strikes, setStrikes] = useState<CountryStrike[]>([]);
   const [loading, setLoading] = useState(false);
@@ -849,6 +1022,15 @@ export default function GridGameClient() {
   const matchId = match?.matchId ?? null;
   const matchStatus = match?.status ?? null;
   const selectedCountry = countries[Math.min(countryIndex, countries.length - 1)] ?? DEFAULT_COUNTRIES[0];
+  const selectedArea = useMemo(() => {
+    if (playScope !== 'area') return null;
+    const base = countryBounds(selectedCountry.country);
+    return (
+      buildAreaCandidates(strikes, base, nowMs, AREA_WINDOW_MS)[0] ??
+      buildAreaCandidates(strikes, base, nowMs, AREA_FALLBACK_WINDOW_MS)[0] ??
+      null
+    );
+  }, [playScope, selectedCountry.country, strikes, nowMs]);
 
   useEffect(() => {
     const init = useSessionStore.getState().init;
@@ -972,6 +1154,7 @@ export default function GridGameClient() {
   };
 
   const onPlay = useCallback(() => {
+    if (playScope === 'area' && !selectedArea) return;
     setLoading(true);
     setError(null);
     setMatch(null);
@@ -986,7 +1169,7 @@ export default function GridGameClient() {
         .catch((err) => setError(err instanceof Error ? err.message : 'Could not start match'))
         .finally(() => setLoading(false));
     }, 650);
-  }, [selectedCountry.country]);
+  }, [playScope, selectedArea, selectedCountry.country]);
 
   const onCellClick = useCallback((cell: number) => {
     if (!match || phase !== 'active') return;
@@ -997,12 +1180,28 @@ export default function GridGameClient() {
       .catch(() => setSelectedCell(null));
   }, [match, phase]);
 
+  const onScopeChange = useCallback((next: PlayScope) => {
+    if (phase !== 'selecting') return;
+    setPlayScope(next);
+    setSelectedCell(null);
+    setVanishedCell(null);
+  }, [phase]);
+
   return (
     <main className="min-h-svh overflow-hidden bg-storm px-4 pb-8 pt-24 text-white sm:px-6">
       <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 pb-4">
-        <Link href="/" className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-semibold text-white/75 transition hover:bg-white/10 hover:text-white">
-          Back to globe
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/" className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-semibold text-white/75 transition hover:bg-white/10 hover:text-white">
+            Back to globe
+          </Link>
+          {!gameStarted && (
+            <GameScopeSwitch
+              value={playScope}
+              onChange={onScopeChange}
+              disabled={phase !== 'selecting'}
+            />
+          )}
+        </div>
         <div className="hidden text-right sm:block">
           <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-100/50">Lightning Map Game</div>
           <div className="font-display text-2xl font-black">Grid Game</div>
@@ -1026,6 +1225,8 @@ export default function GridGameClient() {
             strikes={strikes}
             match={match}
             phase={phase}
+            playScope={playScope}
+            area={selectedArea}
             now={nowMs}
             gameStarted={gameStarted}
             opponentPlays={opponentPlays}
@@ -1067,6 +1268,8 @@ export default function GridGameClient() {
             phase={phase}
             loading={loading}
             error={error}
+            playScope={playScope}
+            area={selectedArea}
             onPlay={onPlay}
           />
         </div>
