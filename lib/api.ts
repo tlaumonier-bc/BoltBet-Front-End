@@ -414,6 +414,21 @@ export interface GridMatchState {
   eloDelta: number | null;
 }
 
+export interface AdminAccountsGrowthPoint {
+  date: string;
+  newAccounts: number;
+  cumulativeAccounts: number;
+}
+
+export interface AdminAccountsGrowthResponse {
+  adminEmail: string;
+  days: number;
+  totalAccounts: number;
+  guestAccounts: number;
+  verifiedAccounts: number;
+  series: AdminAccountsGrowthPoint[];
+}
+
 function trophyFor(tokens: number): Trophy | null {
   let earned: Trophy | null = null;
   for (const trophy of TROPHIES) {
@@ -558,4 +573,14 @@ export async function getGridMatchState(matchId: string): Promise<GridMatchState
 
 export async function clickGridMatchCell(matchId: string, cell: number): Promise<GridMatchState> {
   return postJson<GridMatchState>(`/api/game/grid/match/${matchId}/click/`, { cell });
+}
+
+export async function getAdminAccountsGrowth(idToken: string, days = 180): Promise<AdminAccountsGrowthResponse> {
+  const q = new URLSearchParams({ days: String(days) });
+  const res = await fetch(`${API}/api/admin/accounts-growth/?${q}`, {
+    cache: 'no-store',
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+  if (!res.ok) throw new Error(`admin accounts growth ${res.status}`);
+  return res.json();
 }
