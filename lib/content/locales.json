@@ -107,6 +107,10 @@
         "url": "https://lightningmapgame.com/ro/harta-fulgerelor"
       },
       {
+        "hreflang": "zh-CN",
+        "url": "https://lightningmapgame.com/cn/shandian-ditu"
+      },
+      {
         "hreflang": "x-default",
         "url": "https://lightningmapgame.com/"
       }
@@ -2792,6 +2796,112 @@
           {
             "q": "Se poate prezice unde va cădea un fulger?",
             "a": "Momentul exact nu poate fi prezis, dar densitatea fulgerelor și mișcarea celulei arată dacă se apropie o furtună. Îți poți testa intuiția și în joc: ghicește dacă în următoarele 60 de secunde vor cădea mai multe sau mai puține fulgere."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 26,
+      "locale": "cn",
+      "localePath": "/cn",
+      "country": "China",
+      "language": "Chinese",
+      "hreflang": "zh-CN",
+      "slug": "/cn/shandian-ditu",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "闪电",
+      "primaryKeyword": "闪电",
+      "primaryVolume": null,
+      "primaryKd": null,
+      "keywords": [
+        {
+          "term": "闪电",
+          "role": "primary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "雷击",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "闪电侠",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "product",
+          "isBrand": false
+        }
+      ],
+      "leadSecondary": {
+        "term": "雷击",
+        "kd": 0,
+        "volume": null
+      },
+      "content": {
+        "translated": true,
+        "breadcrumb": [
+          "中国",
+          "闪电地图"
+        ],
+        "h1": "闪电实时地图：中国雷击位置",
+        "title": "闪电实时地图：中国雷击位置 | Lightning Map Game",
+        "metaDescription": "查看中国实时闪电地图，追踪最新雷击位置、风暴活动和过去一小时的闪电变化。",
+        "imageAlt": "中国实时闪电和雷击地图",
+        "sections": [
+          {
+            "h2": "中国哪里正在出现闪电？",
+            "body": "这张实时地图会在闪电被检测到后立即显示位置，帮助你看到雷暴正在中国哪些地区活动，以及风暴可能向哪个方向移动。黄色和红色区域表示闪电更密集、雷暴更活跃。允许定位后，你也可以查看附近的闪电和过去 60 分钟内的雷击情况。"
+          },
+          {
+            "h2": "雷击位置如何判断风暴强度？",
+            "body": "当同一片区域短时间内连续出现雷击，通常说明雷暴单体正在增强。观察闪电密度、最新雷击时间和移动方向，可以判断风暴是否正在靠近城市、山区或沿海地区。"
+          },
+          {
+            "h2": "闪电、雷击和闪电侠有什么区别？",
+            "body": "闪电是最通用的说法，适合描述天空中的放电现象；雷击更强调闪电击中地面、建筑或设备时可能造成的影响；闪电侠则是超级英雄 The Flash 的中文名称，和天气数据不是同一个搜索意图。这个页面关注的是实时闪电和雷击位置。"
+          },
+          {
+            "h2": "实时闪电数据来自哪里？",
+            "body": "闪电数据来自社区探测网络。接收站会记录闪电无线电脉冲到达的时间，再通过多个站点的信号进行三角定位。检测到同一次闪电的站点越多，位置通常越准确。"
+          },
+          {
+            "h2": "预测接下来 60 秒",
+            "body": "接下来一分钟会出现更多还是更少闪电？做出预测，然后实时查看结果。这是免费游戏，不涉及真钱。",
+            "isFunnel": true,
+            "ctaText": "开始：预测接下来 60 秒",
+            "ctaPrompt": "接下来一分钟闪电会更多还是更少？"
+          }
+        ],
+        "faqHeading": "常见问题",
+        "faq": [
+          {
+            "q": "这张闪电地图显示什么？",
+            "a": "它显示实时检测到的闪电和雷击位置，让你看到中国哪里正在发生雷暴活动。"
+          },
+          {
+            "q": "闪电和雷击有什么区别？",
+            "a": "闪电是天空放电现象的通用名称；雷击通常指闪电击中地面、建筑、树木或设备。"
+          },
+          {
+            "q": "闪电侠是什么意思？",
+            "a": "闪电侠是 The Flash 这个超级英雄的中文名称。它和本页面的实时闪电天气数据不是同一个含义。"
+          },
+          {
+            "q": "地图多久更新一次？",
+            "a": "地图接近实时更新，新的闪电通常会在检测后的几秒内出现。"
+          },
+          {
+            "q": "能准确预测闪电会打在哪里吗？",
+            "a": "不能准确预测具体地点和时间，但闪电密度和风暴移动方向可以帮助判断雷暴是否正在靠近。"
           }
         ]
       },

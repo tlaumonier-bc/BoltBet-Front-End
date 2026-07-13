@@ -34,6 +34,7 @@ export const COUNTRY_BOUNDS: Record<string, Bounds> = {
   es: { minLon: -9.5, minLat: 36, maxLon: 3.4, maxLat: 43.8, label: 'Spain' },
   rs: { minLon: 18.8, minLat: 42.2, maxLon: 23, maxLat: 46.2, label: 'Serbia' },
   ro: { minLon: 20.2, minLat: 43.6, maxLon: 29.7, maxLat: 48.3, label: 'Romania' },
+  cn: { minLon: 73, minLat: 18, maxLon: 135, maxLat: 54, label: 'China' },
   br: { minLon: -74, minLat: -34, maxLon: -34, maxLat: 6, label: 'Brazil' },
   in: { minLon: 68, minLat: 6, maxLon: 98, maxLat: 36.5, label: 'India' },
   id: { minLon: 95, minLat: -11, maxLon: 141, maxLat: 6, label: 'Indonesia' },

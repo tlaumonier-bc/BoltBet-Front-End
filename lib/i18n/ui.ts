@@ -23,7 +23,8 @@ export type UiLanguage =
   | 'lt'
   | 'sk'
   | 'sr'
-  | 'ro';
+  | 'ro'
+  | 'zh';
 
 export const UI_LANGUAGES: { code: UiLanguage; label: string; nativeLabel: string }[] = [
   { code: 'en', label: 'English', nativeLabel: 'English' },
@@ -47,6 +48,7 @@ export const UI_LANGUAGES: { code: UiLanguage; label: string; nativeLabel: strin
   { code: 'sk', label: 'Slovak', nativeLabel: 'Slovenčina' },
   { code: 'sr', label: 'Serbian', nativeLabel: 'Srpski' },
   { code: 'ro', label: 'Romanian', nativeLabel: 'Română' },
+  { code: 'zh', label: 'Chinese', nativeLabel: '中文' },
 ];
 
 const LANGUAGE_SET = new Set(UI_LANGUAGES.map((language) => language.code));
@@ -314,6 +316,14 @@ export const UI_COPY = {
     layers: { recent1h: 'Fulgere · 1 h', recent1hDescription: 'Fulgere din ultima oră.', recent3h: 'Fulgere · 3 h', recent3hDescription: 'Fulgere vechi de 1 până la 3 ore.', recent6h: 'Fulgere · 6 h', recent6hDescription: 'Fulgere vechi de 3 până la 6 ore.', clouds: 'Nori', cloudsDescription: 'Acoperire noroasă live la nivel global.', rain: 'Ploaie', rainDescription: 'Ploaie live, minut cu minut.', temperature: 'Temperatură', temperatureDescription: 'Căldura planetei, de la albastru la roșu.', wind: 'Vânt', windDescription: 'Aer în mișcare în toată lumea.' },
     gamePanel: { strikeGame: 'Jocul fulgerelor', notPlayable: 'Nu poate fi jucat', notPlayableBody: 'Nu au fost detectate fulgere aici în ultimele 30 de secunde. Alege o țară cu activitate live sau joacă pe întregul glob.', findPlayableCountry: 'Găsește o țară jucabilă', or: 'sau', playWholeGlobe: 'Joacă pe întregul glob', points: 'Puncte', nextTrophy: 'Următorul trofeu', allTrophiesUnlocked: 'Toate trofeele deblocate', leaderboard: 'Clasament', loadingRanking: 'Se încarcă clasamentul...', activity: 'Activitate', playAnytime: 'joacă oricând', secondsToResult: '{value}s până la rezultat', lastGames: 'Ultimele 3 jocuri' },
   },
+  zh: {
+    nav: { byCountry: '按国家', howItWorks: '玩法说明', leaderboard: '排行榜', play: '开始', playGame: '开始游戏', gridGame: '网格游戏', comingSoon: '即将推出', menu: '打开菜单', language: '语言' },
+    live: { console: '实时控制台', globeActivity: '全球活动', orbitTo: '定位到', wholeGlobe: '整个地球', backToGlobe: '返回地球', nearMe: '我附近', findingNearby: '正在查找附近闪电…', nearbyStrikes: '附近 {count} 次闪电', layers: '图层', layersPro: '图层 · Pro', free: '自由', beginner: '入门', pro: 'Pro', game: '游戏', day: '白天', night: '夜晚', good: '良好', medium: '一般', bad: '较差', close: '关闭', preparingProfile: '正在准备游戏资料…' },
+    countryPanel: { live: '实时', idle: '平静', noStrikeData: '暂无闪电数据', unavailable: '该地区没有 ISO 国家代码，因此暂无闪电数据。', loading: '正在加载近期闪电…', learnMore: '了解更多关于 {country}', strikesLastHour: '次闪电 · 过去一小时', recentRate: '近期频率', lastStrike: '最后一次闪电', latest: '最新 {count} 次闪电 · {span} 窗口', now: '现在', secondsAgo: '{value} 秒前', minutesAgo: '{value} 分钟前', hoursAgo: '{value} 小时前', intensity: { intense: '强烈', active: '活跃', moderate: '中等', light: '较弱', calm: '平静' } },
+    seo: { dataSource: '实时闪电数据来自 Blitzortung 社区探测网络。', play: '开始' },
+    layers: { recent1h: '闪电 · 1 小时', recent1hDescription: '过去一小时的闪电。', recent3h: '闪电 · 3 小时', recent3hDescription: '1 到 3 小时前的闪电。', recent6h: '闪电 · 6 小时', recent6hDescription: '3 到 6 小时前的闪电。', clouds: '云层', cloudsDescription: '全球实时云量。', rain: '降雨', rainDescription: '逐分钟实时降雨。', temperature: '温度', temperatureDescription: '全球温度，从蓝到红。', wind: '风', windDescription: '全球空气流动。' },
+    gamePanel: { strikeGame: '闪电游戏', notPlayable: '暂不可玩', notPlayableBody: '这里过去 30 秒内没有检测到闪电。请选择一个有实时活动的国家，或挑战整个地球。', findPlayableCountry: '寻找可玩的国家', or: '或', playWholeGlobe: '挑战整个地球', points: '积分', nextTrophy: '下一个奖杯', allTrophiesUnlocked: '所有奖杯已解锁', leaderboard: '排行榜', loadingRanking: '正在加载排名...', activity: '活动', playAnytime: '随时可玩', secondsToResult: '{value} 秒后出结果', lastGames: '最近 3 局' },
+  },
 } as const satisfies Record<string, CopyTree>;
 
 const UI_COPY_RECORD: Record<string, CopyTree> = UI_COPY;
@@ -340,6 +350,7 @@ const UI_EXTRA_COPY: Record<string, CopyTree> = {
   sk: { liveSecondary: { recentStrikes: 'Nedávne blesky', waitingForStrikes: 'Čakanie na blesky…', strikes: 'Blesky', last60s: 'posl. 60 s', last10Min: 'posl. 10 min', hottestRegion: 'Najaktívnejší región', telemetry: 'Telemetria', feed: 'Zdroj', avgLatency: 'Priem. latencia', activity15: 'Aktivita · posl. 15 min', peak: 'špička', now: 'teraz' } },
   sr: { liveSecondary: { recentStrikes: 'Nedavne munje', waitingForStrikes: 'Čekaju se munje…', strikes: 'Munje', last60s: 'poslednjih 60 s', last10Min: 'poslednjih 10 min', hottestRegion: 'Najaktivniji region', telemetry: 'Telemetrija', feed: 'Feed', avgLatency: 'Prosečna latencija', activity15: 'Aktivnost · poslednjih 15 min', peak: 'vrh', now: 'sada' } },
   ro: { liveSecondary: { recentStrikes: 'Fulgere recente', waitingForStrikes: 'Se așteaptă fulgere…', strikes: 'Fulgere', last60s: 'ultimele 60 s', last10Min: 'ultimele 10 min', hottestRegion: 'Cea mai activă regiune', telemetry: 'Telemetrie', feed: 'Flux', avgLatency: 'Latență medie', activity15: 'Activitate · ultimele 15 min', peak: 'vârf', now: 'acum' } },
+  zh: { liveSecondary: { recentStrikes: '近期闪电', waitingForStrikes: '等待闪电…', strikes: '闪电', last60s: '过去 60 秒', last10Min: '过去 10 分钟', hottestRegion: '最活跃区域', telemetry: '遥测', feed: '数据流', avgLatency: '平均延迟', activity15: '活动 · 过去 15 分钟', peak: '峰值', now: '现在' } },
 };
 
 const UI_PAGE_COPY: Record<string, CopyTree> = {
@@ -394,6 +405,10 @@ const UI_PAGE_COPY: Record<string, CopyTree> = {
   de: {
     how: { eyebrow: 'So funktioniert es', heroBefore: 'Echte', heroHighlight: 'Blitze', heroAfter: 'sehen. Dann vorhersagen', intro: '{brand} ist ein Live-3D-Globus mit echten Blitzen weltweit plus ein schnelles Vorhersagespiel. Klicke ein Land an, um die Blitze der letzten Stunde, die aktuelle Aktivität und einen Verlauf zu sehen.', modesTitle: 'Vier Arten zu erkunden', modesIntro: 'Wechsle Modi über die Leiste, inklusive Tag-/Nacht-Ansicht.', mode: { free: { name: 'Frei', blurb: 'Nur der Globus mit weltweit aufleuchtenden Blitzen.' }, beginner: { name: 'Einsteiger', blurb: 'Fügt Live-Konsole, Orbit-Ziele, Blitze der letzten Stunde, Wolken, Regen und Aktivität hinzu.' }, pro: { name: 'Pro', blurb: 'Alles aus Einsteiger plus 3h-/6h-Spuren, Temperatur, Wind, Feed-Zustand, Latenz und Signalqualität.' }, game: { name: 'Spiel', blurb: 'Sage voraus, ob die nächsten 30 Sekunden mehr oder weniger Blitze bringen.' } }, weatherNote: 'In Einsteiger und Pro kannst du Live-Wetter über den Globus legen: Wolken, Regen, Temperatur, Wind und Blitzspuren.', gameTitle: 'Spielen: Höher oder niedriger', gameBodyBefore: 'Der Spielmodus macht den Globus zum schnellen Vorhersagespiel. Du wählst, ob die nächsten 30 Sekunden', higher: 'Mehr', gameBodyMiddle: 'oder', lower: 'Weniger', gameBodyAfter: 'Blitze bringen.', payoutBody: 'Richtig getippt gewinnt 2x Punkte. Gleichstand gibt Punkte zurück; falsch verliert sie.', timelinePrevious: 'Vorherige 30 s', timelinePlay: 'Dein Spiel · nächste 30 s', timelineCounted: 'Blitze gezählt', timelineNote: 'Es gibt keinen globalen Rundentimer. Dein 30-Sekunden-Fenster startet, sobald dein Spiel angenommen wird.', card: { scope: { title: 'Bereich', body: 'Spiele den ganzen Globus oder ein einzelnes aktives Land.' }, points: { title: 'Punkte', body: 'Starte mit 100 kostenlosen virtuellen Punkten. Es gibt kein Echtgeld.' }, leaderboard: { title: 'Rangliste', body: 'Melde dich mit Google an, um Punkte zu speichern und aufzusteigen.' } }, liveTitleBefore: 'Wo blitzt es', liveTitleHighlight: 'gerade', liveIntro: 'Eine Live-Rangliste der Orte, an denen gerade Blitze einschlagen.', liveNote: 'Langfristig ist der Maracaibo-See in Venezuela einer der blitzreichsten Orte der Erde. Die Rangliste oben ist live.', rankingOffline: 'Der Live-Blitzfeed ist gerade offline. Die Rangliste erscheint nach der Wiederverbindung.', rankingConnecting: 'Verbinde mit dem Live-Blitzfeed…', rankingSummary: 'Blitze live verfolgt · aktivste {mode} gerade', activeCountries: 'Länder', activeRegions: 'Regionen', rankingRegionNote: 'Regionen werden aus den Koordinaten abgeleitet, damit die Liste auch ohne Land-Tag gefüllt wird.', rankingCountryNote: 'Länder kommen aus dem Live-Feed; Gebiete ohne ISO-Code werden nicht gerankt.' },
     leaderboard: { disabled: 'Die Rangliste startet, sobald das Spiel-Backend verbunden ist.', error: 'Die Rangliste ist gerade nicht erreichbar.', empty: 'Noch keine Spiele. Sei der Erste.', trophyRoad: 'Trophäenpfad', nextMilestone: 'Dein nächster Meilenstein', playersByTrophy: 'Spieler nach Trophäe', noTrophy: 'Noch keine Trophäe', lessThanPoints: 'Weniger als {points} Punkte', pointsPlus: '{points}+ Punkte', title: 'Rangliste', subtitle: 'Top-Blitzvorhersager nach gewonnenen Punkten.', verified: 'Verifiziert', record: '{wins} Siege · {games} Spiele' },
+  },
+  zh: {
+    how: { eyebrow: '玩法说明', heroBefore: '观看真实', heroHighlight: '闪电', heroAfter: '然后预测它', intro: '{brand} 是一个实时 3D 地球闪电地图，展示全球真实闪电，并提供快速预测游戏。点击任意国家即可飞入查看过去一小时的闪电数量、当前活跃度和历史图表。', modesTitle: '四种探索方式', modesIntro: '可从模式栏切换模式，并使用白天 / 夜晚影像开关。', mode: { free: { name: '自由', blurb: '只显示地球和全球闪烁的闪电。' }, beginner: { name: '入门', blurb: '增加实时控制台、定位快捷方式、过去一小时闪电、云层、降雨和活动读数。' }, pro: { name: 'Pro', blurb: '包含入门模式全部功能，并增加 3 小时 / 6 小时闪电轨迹、温度、风、数据流健康、延迟和信号质量遥测。' }, game: { name: '游戏', blurb: '预测接下来 30 秒的闪电次数会比之前更多还是更少，使用免费的虚拟积分。' } }, weatherNote: '在入门和 Pro 模式中，你可以叠加实时天气: 云层、降雨、温度、风，以及过去 1、3 或 6 小时的闪电轨迹。', gameTitle: '游戏: 更高或更低', gameBodyBefore: '游戏模式会把地球变成快速预测游戏。只要没有正在进行的局，就可以随时开始。游戏会记录过去 30 秒，然后你判断接下来的 30 秒会出现', higher: '更多', gameBodyMiddle: '或', lower: '更少', gameBodyAfter: '闪电。', payoutBody: '猜对可赢得 2 倍积分。平局返还积分；猜错则失去积分。', timelinePrevious: '前 30 秒', timelinePlay: '你的预测 · 接下来 30 秒', timelineCounted: '已统计闪电', timelineNote: '没有共享回合计时器。你的 30 秒窗口会在预测被接受时开始。', card: { scope: { title: '范围', body: '可以挑战整个地球，也可以点击一个国家只预测该国闪电。该国家需要有近期活动。' }, points: { title: '积分', body: '开始时获得 100 个免费虚拟积分，用完后可再领取 100 个。没有真钱。' }, leaderboard: { title: '排行榜', body: '使用 Google 登录可跨设备保留积分，并冲击排行榜。' } }, liveTitleBefore: '闪电现在落在哪里', liveTitleHighlight: '实时', liveIntro: '这是实时闪电落点排行榜，使用与地球地图相同的数据流。', liveNote: '从长期看，委内瑞拉马拉开波湖是地球上闪电最频繁的地点之一。但上方排行榜是实时的: 它显示闪电此刻实际落在哪里。', rankingOffline: '实时闪电数据流当前离线。重新连接后排行榜会显示在这里。', rankingConnecting: '正在连接实时闪电数据流…', rankingSummary: '实时追踪闪电 · 当前最活跃{mode}', activeCountries: '国家', activeRegions: '地区', rankingRegionNote: '地区根据每次闪电的坐标推导，因此即使数据流没有国家标签，排行榜也能填充。', rankingCountryNote: '国家标签来自实时数据流；没有 ISO 代码的地区不会进入排名。' },
+    leaderboard: { disabled: '排行榜将在游戏后端连接后上线。', error: '目前无法连接排行榜。请稍后再试。', empty: '还没有游戏记录。成为第一个上榜的人。', trophyRoad: '奖杯之路', nextMilestone: '你的下一个里程碑', playersByTrophy: '按奖杯统计玩家', noTrophy: '还没有奖杯', lessThanPoints: '少于 {points} 分', pointsPlus: '{points}+ 分', title: '排行榜', subtitle: '按获胜积分排名的顶级闪电预测玩家。', verified: '已验证', record: '{wins} 胜 · {games} 局' },
   },
 };
 
@@ -492,6 +507,6 @@ export function useT() {
       setLanguage,
       t: (path: string, params?: Record<string, string | number>) => translateUi(language, path, params),
     }),
-    [language],
+    [language, setLanguage],
   );
 }
