@@ -338,16 +338,6 @@ function formatMatchOffset(timestamp: string, match: GridMatchState | null) {
   return `${seconds >= 0 ? '+' : ''}${seconds.toFixed(2)}s`;
 }
 
-function opponentCellFor(matchId: string, score: number, grid: { cols: number; rows: number }) {
-  let hash = 2166136261;
-  const key = `${matchId}:${score}`;
-  for (let i = 0; i < key.length; i += 1) {
-    hash ^= key.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return Math.abs(hash) % (grid.cols * grid.rows);
-}
-
 function phaseFor(match: GridMatchState | null): Phase {
   if (!match) return 'selecting';
   if (match.status === 'settled') return 'settled';
@@ -759,27 +749,27 @@ function GameBottomHud({ match, phase, country }: { match: GridMatchState | null
         : 'Done'
     : '...';
   return (
-    <div className="pointer-events-auto mx-auto mt-3 max-w-[620px] rounded-3xl border border-white/10 bg-slate-950/75 p-3 shadow-2xl backdrop-blur-xl transition-all duration-700">
-      <div className="grid grid-cols-3 items-center gap-3 text-center">
-        <div className="rounded-2xl bg-white/[0.055] px-3 py-2">
+    <div className="pointer-events-auto mt-3 w-full rounded-3xl border border-white/10 bg-slate-950/75 p-3 shadow-2xl backdrop-blur-xl transition-all duration-700">
+      <div className="grid grid-cols-3 items-center gap-2 text-center">
+        <div className="rounded-2xl bg-white/[0.055] px-2 py-2">
           <div className="text-[10px] uppercase tracking-wider text-white/35">You</div>
-          <div className="font-display text-2xl font-black text-electric">{match?.player.score ?? 0}</div>
+          <div className="font-display text-xl font-black text-electric">{match?.player.score ?? 0}</div>
         </div>
-        <div>
+        <div className="min-w-0">
           <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-bolt/70">
             {phase === 'preparing' ? 'Prepare' : phase === 'active' ? 'Live round' : phase === 'settled' ? 'Result' : 'Finding'}
           </div>
-          <div className="font-display mt-1 text-3xl font-black text-white">{timeLabel}</div>
-          <div className="mt-1 text-[11px] text-white/45">{country.strikes30s.toLocaleString()} strikes · last 30s</div>
+          <div className="font-display mt-1 text-2xl font-black text-white">{timeLabel}</div>
+          <div className="mt-1 truncate text-[10px] text-white/45">{country.strikes30s.toLocaleString()} strikes · 30s</div>
         </div>
-        <div className="rounded-2xl bg-white/[0.055] px-3 py-2">
+        <div className="rounded-2xl bg-white/[0.055] px-2 py-2">
           <div className="text-[10px] uppercase tracking-wider text-white/35">Bot</div>
-          <div className="font-display text-2xl font-black text-rose-300">{match?.opponent.score ?? 0}</div>
+          <div className="font-display text-xl font-black text-rose-300">{match?.opponent.score ?? 0}</div>
         </div>
       </div>
       {phase === 'preparing' && (
-        <p className="mt-3 text-center text-xs leading-relaxed text-white/55">
-          Click cells inside the country to score. Each cell is x1 for now, and your selected zone resets when a new strike appears.
+        <p className="mt-3 text-center text-[11px] leading-relaxed text-white/55">
+          Click cells to score. Your selected zone resets when a new strike appears.
         </p>
       )}
     </div>
@@ -943,8 +933,8 @@ function SatelliteCountryMap({
                   rx="0.8"
                   vectorEffect="non-scaling-stroke"
                   className={`transition ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
-                  fill={selected ? 'rgba(250,204,21,0.26)' : vanished ? 'rgba(0,0,0,0.5)' : 'rgba(148,163,184,0.16)'}
-                  stroke={selected ? 'rgba(250,204,21,0.65)' : 'rgba(226,232,240,0.26)'}
+                  fill={selected ? 'rgba(148,163,184,0.34)' : vanished ? 'rgba(0,0,0,0.5)' : 'rgba(148,163,184,0.16)'}
+                  stroke={selected ? 'rgba(226,232,240,0.72)' : 'rgba(226,232,240,0.26)'}
                   strokeWidth={selected ? 0.28 : 0.16}
                   opacity={vanished ? 0.25 : 1}
                   onClick={() => {
@@ -965,8 +955,8 @@ function SatelliteCountryMap({
                   height={size.height / grid.rows}
                   rx="0.8"
                   vectorEffect="non-scaling-stroke"
-                  fill="rgba(244,63,94,0.24)"
-                  stroke="rgba(251,113,133,0.75)"
+                  fill="rgba(244,63,94,0.34)"
+                  stroke="rgba(251,113,133,0.9)"
                   strokeWidth="0.3"
                   className="animate-pulse"
                 />
@@ -1116,16 +1106,18 @@ export default function GridGameClient() {
       return;
     }
     const plays: OpponentPlay[] = [];
+    const grid = playScope === 'area' ? { cols: AREA_GRID_COLS, rows: AREA_GRID_ROWS } : match.grid;
+    const maxCell = grid.cols * grid.rows;
     for (let score = previous + 1; score <= next; score += 1) {
       plays.push({
         id: `${match.matchId}:${score}`,
-        cell: opponentCellFor(match.matchId, score, match.grid),
+        cell: Math.floor(Math.random() * maxCell),
         at: Date.now(),
       });
     }
     lastOpponentScoreRef.current = next;
     setOpponentPlays((current) => [...current, ...plays].slice(-30));
-  }, [match]);
+  }, [match, playScope]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNowMs(Date.now()), 250);
@@ -1216,6 +1208,7 @@ export default function GridGameClient() {
         {gameStarted && (
           <div className="animate-[fade-up_0.45s_cubic-bezier(0.22,1,0.36,1)_both]">
             <GameLayersPanel country={selectedCountry} match={match} strikes={strikes} />
+            <GameBottomHud match={match} phase={phase} country={selectedCountry} />
           </div>
         )}
 
@@ -1234,7 +1227,6 @@ export default function GridGameClient() {
             vanishedCell={vanishedCell}
             onCellClick={onCellClick}
           />
-          {gameStarted && <GameBottomHud match={match} phase={phase} country={selectedCountry} />}
           <button
             type="button"
             onClick={selectPrevious}
