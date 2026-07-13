@@ -34,6 +34,17 @@ export const COUNTRY_BOUNDS: Record<string, Bounds> = {
   es: { minLon: -9.5, minLat: 36, maxLon: 3.4, maxLat: 43.8, label: 'Spain' },
   rs: { minLon: 18.8, minLat: 42.2, maxLon: 23, maxLat: 46.2, label: 'Serbia' },
   ro: { minLon: 20.2, minLat: 43.6, maxLon: 29.7, maxLat: 48.3, label: 'Romania' },
+  cn: { minLon: 73, minLat: 18, maxLon: 135, maxLat: 54, label: 'China' },
+  br: { minLon: -74, minLat: -34, maxLon: -34, maxLat: 6, label: 'Brazil' },
+  in: { minLon: 68, minLat: 6, maxLon: 98, maxLat: 36.5, label: 'India' },
+  id: { minLon: 95, minLat: -11, maxLon: 141, maxLat: 6, label: 'Indonesia' },
+  au: { minLon: 112, minLat: -44, maxLon: 154, maxLat: -10, label: 'Australia' },
+  mx: { minLon: -118, minLat: 14, maxLon: -86, maxLat: 33, label: 'Mexico' },
+  ar: { minLon: -73.5, minLat: -55, maxLon: -53, maxLat: -21, label: 'Argentina' },
+  za: { minLon: 16, minLat: -35, maxLon: 33, maxLat: -22, label: 'South Africa' },
+  cd: { minLon: 12, minLat: -14, maxLon: 32, maxLat: 6, label: 'DR Congo' },
+  co: { minLon: -79, minLat: -5, maxLon: -66, maxLat: 13, label: 'Colombia' },
+  ve: { minLon: -73.5, minLat: 0.5, maxLon: -59.5, maxLat: 12.5, label: 'Venezuela' },
 };
 
 // Countries whose map geometry spans overseas territories — fitting the full

@@ -11,6 +11,7 @@ import { useLiveStore } from '@/store/liveStore'
 import { useGameStore } from '@/store/gameStore'
 import { primaryPageForLocale } from '@/lib/content/content'
 import StrikeHistoryChart from './StrikeHistoryChart'
+import { useT } from '@/lib/i18n/ui'
 
 function flagEmoji(iso2: string | null): string {
   if (!iso2 || !/^[A-Za-z]{2}$/.test(iso2)) return '🏳️'
@@ -20,19 +21,19 @@ function flagEmoji(iso2: string | null): string {
 }
 
 // Average strikes/min over the loaded window → a human "how busy is it" label.
-function intensityFor(perMin: number): { label: string; color: string } {
-  if (perMin >= 60) return { label: 'Intense', color: 'text-red-400' }
-  if (perMin >= 20) return { label: 'Active', color: 'text-orange-300' }
-  if (perMin >= 5) return { label: 'Moderate', color: 'text-bolt' }
-  if (perMin >= 1) return { label: 'Light', color: 'text-electric' }
-  return { label: 'Calm', color: 'text-white/50' }
+function intensityFor(perMin: number, t: (key: string) => string): { label: string; color: string } {
+  if (perMin >= 60) return { label: t('countryPanel.intensity.intense'), color: 'text-red-400' }
+  if (perMin >= 20) return { label: t('countryPanel.intensity.active'), color: 'text-orange-300' }
+  if (perMin >= 5) return { label: t('countryPanel.intensity.moderate'), color: 'text-bolt' }
+  if (perMin >= 1) return { label: t('countryPanel.intensity.light'), color: 'text-electric' }
+  return { label: t('countryPanel.intensity.calm'), color: 'text-white/50' }
 }
 
-function ago(sec: number): string {
-  if (sec < 5) return 'Now'
-  if (sec < 90) return `${sec}s ago`
+function ago(sec: number, t: (key: string, params?: Record<string, string | number>) => string): string {
+  if (sec < 5) return t('countryPanel.now')
+  if (sec < 90) return t('countryPanel.secondsAgo', { value: sec })
   const m = Math.round(sec / 60)
-  return m < 60 ? `${m}m ago` : `${Math.round(m / 60)}h ago`
+  return m < 60 ? t('countryPanel.minutesAgo', { value: m }) : t('countryPanel.hoursAgo', { value: Math.round(m / 60) })
 }
 
 function span(min: number): string {
@@ -47,6 +48,7 @@ export default function CountryPanel() {
   const setSeoContentOpen = useLiveStore((s) => s.setSeoContentOpen)
   const rows = useLiveStore((s) => s.countryStrikes)
   const strikeMeta = useLiveStore((s) => s.countryStrikeMeta)
+  const { t } = useT()
 
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
@@ -99,7 +101,7 @@ export default function CountryPanel() {
   const hasData = !!country.iso2
   const learnMore = country.iso2 ? primaryPageForLocale(country.iso2.toLowerCase()) : undefined
   const live = stats != null && stats.lastAgeSec < 120
-  const tone = stats ? intensityFor(stats.perMin) : null
+  const tone = stats ? intensityFor(stats.perMin, t) : null
   const lastHourLabel = strikeMeta?.cappedLastHour
     ? `> ${strikeMeta.limit.toLocaleString()}`
     : (strikeMeta?.lastHour ?? stats?.lastHour ?? 0).toLocaleString()
@@ -123,13 +125,13 @@ export default function CountryPanel() {
                     }`}
                   />
                   <span className={live ? 'text-emerald-400' : 'text-white/45'}>
-                    {live ? 'Live' : 'Idle'}
+                    {live ? t('countryPanel.live') : t('countryPanel.idle')}
                   </span>
                   <span className="text-white/25">·</span>
                   <span>{country.iso2}</span>
                 </>
               ) : (
-                <span>No strike data</span>
+                <span>{t('countryPanel.noStrikeData')}</span>
               )}
             </div>
           </div>
@@ -151,19 +153,19 @@ export default function CountryPanel() {
           onClick={() => setSeoContentOpen(true)}
           className="btn-glow mt-3 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold md:mt-4 md:px-4 md:py-3 md:text-sm"
         >
-          Learn more about {country.name}
+          {t('countryPanel.learnMore', { country: country.name })}
           <span aria-hidden>↓</span>
         </button>
       )}
 
       {!hasData ? (
         <p className="mt-4 text-xs leading-relaxed text-white/45">
-          Strike data isn’t available for this territory — it has no ISO country code.
+          {t('countryPanel.unavailable')}
         </p>
       ) : !stats ? (
         <div className="mt-4 flex items-center gap-2 text-sm text-white/45">
           <span className="globe-loading-spinner" />
-          Loading recent strikes…
+          {t('countryPanel.loading')}
         </div>
       ) : (
         <>
@@ -171,11 +173,11 @@ export default function CountryPanel() {
           <div className="mt-4 rounded-xl border border-white/10 bg-linear-to-br from-white/8 to-transparent px-4 py-3">
             <div className="flex items-end justify-between">
               <div>
-                <div className="font-display text-4xl font-extrabold tabular-nums leading-none text-bolt">
+                <div className="font-display text-3xl font-extrabold tabular-nums leading-none text-bolt">
                   {lastHourLabel}
                 </div>
                 <div className="mt-1.5 text-[10px] uppercase tracking-wider text-white/40">
-                  strikes · last hour
+                  {t('countryPanel.strikesLastHour')}
                 </div>
               </div>
               {tone && (
@@ -190,15 +192,15 @@ export default function CountryPanel() {
 
           {/* supporting stats */}
           <div className="mt-2 grid grid-cols-2 gap-2">
-            <Stat value={`~${stats.perMin}`} unit="/min" label="recent rate" />
-            <Stat value={ago(stats.lastAgeSec)} label="last strike" />
+            <Stat value={`~${stats.perMin}`} unit="/min" label={t('countryPanel.recentRate')} />
+            <Stat value={ago(stats.lastAgeSec, t)} label={t('countryPanel.lastStrike')} />
           </div>
 
           {/* strike history chart (replaces signal quality) */}
           <StrikeHistoryChart rows={rows} now={now} />
 
           <p className="mt-3 text-[10px] leading-relaxed text-white/30">
-            Latest {stats.total.toLocaleString()} strikes · {span(stats.spanMin)} window
+            {t('countryPanel.latest', { count: stats.total.toLocaleString(), span: span(stats.spanMin) })}
           </p>
         </>
       )}

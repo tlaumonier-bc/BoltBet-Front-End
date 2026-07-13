@@ -8,6 +8,7 @@ import { flagEmoji, countryName } from '@/lib/live/owm'
 import { regionName } from '@/lib/grid'
 import { Section } from './hudShared'
 import type { LightningStrike } from '@/types'
+import { useT } from '@/lib/i18n/ui'
 
 const MAX = 10
 
@@ -21,6 +22,7 @@ function ago(ms: number): string {
 export default function RecentStrikesSection() {
   const [recent, setRecent] = useState<LightningStrike[]>([])
   const [now, setNow] = useState(() => Date.now())
+  const { t } = useT()
 
   useEffect(() => {
     const tick = () => {
@@ -33,9 +35,9 @@ export default function RecentStrikesSection() {
   }, [])
 
   return (
-    <Section title="Recent strikes">
+    <Section title={t('liveSecondary.recentStrikes')}>
       {recent.length === 0 ? (
-        <p className="text-xs text-white/40">Waiting for strikes…</p>
+        <p className="text-xs text-white/40">{t('liveSecondary.waitingForStrikes')}</p>
       ) : (
         <div className="space-y-1">
           {recent.map((s) => {

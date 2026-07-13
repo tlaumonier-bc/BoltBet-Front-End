@@ -1,5 +1,5 @@
 // lib/globe/countryStrikesLayer.ts
-// "Latest 5000 strikes in <country>" layer. Reacts to liveStore.selectedCountry
+// "Latest 10000 strikes in <country>" layer. Reacts to liveStore.selectedCountry
 // + liveStore.countryStrikesOn: when on and the country has an ISO-2 code, it
 // fetches /api/strikes/by-country/ and renders the points in electric cyan
 // (distinct from the recent-strikes heat-map). Fetched rows are written back to
@@ -10,7 +10,7 @@ import { getCountryStrikesResult } from '@/lib/api';
 import { useLiveStore } from '@/store/liveStore';
 
 const POLL_MS = 30_000;
-const LIMIT = 5000;
+const LIMIT = 10000;
 const COLOR = Cesium.Color.fromCssColorString('#38bdf8'); // electric cyan
 
 export function attachCountryStrikes(scene: Cesium.Scene): () => void {

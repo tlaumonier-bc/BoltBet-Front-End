@@ -7,9 +7,21 @@
 // server-side and is never shipped in the client bundle.
 
 import * as Cesium from 'cesium';
-import { useLiveStore } from '@/store/liveStore';
+import { useLiveStore, type GlobeMapStyle } from '@/store/liveStore';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+const DEFAULT_SCREEN_SPACE_ERROR = 2;
+const HIGH_DETAIL_SCREEN_SPACE_ERROR = 0.5;
+const DEFAULT_TILE_CACHE_SIZE = 100;
+const HIGH_DETAIL_TILE_CACHE_SIZE = 1000;
+
+// Tuning knobs for the NASA -> Esri automatic switch:
+// - ESRI_MAX_LEVEL: increase to 24/25 to test deeper Esri requests. Avoid very
+//   high values because Cesium will request many non-existent tiles.
+// - ESRI_SWITCH_HEIGHT_M: lower = stay on NASA longer, higher = switch to Esri
+//   sooner while zooming in.
+const ESRI_MAX_LEVEL = 23;
+const ESRI_SWITCH_HEIGHT_M = 2_500_000;
 
 export function addOwmLayer(
   viewer: Cesium.Viewer,
@@ -44,13 +56,37 @@ export function setupImagery(viewer: Cesium.Viewer): () => void {
       credit: 'NASA EOSDIS GIBS — Blue Marble',
     }),
   );
+  const esriLayer = viewer.imageryLayers.addImageryProvider(
+    new Cesium.UrlTemplateImageryProvider({
+      url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      maximumLevel: ESRI_MAX_LEVEL,
+      credit: 'Esri World Imagery',
+    }),
+  );
 
-  const applyMapStyle = (style: 'night' | 'day') => {
-    nightLayer.show = style === 'night';
-    dayLayer.show = style === 'day';
+  const applyBaseImagery = (style: GlobeMapStyle) => {
+    const useEsri = viewer.camera.positionCartographic.height <= ESRI_SWITCH_HEIGHT_M;
+
+    nightLayer.show = !useEsri && style === 'night';
+    dayLayer.show = !useEsri && style === 'day';
+    esriLayer.show = useEsri;
+
+    viewer.scene.globe.maximumScreenSpaceError = useEsri
+      ? HIGH_DETAIL_SCREEN_SPACE_ERROR
+      : DEFAULT_SCREEN_SPACE_ERROR;
+    viewer.scene.globe.tileCacheSize = useEsri ? HIGH_DETAIL_TILE_CACHE_SIZE : DEFAULT_TILE_CACHE_SIZE;
+    viewer.scene.globe.preloadAncestors = useEsri;
+    viewer.scene.globe.preloadSiblings = useEsri;
   };
-  applyMapStyle(useLiveStore.getState().mapStyle);
-  const unsub = useLiveStore.subscribe((state) => applyMapStyle(state.mapStyle));
 
-  return () => unsub();
+  const initial = useLiveStore.getState();
+  applyBaseImagery(initial.mapStyle);
+  const onCameraChanged = () => applyBaseImagery(useLiveStore.getState().mapStyle);
+  viewer.camera.changed.addEventListener(onCameraChanged);
+  const unsub = useLiveStore.subscribe((state) => applyBaseImagery(state.mapStyle));
+
+  return () => {
+    viewer.camera.changed.removeEventListener(onCameraChanged);
+    unsub();
+  };
 }

@@ -1,5 +1,16 @@
 // components/live/LayerToggle.tsx
 import type { GlobeLayerDef } from '@/lib/globe/layers'
+import { useT } from '@/lib/i18n/ui'
+
+const LAYER_COPY_KEYS: Record<string, { label: string; description: string }> = {
+  'recent-strikes-1h': { label: 'layers.recent1h', description: 'layers.recent1hDescription' },
+  'recent-strikes-3h': { label: 'layers.recent3h', description: 'layers.recent3hDescription' },
+  'recent-strikes-6h': { label: 'layers.recent6h', description: 'layers.recent6hDescription' },
+  'storm-fog': { label: 'layers.clouds', description: 'layers.cloudsDescription' },
+  precipitation: { label: 'layers.rain', description: 'layers.rainDescription' },
+  temperature: { label: 'layers.temperature', description: 'layers.temperatureDescription' },
+  wind: { label: 'layers.wind', description: 'layers.windDescription' },
+}
 
 export default function LayerToggle({
   def,
@@ -12,12 +23,17 @@ export default function LayerToggle({
   onToggle: () => void
   compact?: boolean
 }) {
+  const { t } = useT()
+  const copy = LAYER_COPY_KEYS[def.id]
+  const label = copy ? t(copy.label) : def.label
+  const description = copy ? t(copy.description) : def.description
+
   return (
     <button
       type="button"
       onClick={onToggle}
       aria-pressed={active}
-      title={def.description}
+      title={description}
       className={`flex w-full items-start gap-2.5 rounded-lg border px-2.5 text-left transition ${compact ? 'py-1.5' : 'py-2'} ${
         active
           ? 'border-electric/50 bg-electric/10'
@@ -33,7 +49,7 @@ export default function LayerToggle({
             active ? 'text-electric' : 'text-white/85'
           }`}
         >
-          {def.label}
+          {label}
           {def.tier === 'pro' && (
             <span className="rounded bg-bolt/15 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-bolt">
               pro
@@ -42,7 +58,7 @@ export default function LayerToggle({
         </span>
         {!compact && (
           <span className="mt-0.5 block text-[10px] leading-snug text-white/40">
-            {def.description}
+            {description}
           </span>
         )}
       </span>

@@ -15,6 +15,7 @@ import { useStrikeGame, type StrikeGameVM } from '@/lib/game/useStrikeGame'
 import { useSessionStore } from '@/store/sessionStore'
 import { flagEmoji } from '@/lib/live/owm'
 import { useNearMeAction } from './useNearMeAction'
+import { useT } from '@/lib/i18n/ui'
 
 function MobileActionButton({
   active,
@@ -44,6 +45,7 @@ function MobileNearMeButton() {
   const orbitTarget = useLiveStore((s) => s.orbitTarget)
   const { nearMe, nearbyMessage, nearbyState, nearbyStrikes } = useNearMeAction()
   const active = orbitTarget?.id === 'near-me'
+  const { t } = useT()
 
   return (
     <div className="pointer-events-auto fixed left-1/2 top-[70px] z-40 w-[min(960px,94vw)] -translate-x-1/2 md:hidden">
@@ -59,11 +61,11 @@ function MobileNearMeButton() {
           } disabled:cursor-wait disabled:opacity-70`}
         >
           <span aria-hidden>📍</span>
-          {nearbyState === 'loading' ? 'Finding nearby strikes...' : 'Near me'}
+          {nearbyState === 'loading' ? t('live.findingNearby') : t('live.nearMe')}
         </button>
         {(nearbyMessage || nearbyStrikes.length > 0) && (
           <p className={`px-2 pb-1 pt-1 text-center text-[10px] ${nearbyState === 'error' ? 'text-rose-300' : 'text-white/50'}`}>
-            {nearbyMessage || `${nearbyStrikes.length} nearby strikes`}
+            {nearbyMessage || t('live.nearbyStrikes', { count: nearbyStrikes.length })}
           </p>
         )}
       </div>
@@ -149,6 +151,7 @@ function MobileCountryTopConsole({ country }: { country: SelectedCountry }) {
   const [now, setNow] = useState(() => Date.now())
   const rows = useLiveStore((s) => s.countryStrikes)
   const strikeMeta = useLiveStore((s) => s.countryStrikeMeta)
+  const { t } = useT()
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000)
@@ -186,7 +189,7 @@ function MobileCountryTopConsole({ country }: { country: SelectedCountry }) {
   const lastHourLabel = strikeMeta?.cappedLastHour
     ? `> ${strikeMeta.limit.toLocaleString()}`
     : (strikeMeta?.lastHour ?? stats?.lastHour ?? 0).toLocaleString()
-  const lastStrikeLabel = stats ? ago(stats.lastAgeSec) : 'Loading'
+  const lastStrikeLabel = stats ? ago(stats.lastAgeSec) : t('countryPanel.loading')
 
   return (
     <div className="pointer-events-auto fixed left-1/2 top-[126px] z-40 w-[min(960px,94vw)] -translate-x-1/2 md:hidden">
@@ -198,8 +201,8 @@ function MobileCountryTopConsole({ country }: { country: SelectedCountry }) {
           <div className="min-w-0 flex-1">
             <div className="truncate text-xs font-bold text-white/85">{country.name}</div>
             <div className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-white/50">
-              <span><span className="font-bold text-bolt">{lastHourLabel}</span> strikes · 1h</span>
-              <span>last {lastStrikeLabel}</span>
+              <span><span className="font-bold text-bolt">{lastHourLabel}</span> {t('countryPanel.strikesLastHour')}</span>
+              <span>{t('countryPanel.lastStrike')} {lastStrikeLabel}</span>
             </div>
           </div>
           <button
@@ -228,6 +231,7 @@ export default function LiveHUD() {
   const showGamePanels = isGame && gameSessionReady
   const mobileSheet = useLiveStore((s) => s.mobileSheet)
   const setMobileSheet = useLiveStore((s) => s.setMobileSheet)
+  const { t } = useT()
 
   // Always run the game clock so pending bets resolve even after switching modes.
   const vm = useStrikeGame()
@@ -276,10 +280,10 @@ export default function LiveHUD() {
       <div className="pointer-events-auto fixed bottom-2 left-2 right-2 z-50 md:hidden">
         <div className="glass flex gap-1.5 rounded-2xl border border-white/10 p-1.5 shadow-2xl">
           <MobileActionButton active={mobileSheet === 'layers'} onClick={() => toggleSheet('layers')}>
-            Layers
+            {t('live.layers')}
           </MobileActionButton>
           <MobileActionButton active={mobileSheet === 'game'} onClick={openGame}>
-            Game
+            {t('live.game')}
           </MobileActionButton>
         </div>
       </div>
@@ -290,7 +294,7 @@ export default function LiveHUD() {
           <div className={`glass pointer-events-auto overflow-hidden rounded-2xl border border-white/10 p-2 shadow-2xl ${mobileSheet === 'layers' ? 'max-h-[42vh]' : 'max-h-[58vh]'}`}>
             <div className="mb-2 grid grid-cols-[auto_1fr_auto] items-center gap-2 px-1">
               <span className="font-display text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">
-                {mobileSheet === 'layers' ? 'Layers' : 'Game'}
+                {mobileSheet === 'layers' ? t('live.layers') : t('live.game')}
               </span>
               <span className="min-w-0 truncate text-center text-xs font-semibold text-white/75">
                 {mobileSheet === 'game' ? `${vm.scope.kind === 'country' ? flagEmoji(vm.scope.id || null) : '🌍'} ${vm.scope.label}` : ''}
@@ -301,7 +305,7 @@ export default function LiveHUD() {
                 aria-label="Close panel"
                 className="rounded-full bg-white/8 px-2.5 py-1 text-[11px] font-bold text-white/60 transition hover:bg-white/15 hover:text-white"
               >
-                Close
+                {t('live.close')}
               </button>
             </div>
             <div className={`panel-scroll overflow-y-auto pr-1 text-sm ${mobileSheet === 'layers' ? 'max-h-[34vh]' : 'max-h-[50vh]'}`}>
@@ -319,7 +323,7 @@ export default function LiveHUD() {
                     <BetBar vm={vm} variant="compact" />
                   ) : (
                     <div className="rounded-2xl bg-white/5 p-3 text-xs text-white/55">
-                      Preparing your game profile…
+                      {t('live.preparingProfile')}
                     </div>
                   )}
                 </div>

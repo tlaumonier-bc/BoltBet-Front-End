@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import posthog from 'posthog-js';
 import { useLiveStore } from '@/store/liveStore';
+import { useT } from '@/lib/i18n/ui';
 
 type CountryItem = { slug: string; country: string; primaryKeyword: string };
 
@@ -18,6 +19,7 @@ export default function MobileMenuButton({ countries }: { countries: CountryItem
   const setSeoContentOpen = useLiveStore((s) => s.setSeoContentOpen);
   const setSelectedCountry = useLiveStore((s) => s.setSelectedCountry);
   const setMobileSheet = useLiveStore((s) => s.setMobileSheet);
+  const { t } = useT();
 
   useEffect(() => {
     if (!open) return;
@@ -57,7 +59,7 @@ export default function MobileMenuButton({ countries }: { countries: CountryItem
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        aria-label="Open menu"
+        aria-label={t('nav.menu')}
         aria-expanded={open}
         className="flex size-9 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-white/10 bg-white/8 text-white transition hover:bg-white/15"
       >
@@ -73,14 +75,21 @@ export default function MobileMenuButton({ countries }: { countries: CountryItem
             onClick={close}
             className="block rounded-xl px-3 py-3 text-sm font-semibold text-white/85 transition hover:bg-white/10"
           >
-            How it works
+            {t('nav.howItWorks')}
           </Link>
           <Link
             href="/leaderboard"
             onClick={close}
             className="block rounded-xl px-3 py-3 text-sm font-semibold text-white/85 transition hover:bg-white/10"
           >
-            Leaderboard
+            {t('nav.leaderboard')}
+          </Link>
+          <Link
+            href="/grid-game"
+            onClick={close}
+            className="block rounded-xl px-3 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-200/10"
+          >
+            {t('nav.gridGame')}
           </Link>
 
           <button
@@ -88,7 +97,7 @@ export default function MobileMenuButton({ countries }: { countries: CountryItem
             onClick={() => setCountriesOpen((value) => !value)}
             className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-semibold text-white/85 transition hover:bg-white/10"
           >
-            <span>By country</span>
+            <span>{t('nav.byCountry')}</span>
             <span className={`text-[10px] transition-transform ${countriesOpen ? 'rotate-180' : ''}`}>v</span>
           </button>
           {countriesOpen && (
@@ -112,7 +121,7 @@ export default function MobileMenuButton({ countries }: { countries: CountryItem
             onClick={onPlay}
             className="btn-glow mt-2 w-full rounded-xl px-3 py-3 text-sm font-bold"
           >
-            Play the game
+            {t('nav.playGame')}
           </button>
         </div>
       )}

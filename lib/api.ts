@@ -129,6 +129,34 @@ export interface CountryNewsResponse {
   articles: CountryNewsArticle[];
 }
 
+export interface CountryMapCity {
+  city_id: string;
+  city_name: string;
+  country: string;
+  lat: number;
+  lon: number;
+  population: number;
+  strikes: number;
+}
+
+export interface CountryMapStrike {
+  lat: number;
+  lon: number;
+  quality: string;
+  received_at: string;
+}
+
+export interface CountryMapStatsResponse {
+  country: string;
+  period: 'all' | 'year' | 'month' | 'day';
+  cityRadiusKm: number;
+  cityCount: number;
+  strikeLimit: number;
+  strikeCount: number;
+  cities: CountryMapCity[];
+  strikes: CountryMapStrike[];
+}
+
 export async function getRecentStrikes(
   minutes: number,
   limit = 5000,
@@ -173,9 +201,9 @@ export async function getStrikesPerMinute(minutes = 15): Promise<StrikesPerMinut
   return res.json();
 }
 
-export async function getCountryStrikesResult(country: string, limit = 5000): Promise<CountryStrikesResult> {
+export async function getCountryStrikesResult(country: string, limit = 10000): Promise<CountryStrikesResult> {
   const q = new URLSearchParams({ country, limit: String(limit) });
-  const res = await fetch(`${API}/api/strikes/by-country/?${q}`, { cache: 'no-store' });
+  const res = await fetch(`${STRIKES_API}/api/strikes/by-country/?${q}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`country strikes ${res.status}`);
   const data = (await res.json()) as Record<string, CountryStrike[] | CountryStrikeMeta | undefined>;
   const key = country.toUpperCase();
@@ -186,7 +214,7 @@ export async function getCountryStrikesResult(country: string, limit = 5000): Pr
   };
 }
 
-export async function getCountryStrikes(country: string, limit = 5000): Promise<CountryStrike[]> {
+export async function getCountryStrikes(country: string, limit = 10000): Promise<CountryStrike[]> {
   const result = await getCountryStrikesResult(country, limit);
   return result.strikes;
 }
@@ -215,6 +243,21 @@ export async function getCountryNews(params: {
   return res.json();
 }
 
+export async function getCountryMapStats(params: {
+  country: string;
+  strikeLimit?: number;
+  period?: 'all' | 'year' | 'month' | 'day';
+}): Promise<CountryMapStatsResponse> {
+  const q = new URLSearchParams({
+    country: params.country,
+    strike_limit: String(params.strikeLimit ?? 10000),
+    period: params.period ?? 'all',
+  });
+  const res = await fetch(`${STRIKES_API}/api/stats/country-map/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`country map stats ${res.status}`);
+  return res.json();
+}
+
 // ── identity / auth ───────────────────────────────────────────────────────
 export interface UsernameCheck {
   available: boolean;
@@ -224,6 +267,7 @@ export interface Session {
   username: string;
   token: string;
   tokens: number; // starting balance
+  gridElo: number;
   verified: boolean;
   country: string;
   canChangeUsername: boolean;
@@ -265,6 +309,7 @@ export type ScopeKind = 'globe' | 'country';
 export interface PlayerProfile {
   username: string;
   tokens: number;
+  gridElo: number;
   verified: boolean;
   country: string;
   canChangeUsername: boolean;
@@ -324,6 +369,64 @@ export interface LeaderboardSummary {
   entries: LeaderboardEntry[];
   trophies: Trophy[];
   totalPlayers: number;
+}
+
+export interface GridActiveCountry {
+  country: string;
+  strikes30s: number;
+  strikes5m: number;
+}
+
+export interface GridActiveCountriesResponse {
+  countries: GridActiveCountry[];
+  windowSeconds: number;
+  fallbackWindowSeconds: number;
+}
+
+export type GridMatchStatus = 'preparing' | 'active' | 'settled';
+
+export interface GridMatchState {
+  matchId: string;
+  status: GridMatchStatus;
+  country: string;
+  grid: { cols: number; rows: number };
+  player: {
+    username: string;
+    score: number;
+    eloBefore: number;
+    eloAfter: number | null;
+  };
+  opponent: {
+    username: string;
+    score: number;
+    elo: number;
+    eloAfter: number | null;
+    bot: boolean;
+  };
+  timing: {
+    createdAt: string;
+    prepareEndsAt: string;
+    startedAt: string;
+    endsAt: string;
+    serverNow: string;
+  };
+  strikes30sAtStart: number;
+  eloDelta: number | null;
+}
+
+export interface AdminAccountsGrowthPoint {
+  date: string;
+  newAccounts: number;
+  cumulativeAccounts: number;
+}
+
+export interface AdminAccountsGrowthResponse {
+  adminEmail: string;
+  days: number;
+  totalAccounts: number;
+  guestAccounts: number;
+  verifiedAccounts: number;
+  series: AdminAccountsGrowthPoint[];
 }
 
 function trophyFor(tokens: number): Trophy | null {
@@ -446,4 +549,38 @@ export async function changeUsername(username: string): Promise<PlayerProfile> {
 
 export async function changeCountry(countryCode: string): Promise<PlayerProfile> {
   return postJson<PlayerProfile>('/api/game/country/change/', { countryCode });
+}
+
+export async function getGridActiveCountries(limit = 8): Promise<GridActiveCountriesResponse> {
+  const q = new URLSearchParams({ limit: String(limit) });
+  const res = await fetch(`${API}/api/game/grid/active-countries/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`grid active countries ${res.status}`);
+  return res.json();
+}
+
+export async function startGridMatch(country: string): Promise<GridMatchState> {
+  return postJson<GridMatchState>('/api/game/grid/match/', { country });
+}
+
+export async function getGridMatchState(matchId: string): Promise<GridMatchState> {
+  const res = await fetch(`${API}/api/game/grid/match/${matchId}/`, {
+    cache: 'no-store',
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(`grid match ${res.status}`);
+  return res.json();
+}
+
+export async function clickGridMatchCell(matchId: string, cell: number): Promise<GridMatchState> {
+  return postJson<GridMatchState>(`/api/game/grid/match/${matchId}/click/`, { cell });
+}
+
+export async function getAdminAccountsGrowth(idToken: string, days = 180): Promise<AdminAccountsGrowthResponse> {
+  const q = new URLSearchParams({ days: String(days) });
+  const res = await fetch(`${API}/api/admin/accounts-growth/?${q}`, {
+    cache: 'no-store',
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+  if (!res.ok) throw new Error(`admin accounts growth ${res.status}`);
+  return res.json();
 }

@@ -2,6 +2,7 @@
 // components/live/LeftPanel.tsx — carte de console gauche : orbit + layers.
 import OrbitSection from './OrbitSection'
 import LayersSection from './LayersSection'
+import { useT } from '@/lib/i18n/ui'
 
 export default function LeftPanel({
   pro,
@@ -16,11 +17,14 @@ export default function LeftPanel({
   showLayerTitle?: boolean
   compactLayers?: boolean
 }) {
+  const { t } = useT()
+  const resolvedTitle = title === 'Live console' ? t('live.console') : title
+
   return (
     <div className={`glass panel-scroll pointer-events-auto min-h-0 overflow-y-auto rounded-2xl ${compactLayers ? 'p-2.5' : 'p-4 max-md:max-h-[46vh]'}`}>
-      {title && (
+      {resolvedTitle && (
         <span className="font-display text-[11px] font-bold uppercase tracking-[0.25em] text-white/80">
-          {title}
+          {resolvedTitle}
         </span>
       )}
 

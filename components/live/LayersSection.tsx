@@ -4,6 +4,7 @@ import { useLiveStore } from '@/store/liveStore'
 import { layersForTier } from '@/lib/globe/layers'
 import { Section } from './hudShared'
 import LayerToggle from './LayerToggle'
+import { useT } from '@/lib/i18n/ui'
 
 export default function LayersSection({
   pro,
@@ -17,6 +18,7 @@ export default function LayersSection({
   const activeLayers = useLiveStore((s) => s.activeLayers)
   const toggleLayer = useLiveStore((s) => s.toggleLayer)
   const layers = layersForTier(pro)
+  const { t } = useT()
   const content = (
     <div className={compact ? 'space-y-1' : 'space-y-1.5'}>
       {layers.map((def) => (
@@ -34,7 +36,7 @@ export default function LayersSection({
   if (!showTitle) return content
 
   return (
-    <Section title={pro ? 'Layers · Pro' : 'Layers'}>
+    <Section title={pro ? t('live.layersPro') : t('live.layers')}>
       {content}
     </Section>
   )

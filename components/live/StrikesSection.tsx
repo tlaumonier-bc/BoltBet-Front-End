@@ -1,15 +1,19 @@
 // components/live/StrikesSection.tsx — global strike stats (last 60s / last 10 min + hottest region).
+'use client'
 import type { LiveStats } from '@/lib/live/useLiveStats'
 import { Section, BigStat } from './hudShared'
+import { useT } from '@/lib/i18n/ui'
 
 export default function StrikesSection({ stats }: { stats: LiveStats }) {
+  const { t } = useT()
+
   return (
-    <Section title="Strikes">
+    <Section title={t('liveSecondary.strikes')}>
       <div className="grid grid-cols-2 gap-2">
-        <BigStat value={stats.perMinute} label="last 60 s" />
-        <BigStat value={stats.last10Min} label="last 10 min" />
+        <BigStat value={stats.perMinute} label={t('liveSecondary.last60s')} />
+        <BigStat value={stats.last10Min} label={t('liveSecondary.last10Min')} />
       </div>
-      <Row name="Hottest region" value={stats.topRegion ?? '—'} />
+      <Row name={t('liveSecondary.hottestRegion')} value={stats.topRegion ?? '—'} />
     </Section>
   )
 }

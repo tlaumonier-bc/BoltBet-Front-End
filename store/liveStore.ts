@@ -49,7 +49,7 @@ interface LiveStore {
   toggleLayer: (id: GlobeLayerId) => void
   setLayer: (id: GlobeLayerId, on: boolean) => void
 
-  // ── Selected country + its "latest 5000 strikes" layer ──
+  // ── Selected country + its "latest 10000 strikes" layer ──
   selectedCountry: SelectedCountry | null
   setSelectedCountry: (c: SelectedCountry | null) => void
   countryStrikesOn: boolean

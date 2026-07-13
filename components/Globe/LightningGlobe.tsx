@@ -25,6 +25,7 @@ import { attachAtmosphereGlow } from '@/lib/globe/atmosphereGlow';
 import { attachLayers } from '@/lib/globe/layerManager';
 import { attachCountryStrikes } from '@/lib/globe/countryStrikesLayer';
 import { attachNearbyStrikes } from '@/lib/globe/nearbyStrikesLayer';
+import { attachCityLabels } from '@/lib/globe/cityLabelsLayer';
 
 const FRANCE_INTRO_LON = 2.2;
 const FRANCE_INTRO_LAT = 46.2;
@@ -284,11 +285,12 @@ export default function LightningGlobe({
     // live lightning strikes
     disposers.push(attachLightningStrikes(scene));
 
-    // "orbit to" flights + per-country "latest 5000 strikes" layer (view-only)
+    // "orbit to" flights + per-country "latest 10000 strikes" layer (view-only)
     if (viewOnly) {
       disposers.push(attachOrbitFlights({ camera, interaction }));
       disposers.push(attachCountryStrikes(scene));
       disposers.push(attachNearbyStrikes(scene));
+      disposers.push(attachCityLabels(scene));
     }
 
     return () => {

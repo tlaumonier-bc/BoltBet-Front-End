@@ -43,6 +43,7 @@ export default function StrikeHistoryChart({
   barLabel = 'each bar',
   nowLabel = 'now',
   ariaLabel,
+  fill = false,
 }: {
   rows: CountryStrike[]
   now: number
@@ -50,6 +51,7 @@ export default function StrikeHistoryChart({
   barLabel?: string
   nowLabel?: string
   ariaLabel?: (total: number) => string
+  fill?: boolean
 }) {
   const data = useMemo(() => {
     const times: number[] = []
@@ -94,14 +96,14 @@ export default function StrikeHistoryChart({
   const bw = 100 / BUCKETS
 
   return (
-    <div className="mt-4">
+    <div className={fill ? 'mt-4 flex min-h-0 flex-1 flex-col' : 'mt-4'}>
       <div className="mb-1.5 flex items-center justify-between text-[10px] uppercase tracking-wider text-white/40">
         <span>{title}</span>
         <span className="text-white/30">{barLabel} ≈ {humanDuration(bucketMs)}</span>
       </div>
 
-      <div className="rounded-xl bg-white/4 p-3">
-        <div className="flex gap-2">
+      <div className={fill ? 'flex min-h-0 flex-1 flex-col rounded-xl bg-white/4 p-3' : 'rounded-xl bg-white/4 p-3'}>
+        <div className="flex min-h-0 flex-1 gap-2">
           {/* y-axis */}
           <div className="flex w-8 shrink-0 flex-col justify-between py-0.5 text-right text-[9px] tabular-nums text-white/30">
             <span>{max}</span>
@@ -112,7 +114,7 @@ export default function StrikeHistoryChart({
           <svg
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
-            className="h-24 w-full text-bolt"
+            className={fill ? 'min-h-0 flex-1 text-bolt' : 'h-24 w-full text-bolt'}
             aria-label={ariaLabel ? ariaLabel(total) : `Strike count over time for the latest ${total} strikes`}
           >
             {/* baseline */}

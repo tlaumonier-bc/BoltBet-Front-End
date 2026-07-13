@@ -5,12 +5,14 @@
 import { useRouter, usePathname } from 'next/navigation'
 import { useLiveStore } from '@/store/liveStore'
 import posthog from 'posthog-js'
+import { useT } from '@/lib/i18n/ui'
 
 export default function PlayButton() {
   const router = useRouter()
   const pathname = usePathname()
   const setMode = useLiveStore((s) => s.setMode)
   const setSeoContentOpen = useLiveStore((s) => s.setSeoContentOpen)
+  const { t } = useT()
 
   const onPlay = () => {
     setMode('game')
@@ -23,9 +25,9 @@ export default function PlayButton() {
     <button
       type="button"
       onClick={onPlay}
-      className="btn-glow ml-1 cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold sm:ml-2 sm:px-4 sm:text-sm"
+      className="btn-glow ml-1 cursor-pointer whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold sm:ml-2 sm:px-4 sm:text-sm"
     >
-      Play
+      {t('nav.play')}
     </button>
   )
 }
