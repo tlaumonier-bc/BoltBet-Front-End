@@ -40,7 +40,6 @@ const AREA_TTL_MS = 10_000;
 const AREA_MIN_TRIGGERED_RATIO = 0.5;
 const AREA_MIN_TRIGGERED_CELLS = 3;
 const AREA_MIN_STRIKES = 3;
-const CELL_LOCK_MS = 3_000;
 
 type LayerKey = 'density' | 'multiplier' | 'opponent' | 'storm';
 const LAYER_DEFS: { key: LayerKey; label: string; available: boolean; hint: string }[] = [
@@ -1169,9 +1168,7 @@ function SatelliteCountryMap({
             {cells.map((cell) => {
               const selected = selectedCell?.cell === cell.index && selectedCell.expiresAt > now;
               const botSelected = phase === 'active' && botSelectedCell?.cell === cell.index && botSelectedCell.expiresAt > now;
-              const lockActive = Boolean(selectedCell && selectedCell.expiresAt > now);
-              const disabled = phase !== 'active' || (lockActive && !selected);
-              const countdown = selectedCell && selected ? Math.max(1, Math.ceil((selectedCell.expiresAt - now) / 1000)) : 0;
+              const disabled = phase !== 'active';
               return (
                 <g key={cell.index}>
                   <rect
@@ -1207,9 +1204,9 @@ function SatelliteCountryMap({
                       y={((cell.row + 0.5) / grid.rows) * size.height}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      className="pointer-events-none fill-white/70 text-[22px] font-black"
+                      className="pointer-events-none text-[18px]"
                     >
-                      {countdown}
+                      📍
                     </text>
                   )}
                   {botSelected && !selected && (
@@ -1558,8 +1555,10 @@ export default function GridGameClient() {
   const onCellClick = useCallback((cell: number) => {
     if (!match || phase !== 'active') return;
     const now = Date.now();
-    // Optimistic local highlight; the server records the selection and scores it.
-    setSelectedCell({ cell, startedAt: now, expiresAt: now + CELL_LOCK_MS });
+    // The cell stays selected (and scoring) until you pick another or the round
+    // ends. Optimistic local highlight; the server records + scores it.
+    const endMs = new Date(match.timing.endsAt).getTime();
+    setSelectedCell({ cell, startedAt: now, expiresAt: endMs });
     selectGridCell(match.matchId, cell).then(setMatch).catch(() => undefined);
   }, [match, phase]);
 
