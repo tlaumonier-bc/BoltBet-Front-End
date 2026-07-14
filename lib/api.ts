@@ -389,7 +389,12 @@ export interface GridMatchState {
   matchId: string;
   status: GridMatchStatus;
   country: string;
-  grid: { cols: number; rows: number };
+  grid: {
+    cols: number;
+    rows: number;
+    bounds: { minLat: number; maxLat: number; minLon: number; maxLon: number } | null;
+    cellSizeKm: number | null;
+  };
   player: {
     username: string;
     score: number;
@@ -402,7 +407,10 @@ export interface GridMatchState {
     elo: number;
     eloAfter: number | null;
     bot: boolean;
+    selectedCell: number | null;
   };
+  model?: string;
+  zone?: { hNorm: number | null; roundStrikes: number | null };
   timing: {
     createdAt: string;
     prepareEndsAt: string;
@@ -571,8 +579,8 @@ export async function getGridMatchState(matchId: string): Promise<GridMatchState
   return res.json();
 }
 
-export async function clickGridMatchCell(matchId: string, cell: number): Promise<GridMatchState> {
-  return postJson<GridMatchState>(`/api/game/grid/match/${matchId}/click/`, { cell });
+export async function selectGridCell(matchId: string, cell: number): Promise<GridMatchState> {
+  return postJson<GridMatchState>(`/api/game/grid/match/${matchId}/select-cell/`, { cell });
 }
 
 export async function getAdminAccountsGrowth(idToken: string, days = 180): Promise<AdminAccountsGrowthResponse> {

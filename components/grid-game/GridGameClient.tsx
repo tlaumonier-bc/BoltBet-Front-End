@@ -9,6 +9,7 @@ import {
   getGridMatchState,
   getProfile,
   registerUsername,
+  selectGridCell,
   startGridMatch,
   type CountryStrike,
   type GridActiveCountry,
@@ -428,7 +429,12 @@ function formatMatchOffset(timestamp: string, match: GridMatchState | null) {
 function phaseFor(match: GridMatchState | null): Phase {
   if (!match) return 'selecting';
   if (match.status === 'settled') return 'settled';
-  if (Date.now() < new Date(match.timing.startedAt).getTime()) return 'preparing';
+  const now = Date.now();
+  if (now < new Date(match.timing.startedAt).getTime()) return 'preparing';
+  // End the round on the clock rather than waiting for the backend to flip
+  // status: the round is over once endsAt passes. The settle poll then fills in
+  // the authoritative Elo a moment later.
+  if (now >= new Date(match.timing.endsAt).getTime()) return 'settled';
   return 'active';
 }
 
@@ -1041,7 +1047,12 @@ function SatelliteCountryMap({
         </div>
       )}
 
-      {gameStarted && (
+      {gameStarted && (() => {
+        const msLeft = match ? Math.max(0, new Date(match.timing.endsAt).getTime() - now) : 0;
+        const secondsLeft = Math.ceil(msLeft / 1000);
+        const clock = `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}`;
+        const urgent = phase === 'active' && secondsLeft <= 10;
+        return (
         <div className="pointer-events-none absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-4 rounded-2xl border border-white/10 bg-slate-950/70 px-5 py-2 shadow-2xl backdrop-blur-md">
           <div className="text-center">
             <div className="text-[9px] font-bold uppercase tracking-wider text-white/45">You</div>
@@ -1049,11 +1060,17 @@ function SatelliteCountryMap({
           </div>
           <div className="h-8 w-px bg-white/15" />
           <div className="text-center">
+            <div className="text-[9px] font-bold uppercase tracking-wider text-white/45">Time</div>
+            <div className={`font-display text-2xl font-black leading-none tabular-nums ${urgent ? 'text-amber-300' : 'text-white'}`}>{clock}</div>
+          </div>
+          <div className="h-8 w-px bg-white/15" />
+          <div className="text-center">
             <div className="text-[9px] font-bold uppercase tracking-wider text-white/45">Bot</div>
             <div className="font-display text-2xl font-black leading-none text-rose-300">{botScore}</div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {locatorRect && area && (
         <svg
@@ -1338,13 +1355,9 @@ export default function GridGameClient() {
   const [botScore, setBotScore] = useState(0);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [dominantIso, setDominantIso] = useState<string | null>(null);
-  const [mapAspect, setMapAspect] = useState(1.4);
   const [layers, setLayers] = useState<LayerState>(DEFAULT_LAYERS);
   const [botCellCounts, setBotCellCounts] = useState<number[]>([]);
   const lastStrikeRef = useRef<string | null>(null);
-  const countedStrikeRef = useRef(new Set<string>());
-  const botCountedStrikeRef = useRef(new Set<string>());
-  const botPickTimerRef = useRef<number | null>(null);
   const phase = loading && !match ? 'finding' : phaseFor(match);
   const gameStarted = phase !== 'selecting';
   const matchId = match?.matchId ?? null;
@@ -1352,9 +1365,15 @@ export default function GridGameClient() {
   const selectedCountry = countries[Math.min(countryIndex, countries.length - 1)] ?? DEFAULT_COUNTRIES[0];
   const safeAreaIndex = activeAreas.length ? areaIndex % activeAreas.length : 0;
   const selectedArea = activeAreas[safeAreaIndex] ?? null;
-  const displayedArea = gameStarted ? matchArea : selectedArea;
+  // Once the backend returns the EAGZ-1 zone, render on ITS bounds so the grid
+  // the player taps is exactly the grid the server scores.
+  const displayedArea = gameStarted
+    ? (match?.grid.bounds && matchArea
+        ? { ...matchArea, bounds: { ...match.grid.bounds, label: matchArea.bounds.label } }
+        : matchArea)
+    : selectedArea;
   const handleDominantCountry = useCallback((iso: string) => setDominantIso(iso), []);
-  const handleAspectChange = useCallback((aspect: number) => setMapAspect(aspect), []);
+  const handleAspectChange = useCallback(() => {}, []);
   const toggleLayer = useCallback((key: LayerKey) => {
     setLayers((current) => ({ ...current, [key]: !current[key] }));
   }, []);
@@ -1464,59 +1483,17 @@ export default function GridGameClient() {
     };
   }, [match, matchId, matchStatus]);
 
+  // Server-authoritative: scores and the bot's current cell come straight from
+  // the match payload (the backend counts strikes-in-cell). No client scoring.
   useEffect(() => {
-    if (phase !== 'active') {
-      if (botPickTimerRef.current) {
-        window.clearTimeout(botPickTimerRef.current);
-        botPickTimerRef.current = null;
-      }
-      return;
-    }
-    let cancelled = false;
-    const pick = () => {
-      if (cancelled) return;
-      const now = Date.now();
-      const maxCell = AREA_GRID_COLS * AREA_GRID_ROWS;
-      const cell = Math.floor(Math.random() * maxCell);
-      setBotSelectedCell({
-        cell,
-        startedAt: now,
-        expiresAt: now + CELL_LOCK_MS,
-      });
-      setBotCellCounts((current) => {
-        const next = current.slice();
-        next[cell] = (next[cell] ?? 0) + 1;
-        return next;
-      });
-      botPickTimerRef.current = window.setTimeout(pick, CELL_LOCK_MS);
-    };
-    pick();
-    return () => {
-      cancelled = true;
-      if (botPickTimerRef.current) {
-        window.clearTimeout(botPickTimerRef.current);
-        botPickTimerRef.current = null;
-      }
-    };
-  }, [phase]);
-
-  useEffect(() => {
-    if (!botSelectedCell || phase !== 'active') return;
-    if (nowMs >= botSelectedCell.expiresAt) return;
-    const grid = { cols: AREA_GRID_COLS, rows: AREA_GRID_ROWS };
-    const bounds = matchArea ? matchArea.bounds : countryBounds(selectedCountry.country);
-    let gained = 0;
-    for (const strike of strikes) {
-      const receivedAt = Date.parse(strike.received_at);
-      if (!Number.isFinite(receivedAt) || receivedAt < botSelectedCell.startedAt || receivedAt > botSelectedCell.expiresAt) continue;
-      const key = `bot:${strike.received_at}:${strike.lat}:${strike.lon}`;
-      if (botCountedStrikeRef.current.has(key)) continue;
-      if (cellForStrike(strike, bounds, grid, mapAspect) !== botSelectedCell.cell) continue;
-      botCountedStrikeRef.current.add(key);
-      gained += 1;
-    }
-    if (gained) window.setTimeout(() => setBotScore((score) => score + gained), 0);
-  }, [nowMs, botSelectedCell, phase, matchArea, selectedCountry.country, strikes, mapAspect]);
+    if (!match) return;
+    setPlayerScore(match.player.score ?? 0);
+    setBotScore(match.opponent.score ?? 0);
+    const bc = match.opponent.selectedCell ?? null;
+    setBotSelectedCell(
+      bc != null ? { cell: bc, startedAt: 0, expiresAt: Number.MAX_SAFE_INTEGER } : null,
+    );
+  }, [match]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNowMs(Date.now()), 250);
@@ -1535,24 +1512,6 @@ export default function GridGameClient() {
     const timeout = window.setTimeout(() => setSelectedCell(null), Math.max(0, selectedCell.expiresAt - Date.now()));
     return () => window.clearTimeout(timeout);
   }, [selectedCell]);
-
-  useEffect(() => {
-    if (!selectedCell || phase !== 'active') return;
-    if (nowMs >= selectedCell.expiresAt) return;
-    const grid = { cols: AREA_GRID_COLS, rows: AREA_GRID_ROWS };
-    const bounds = matchArea ? matchArea.bounds : countryBounds(selectedCountry.country);
-    let gained = 0;
-    for (const strike of strikes) {
-      const receivedAt = Date.parse(strike.received_at);
-      if (!Number.isFinite(receivedAt) || receivedAt < selectedCell.startedAt || receivedAt > selectedCell.expiresAt) continue;
-      const key = `${strike.received_at}:${strike.lat}:${strike.lon}`;
-      if (countedStrikeRef.current.has(key)) continue;
-      if (cellForStrike(strike, bounds, grid, mapAspect) !== selectedCell.cell) continue;
-      countedStrikeRef.current.add(key);
-      gained += 1;
-    }
-    if (gained) window.setTimeout(() => setPlayerScore((score) => score + gained), 0);
-  }, [nowMs, selectedCell, phase, matchArea, selectedCountry.country, strikes, mapAspect]);
 
   const selectPrevious = () => {
     if (phase !== 'selecting' || !activeAreas.length) return;
@@ -1578,8 +1537,6 @@ export default function GridGameClient() {
     setBotScore(0);
     setDominantIso(null);
     setBotCellCounts([]);
-    countedStrikeRef.current = new Set();
-    botCountedStrikeRef.current = new Set();
     window.setTimeout(() => {
       ensureGameSession()
         .then(() => startGridMatch(selectedCountry.country))
@@ -1592,7 +1549,9 @@ export default function GridGameClient() {
   const onCellClick = useCallback((cell: number) => {
     if (!match || phase !== 'active') return;
     const now = Date.now();
+    // Optimistic local highlight; the server records the selection and scores it.
     setSelectedCell({ cell, startedAt: now, expiresAt: now + CELL_LOCK_MS });
+    selectGridCell(match.matchId, cell).then(setMatch).catch(() => undefined);
   }, [match, phase]);
 
   return (
