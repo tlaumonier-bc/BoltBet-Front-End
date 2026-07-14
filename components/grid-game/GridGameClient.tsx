@@ -35,11 +35,12 @@ const AREA_GRID_COLS = 10;
 const AREA_GRID_ROWS = 8;
 const AREA_WINDOW_MS = 30_000;
 const AREA_FALLBACK_WINDOW_MS = 2 * 60_000;
-const AREA_SCAN_MS = 5_000;
-const AREA_TTL_MS = 10_000;
+const AREA_SCAN_MS = 10_000;   // rescan for active areas every 10s (drives the countdown)
+const AREA_TTL_MS = 22_000;    // keep a detected area alive across a couple of scans
 const AREA_MIN_TRIGGERED_RATIO = 0.5;
 const AREA_MIN_TRIGGERED_CELLS = 3;
 const AREA_MIN_STRIKES = 3;
+const CELL_LOCK_MS = 3_000;
 
 type LayerKey = 'density' | 'multiplier' | 'opponent' | 'storm';
 const LAYER_DEFS: { key: LayerKey; label: string; available: boolean; hint: string }[] = [
@@ -899,6 +900,7 @@ function SatelliteCountryMap({
   phase,
   area,
   activeAreaCount,
+  secondsToScan,
   loading,
   onPlay,
   playerScore,
@@ -920,6 +922,7 @@ function SatelliteCountryMap({
   phase: Phase;
   area: AreaCandidate | null;
   activeAreaCount: number;
+  secondsToScan: number;
   loading: boolean;
   onPlay: () => void;
   playerScore: number;
@@ -952,7 +955,15 @@ function SatelliteCountryMap({
   const bounds = zoomToArea ? area.bounds : countryRender.bounds;
   const aspect = size.width / Math.max(1, size.height);
   const tiles = useMemo(() => mapTiles(bounds, aspect), [bounds, aspect]);
-  const grid = useMemo(() => ({ cols: AREA_GRID_COLS, rows: AREA_GRID_ROWS }), []);
+  // Once a match exists, render the server's (adaptive) grid dimensions so the
+  // cells the player clicks line up with the cells the server scores. Before a
+  // match, use the fixed preview grid.
+  const grid = useMemo(
+    () => (match?.grid?.cols && match?.grid?.rows
+      ? { cols: match.grid.cols, rows: match.grid.rows }
+      : { cols: AREA_GRID_COLS, rows: AREA_GRID_ROWS }),
+    [match?.grid?.cols, match?.grid?.rows],
+  );
   // Once a match is running, the playable rectangle can span the ocean or two
   // countries — label it after whichever country owns the most grid cells.
   const dominant = useMemo(
@@ -1168,7 +1179,9 @@ function SatelliteCountryMap({
             {cells.map((cell) => {
               const selected = selectedCell?.cell === cell.index && selectedCell.expiresAt > now;
               const botSelected = phase === 'active' && botSelectedCell?.cell === cell.index && botSelectedCell.expiresAt > now;
-              const disabled = phase !== 'active';
+              const lockActive = Boolean(selectedCell && selectedCell.expiresAt > now);
+              const disabled = phase !== 'active' || (lockActive && !selected);
+              const countdown = selectedCell && selected ? Math.max(1, Math.ceil((selectedCell.expiresAt - now) / 1000)) : 0;
               return (
                 <g key={cell.index}>
                   <rect
@@ -1204,9 +1217,9 @@ function SatelliteCountryMap({
                       y={((cell.row + 0.5) / grid.rows) * size.height}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      className="pointer-events-none text-[18px]"
+                      className="pointer-events-none fill-white/70 text-[22px] font-black"
                     >
-                      📍
+                      {countdown}
                     </text>
                   )}
                   {botSelected && !selected && (
@@ -1324,7 +1337,7 @@ function SatelliteCountryMap({
             <div className="text-[11px] font-black uppercase tracking-[0.32em] text-bolt/70">Prepare</div>
             <div className="font-display mt-2 text-7xl font-black text-bolt">{secondsUntil(match.timing.startedAt)}</div>
             <p className="mt-4 max-w-sm text-sm font-semibold leading-relaxed text-white/70">
-              Pick a cell. It stays selected for 3 seconds, and every strike landing inside it adds to your score.
+              Pick a cell. It stays selected until you pick another, and every strike landing inside it adds to your score.
             </p>
           </div>
         </div>
@@ -1335,6 +1348,28 @@ function SatelliteCountryMap({
           <div className="rounded-[2rem] border border-cyan-200/25 bg-slate-950/80 px-8 py-7 text-center shadow-2xl">
             <div className="text-[11px] font-black uppercase tracking-[0.32em] text-cyan-100/60">Area Game</div>
             <div className="font-display mt-2 text-4xl font-black text-white">Match being found...</div>
+          </div>
+        </div>
+      )}
+
+      {phase === 'selecting' && activeAreaCount === 0 && (
+        <div className="pointer-events-none absolute inset-0 z-[30] grid place-items-center bg-black/25 backdrop-blur-[1px]">
+          <div className="glass rounded-[2rem] border border-white/15 bg-slate-950/70 px-8 py-7 text-center shadow-2xl backdrop-blur-md">
+            <div className="text-[11px] font-black uppercase tracking-[0.32em] text-white/55">No game available</div>
+            <div className="mt-2 max-w-sm text-sm font-semibold leading-relaxed text-white/70">
+              No active storm has a playable zone right now.
+            </div>
+            <div className="mt-4 text-[10px] font-bold uppercase tracking-[0.24em] text-white/40">New search in</div>
+            <div className="font-display text-5xl font-black tabular-nums text-bolt">{secondsToScan}</div>
+          </div>
+        </div>
+      )}
+
+      {phase === 'selecting' && activeAreaCount > 0 && (
+        <div className="pointer-events-none absolute left-1/2 top-4 z-[30] -translate-x-1/2">
+          <div className="glass rounded-full border border-white/12 bg-slate-950/60 px-4 py-1.5 shadow-xl backdrop-blur-md">
+            <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">New search in </span>
+            <span className="font-display text-sm font-black tabular-nums text-bolt">{secondsToScan}s</span>
           </div>
         </div>
       )}
@@ -1350,6 +1385,8 @@ export default function GridGameClient() {
   const [areaIndex, setAreaIndex] = useState(0);
   const [match, setMatch] = useState<GridMatchState | null>(null);
   const [activeAreas, setActiveAreas] = useState<AreaCandidate[]>([]);
+  const [nextScanAt, setNextScanAt] = useState(() => Date.now() + AREA_SCAN_MS);
+  const areasCountryRef = useRef<string | null>(null);
   const [matchArea, setMatchArea] = useState<AreaCandidate | null>(null);
   const [strikes, setStrikes] = useState<CountryStrike[]>([]);
   const [loading, setLoading] = useState(false);
@@ -1404,16 +1441,23 @@ export default function GridGameClient() {
     if (phase !== 'selecting') return;
     const refreshAreas = () => {
       const now = Date.now();
+      // Areas are country-scoped; drop the previous country's areas on switch so
+      // stale/cross-country candidates (and colliding ids) never linger.
+      const countryChanged = areasCountryRef.current !== selectedCountry.country;
+      areasCountryRef.current = selectedCountry.country;
+      if (countryChanged) setAreaIndex(0);
       const base = countryBounds(selectedCountry.country);
       const fresh = buildAreaCandidates(strikes, base, now, AREA_WINDOW_MS);
       const candidates = fresh.length ? fresh : buildAreaCandidates(strikes, base, now, AREA_FALLBACK_WINDOW_MS);
       setActiveAreas((current) => {
-        const byId = new Map(current.filter((area) => (area.expiresAt ?? 0) > now).map((area) => [area.id, area]));
+        const prior = countryChanged ? [] : current;
+        const byId = new Map(prior.filter((area) => (area.expiresAt ?? 0) > now).map((area) => [area.id, area]));
         for (const candidate of candidates) {
           byId.set(candidate.id, { ...candidate, expiresAt: now + AREA_TTL_MS });
         }
         return [...byId.values()].sort((a, b) => b.score - a.score);
       });
+      setNextScanAt(now + AREA_SCAN_MS);
     };
     refreshAreas();
     const timer = window.setInterval(refreshAreas, AREA_SCAN_MS);
@@ -1555,10 +1599,9 @@ export default function GridGameClient() {
   const onCellClick = useCallback((cell: number) => {
     if (!match || phase !== 'active') return;
     const now = Date.now();
-    // The cell stays selected (and scoring) until you pick another or the round
-    // ends. Optimistic local highlight; the server records + scores it.
-    const endMs = new Date(match.timing.endsAt).getTime();
-    setSelectedCell({ cell, startedAt: now, expiresAt: endMs });
+    // Committed for a 3s lock (with the in-cell 3-2-1 countdown); optimistic
+    // local highlight, the server records + scores it.
+    setSelectedCell({ cell, startedAt: now, expiresAt: now + CELL_LOCK_MS });
     selectGridCell(match.matchId, cell).then(setMatch).catch(() => undefined);
   }, [match, phase]);
 
@@ -1595,6 +1638,7 @@ export default function GridGameClient() {
             phase={phase}
             area={displayedArea}
             activeAreaCount={activeAreas.length}
+            secondsToScan={Math.max(0, Math.min(10, Math.floor((nextScanAt - nowMs) / 1000)))}
             loading={loading}
             onPlay={onPlay}
             playerScore={playerScore}
