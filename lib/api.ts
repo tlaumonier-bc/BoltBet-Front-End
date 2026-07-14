@@ -219,6 +219,26 @@ export async function getCountryStrikes(country: string, limit = 10000): Promise
   return result.strikes;
 }
 
+/** Recent strikes inside a lat/lon box (for feeding a zoomed grid-game zone). */
+export async function getStrikesInBounds(
+  bounds: { minLat: number; maxLat: number; minLon: number; maxLon: number },
+  seconds = 90,
+  limit = 800,
+): Promise<CountryStrike[]> {
+  const q = new URLSearchParams({
+    minLat: String(bounds.minLat),
+    maxLat: String(bounds.maxLat),
+    minLon: String(bounds.minLon),
+    maxLon: String(bounds.maxLon),
+    seconds: String(seconds),
+    limit: String(limit),
+  });
+  const res = await fetch(`${STRIKES_API}/api/strikes/in-bounds/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`strikes in-bounds ${res.status}`);
+  const data = (await res.json()) as { strikes?: CountryStrike[] };
+  return data.strikes ?? [];
+}
+
 export async function getWeatherNow(lat: number, lon: number): Promise<WeatherNow> {
   const q = new URLSearchParams({ lat: String(lat), lon: String(lon) });
   const res = await fetch(`${API}/api/weather/now/?${q}`, { cache: 'no-store' });

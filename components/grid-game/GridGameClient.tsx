@@ -8,6 +8,7 @@ import {
   getGridActiveCountries,
   getGridMatchState,
   getProfile,
+  getStrikesInBounds,
   registerUsername,
   selectGridCell,
   startGridMatch,
@@ -1525,15 +1526,30 @@ export default function GridGameClient() {
     };
   }, []);
 
+  // Once a match is running, feed strikes from ITS zone bbox (the source the
+  // server scores on) instead of the country-wide last-220 feed, which badly
+  // under-feeds a small box in an active country. zoneKey is a stable string so
+  // the effect only resets when the box actually changes.
+  const zb = match?.grid?.bounds;
+  const zoneKey = zb ? `${zb.minLat}|${zb.maxLat}|${zb.minLon}|${zb.maxLon}` : null;
+
   useEffect(() => {
     let alive = true;
+    const bounds = zoneKey
+      ? (() => {
+          const [minLat, maxLat, minLon, maxLon] = zoneKey.split('|').map(Number);
+          return { minLat, maxLat, minLon, maxLon };
+        })()
+      : null;
     const load = () => {
-      getCountryStrikesResult(selectedCountry.country, 220)
-        .then((data) => {
+      const fetchStrikes = bounds
+        ? getStrikesInBounds(bounds, 90, 800)
+        : getCountryStrikesResult(selectedCountry.country, 220).then((d) => d.strikes);
+      fetchStrikes
+        .then((list) => {
           if (!alive) return;
-          const latest = data.strikes[0]?.received_at ?? null;
-          lastStrikeRef.current = latest;
-          setStrikes(data.strikes);
+          lastStrikeRef.current = list[0]?.received_at ?? null;
+          setStrikes(list);
         })
         .catch(() => undefined);
     };
@@ -1543,7 +1559,7 @@ export default function GridGameClient() {
       alive = false;
       window.clearInterval(timer);
     };
-  }, [selectedCountry.country, phase]);
+  }, [selectedCountry.country, phase, zoneKey]);
 
   useEffect(() => {
     if (!match || match.status === 'settled') return;
