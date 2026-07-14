@@ -37,6 +37,8 @@ const AREA_WINDOW_MS = 30_000;
 const AREA_FALLBACK_WINDOW_MS = 2 * 60_000;
 const AREA_SCAN_MS = 10_000;   // rescan for active areas every 10s (drives the countdown)
 const AREA_TTL_MS = 22_000;    // keep a detected area alive across a couple of scans
+const DENSITY_WINDOW_MS = 60_000;   // heatmap reflects strikes from the last 60s (= a round)
+const DENSITY_REDRAW_MS = 1_000;    // recompute the heatmap every second
 const AREA_MIN_TRIGGERED_RATIO = 0.5;
 const AREA_MIN_TRIGGERED_CELLS = 3;
 const AREA_MIN_STRIKES = 3;
@@ -839,6 +841,14 @@ function StrikeDensityLayer({
   height: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Recompute every second so the heat keeps evolving during the round even when
+  // the strike feed hasn't changed between polls (this is what stops it freezing
+  // and then vanishing mid-game).
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const t = window.setInterval(() => setNowTick(Date.now()), DENSITY_REDRAW_MS);
+    return () => window.clearInterval(t);
+  }, []);
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -854,11 +864,13 @@ function StrikeDensityLayer({
     const radius = Math.max(16, Math.min(w, h) * 0.055);
     const now = Date.now();
     for (const strike of strikes) {
-      const p = projectPx(bounds, w, h, strike.lat, strike.lon);
-      if (p.x < -radius || p.x > w + radius || p.y < -radius || p.y > h + radius) continue;
       const receivedAt = Date.parse(strike.received_at);
       const age = Number.isFinite(receivedAt) ? now - receivedAt : Infinity;
-      const weight = age < 30_000 ? 0.3 : age < 120_000 ? 0.18 : 0.1;
+      if (age >= DENSITY_WINDOW_MS) continue; // only the last DENSITY_WINDOW_MS
+      const p = projectPx(bounds, w, h, strike.lat, strike.lon);
+      if (p.x < -radius || p.x > w + radius || p.y < -radius || p.y > h + radius) continue;
+      // Fade with age inside the window: freshest hottest, ~60s oldest faint.
+      const weight = 0.12 + 0.28 * Math.max(0, 1 - age / DENSITY_WINDOW_MS);
       const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius);
       gradient.addColorStop(0, `rgba(0,0,0,${weight})`);
       gradient.addColorStop(1, 'rgba(0,0,0,0)');
@@ -881,7 +893,7 @@ function StrikeDensityLayer({
       data[i + 3] = ramp[idx + 3];
     }
     ctx.putImageData(image, 0, 0);
-  }, [strikes, bounds, width, height]);
+  }, [strikes, bounds, width, height, nowTick]);
 
   return (
     <canvas
