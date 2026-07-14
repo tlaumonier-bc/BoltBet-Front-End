@@ -45,6 +45,7 @@ export const COUNTRY_BOUNDS: Record<string, Bounds> = {
   cd: { minLon: 12, minLat: -14, maxLon: 32, maxLat: 6, label: 'DR Congo' },
   co: { minLon: -79, minLat: -5, maxLon: -66, maxLat: 13, label: 'Colombia' },
   ve: { minLon: -73.5, minLat: 0.5, maxLon: -59.5, maxLat: 12.5, label: 'Venezuela' },
+  ph: { minLon: 116.9, minLat: 4.6, maxLon: 126.6, maxLat: 19.6, label: 'Philippines' },
 };
 
 // Countries whose map geometry spans overseas territories — fitting the full

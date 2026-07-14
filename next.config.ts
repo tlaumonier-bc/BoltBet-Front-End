@@ -6,8 +6,6 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
 ];
 
-const localDevBackend = process.env.LOCAL_DEV_BACKEND_URL?.replace(/\/$/, "");
-
 const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
@@ -95,14 +93,6 @@ const nextConfig: NextConfig = {
 
   async rewrites() {
     return [
-      ...(localDevBackend
-        ? [
-            {
-              source: "/api/:path*",
-              destination: `${localDevBackend}/api/:path*`,
-            },
-          ]
-        : []),
       {
         source: "/ingest/static/:path*",
         destination: "https://eu-assets.i.posthog.com/static/:path*",

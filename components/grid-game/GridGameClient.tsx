@@ -3,9 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- raw map tiles are external tile images, not app content images. */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import GameAccount from '@/components/game/GameAccount';
 import {
-  clickGridMatchCell,
   getCountryStrikesResult,
   getGridActiveCountries,
   getGridMatchState,
@@ -36,15 +34,27 @@ const AREA_GRID_COLS = 10;
 const AREA_GRID_ROWS = 8;
 const AREA_WINDOW_MS = 30_000;
 const AREA_FALLBACK_WINDOW_MS = 2 * 60_000;
+const AREA_SCAN_MS = 5_000;
+const AREA_TTL_MS = 10_000;
 const AREA_MIN_TRIGGERED_RATIO = 0.5;
 const AREA_MIN_TRIGGERED_CELLS = 3;
 const AREA_MIN_STRIKES = 3;
+const CELL_LOCK_MS = 3_000;
+
+type LayerKey = 'density' | 'multiplier' | 'opponent' | 'storm';
+const LAYER_DEFS: { key: LayerKey; label: string; available: boolean; hint: string }[] = [
+  { key: 'density', label: 'Strike density', available: true, hint: 'Live heatmap of recent strikes' },
+  { key: 'opponent', label: 'Opponent heat', available: true, hint: 'Where the bot picks most' },
+  { key: 'multiplier', label: 'Multiplier zones', available: false, hint: 'Coming soon' },
+  { key: 'storm', label: 'Storm movement', available: false, hint: 'Needs live storm feed' },
+];
+type LayerState = Record<LayerKey, boolean>;
+const DEFAULT_LAYERS: LayerState = { density: true, opponent: true, multiplier: false, storm: false };
 
 type Phase = 'selecting' | 'finding' | 'preparing' | 'active' | 'settled';
-type PlayScope = 'country' | 'area';
 type LonLat = [number, number];
 type CountryPolygon = LonLat[][];
-type OpponentPlay = { id: string; cell: number; at: number };
+type SelectedCell = { cell: number; startedAt: number; expiresAt: number } | null;
 type PreparedPolygon = { polygon: CountryPolygon; bounds: Bounds; area: number; centerLon: number };
 type AreaCandidate = {
   id: string;
@@ -54,6 +64,7 @@ type AreaCandidate = {
   boxCells: number;
   triggeredRatio: number;
   score: number;
+  expiresAt?: number;
 };
 
 interface CountryFeature {
@@ -271,6 +282,82 @@ function selectCountryRender(polygons: CountryPolygon[], strikes: CountryStrike[
   return { polygons: [best.polygon], bounds: best.bounds };
 }
 
+type PreparedCountry = {
+  iso: string;
+  polygons: PreparedPolygon[];
+  minLat: number;
+  maxLat: number;
+};
+
+// Prepare every country polygon once so we can resolve which country any point
+// falls into (used to label areas that straddle borders or sit offshore).
+function prepareCountries(features: CountryFeature[]): PreparedCountry[] {
+  const result: PreparedCountry[] = [];
+  for (const feature of features) {
+    const iso = featureIso(feature);
+    if (!iso) continue;
+    const polygons = preparePolygons(featurePolygons(feature), iso);
+    if (!polygons.length) continue;
+    let minLat = Infinity;
+    let maxLat = -Infinity;
+    for (const polygon of polygons) {
+      minLat = Math.min(minLat, polygon.bounds.minLat);
+      maxLat = Math.max(maxLat, polygon.bounds.maxLat);
+    }
+    result.push({ iso, polygons, minLat, maxLat });
+  }
+  return result;
+}
+
+function cellCenter(bounds: Bounds, grid: { cols: number; rows: number }, row: number, col: number): LonLat {
+  const lon = bounds.minLon + ((col + 0.5) / grid.cols) * (bounds.maxLon - bounds.minLon);
+  const lat = bounds.maxLat - ((row + 0.5) / grid.rows) * (bounds.maxLat - bounds.minLat);
+  return [lon, lat];
+}
+
+function polygonOverlapsBounds(polygon: PreparedPolygon, area: Bounds) {
+  if (polygon.bounds.maxLat < area.minLat || polygon.bounds.minLat > area.maxLat) return false;
+  const center = normalizeLonToBounds(polygon.centerLon, area);
+  const halfWidth = (polygon.bounds.maxLon - polygon.bounds.minLon) / 2;
+  return center + halfWidth >= area.minLon && center - halfWidth <= area.maxLon;
+}
+
+// Tally which country owns each grid cell center; the country with the most
+// cells wins the label. Cells over the ocean simply belong to no country.
+function dominantCountryForArea(
+  countries: PreparedCountry[],
+  bounds: Bounds,
+  grid: { cols: number; rows: number },
+): { iso: string; count: number; renderPolygons: CountryPolygon[] } | null {
+  if (!countries.length) return null;
+  const counts = new Map<string, number>();
+  for (let row = 0; row < grid.rows; row += 1) {
+    for (let col = 0; col < grid.cols; col += 1) {
+      const [lon, lat] = cellCenter(bounds, grid, row, col);
+      for (const country of countries) {
+        if (lat < country.minLat || lat > country.maxLat) continue;
+        if (country.polygons.some((polygon) => pointInPolygon(lon, lat, polygon))) {
+          counts.set(country.iso, (counts.get(country.iso) ?? 0) + 1);
+          break;
+        }
+      }
+    }
+  }
+  let bestIso = '';
+  let bestCount = 0;
+  for (const [iso, count] of counts) {
+    if (count > bestCount) {
+      bestCount = count;
+      bestIso = iso;
+    }
+  }
+  if (!bestIso) return null;
+  const country = countries.find((item) => item.iso === bestIso)!;
+  const overlapping = country.polygons.filter((polygon) => polygonOverlapsBounds(polygon, bounds));
+  const source = overlapping.length ? overlapping : country.polygons;
+  return { iso: bestIso, count: bestCount, renderPolygons: source.map((polygon) => polygon.polygon) };
+}
+
 function mapTiles(bounds: Bounds, aspect: number) {
   const view = viewport(bounds, aspect);
   const tileCount = 2 ** view.zoom;
@@ -444,6 +531,46 @@ function buildAreaCandidates(strikes: CountryStrike[], bounds: Bounds, now: numb
   return candidates.sort((a, b) => b.score - a.score);
 }
 
+// Ratio (0..1) of where a lat/lon lands inside the rendered viewport. The grid,
+// the strike markers and the cell hit-testing must all use this same projection
+// (Mercator + padding + aspect), otherwise a strike scores in a different cell
+// than the one it visually lands in.
+function projectRatio(bounds: Bounds, aspect: number, lat: number, lon: number) {
+  const view = viewport(bounds, aspect);
+  const p = worldPoint(lat, normalizeLonToBounds(lon, bounds), view.zoom);
+  return { rx: (p.x - view.left) / view.width, ry: (p.y - view.top) / view.height };
+}
+
+function cellForStrike(strike: CountryStrike, bounds: Bounds, grid: { cols: number; rows: number }, aspect: number) {
+  const { rx, ry } = projectRatio(bounds, aspect, strike.lat, strike.lon);
+  if (rx < 0 || rx >= 1 || ry < 0 || ry >= 1) return null;
+  const col = Math.min(grid.cols - 1, Math.floor(rx * grid.cols));
+  const row = Math.min(grid.rows - 1, Math.floor(ry * grid.rows));
+  return row * grid.cols + col;
+}
+
+function cellStrikeCounts(strikes: CountryStrike[], bounds: Bounds, grid: { cols: number; rows: number }, aspect: number, now: number) {
+  const counts = Array.from({ length: grid.rows }, () => Array.from({ length: grid.cols }, () => 0));
+  for (const strike of strikes) {
+    const receivedAt = Date.parse(strike.received_at);
+    if (!Number.isFinite(receivedAt) || receivedAt < now - AREA_WINDOW_MS) continue;
+    const cell = cellForStrike(strike, bounds, grid, aspect);
+    if (cell === null) continue;
+    counts[Math.floor(cell / grid.cols)][cell % grid.cols] += 1;
+  }
+  return counts;
+}
+
+function areaRectPx(countryBounds: Bounds, areaBounds: Bounds, width: number, height: number) {
+  const nw = projectPx(countryBounds, width, height, areaBounds.maxLat, areaBounds.minLon);
+  const se = projectPx(countryBounds, width, height, areaBounds.minLat, areaBounds.maxLon);
+  const x = Math.max(0, Math.min(nw.x, se.x));
+  const y = Math.max(0, Math.min(nw.y, se.y));
+  const w = Math.min(width - x, Math.abs(se.x - nw.x));
+  const h = Math.min(height - y, Math.abs(se.y - nw.y));
+  return { x, y, w, h, cx: x + w / 2, cy: y + h / 2 };
+}
+
 async function activeCountriesFromStrikeFeed(): Promise<GridActiveCountry[]> {
   const rows = await Promise.all(
     ACTIVE_COUNTRY_CANDIDATES.map(async (country) => {
@@ -515,68 +642,17 @@ function PlayerCard({ match }: { match: GridMatchState | null }) {
   );
 }
 
-function GameScopeSwitch({ value, onChange, disabled }: { value: PlayScope; onChange: (value: PlayScope) => void; disabled: boolean }) {
-  return (
-    <div className="flex items-center rounded-full border border-white/10 bg-white/[0.045] p-1 text-xs font-black text-white/50">
-      <button
-        type="button"
-        onClick={() => onChange('country')}
-        disabled={disabled}
-        className={`rounded-full px-3.5 py-2 transition disabled:cursor-not-allowed ${
-          value === 'country'
-            ? 'bg-bolt text-slate-950 shadow-[0_0_24px_rgba(250,204,21,0.18)]'
-            : 'hover:bg-white/8 hover:text-white'
-        }`}
-      >
-        Countries
-      </button>
-      <button
-        type="button"
-        onClick={() => onChange('area')}
-        disabled={disabled}
-        title="Play inside the most active storm area"
-        className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 transition disabled:cursor-not-allowed ${
-          value === 'area'
-            ? 'bg-cyan-200/15 text-cyan-100 shadow-[0_0_24px_rgba(56,189,248,0.14)]'
-            : 'hover:bg-white/8 hover:text-white'
-        }`}
-      >
-        <span>Areas</span>
-        <span className="rounded-full border border-cyan-200/15 bg-cyan-200/10 px-1.5 py-0.5 text-[8px] uppercase tracking-wider text-cyan-100/70">
-          Beta
-        </span>
-      </button>
-    </div>
-  );
-}
-
 function ControlPanel({
   country,
   match,
-  phase,
-  loading,
-  error,
-  playScope,
-  area,
-  onPlay,
 }: {
   country: GridActiveCountry;
   match: GridMatchState | null;
-  phase: Phase;
-  loading: boolean;
-  error: string | null;
-  playScope: PlayScope;
-  area: AreaCandidate | null;
-  onPlay: () => void;
 }) {
   const name = countryName(country.country);
-  const eloDelta = match?.eloDelta ?? null;
-  const areaReady = playScope === 'country' || Boolean(area);
-  const playDisabled = loading || country.strikes30s <= 0 || !areaReady;
   return (
-    <aside className="glass pointer-events-auto z-10 w-full max-w-[360px] rounded-3xl p-4 shadow-2xl">
-      <GameAccount variant="inline" />
-      <div className="mt-4 rounded-2xl border border-cyan-200/15 bg-cyan-200/10 p-4">
+    <aside className="pointer-events-auto z-10 w-full max-w-[360px] space-y-4">
+      <div className="glass rounded-3xl border border-cyan-200/15 bg-cyan-200/10 p-4 shadow-2xl">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-100/60">Selected country</div>
@@ -595,83 +671,7 @@ function ControlPanel({
           </div>
         </div>
       </div>
-
-      {phase === 'selecting' && playScope === 'area' && (
-        <div className="mt-4 rounded-2xl border border-cyan-200/15 bg-cyan-200/10 p-3 text-xs leading-relaxed text-cyan-50/75">
-          {area
-            ? `${area.strikeCount} strikes · ${Math.round(area.triggeredRatio * 100)}% of cells active in the selected storm area`
-            : 'Waiting for a storm area where at least 30% of local cells were triggered recently.'}
-        </div>
-      )}
-
-      <div className="mt-4">
-        <PlayerCard match={match} />
-      </div>
-
-      {match && (
-        <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold text-white/70">You</span>
-            <span className="font-display text-xl font-black text-electric">{match.player.score}</span>
-          </div>
-          <div className="my-2 h-px bg-white/10" />
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold text-white/70">{match.opponent.username}</span>
-            <span className="font-display text-xl font-black text-rose-300">{match.opponent.score}</span>
-          </div>
-          {phase === 'settled' && (
-            <div className={`mt-3 rounded-xl px-3 py-2 text-center text-sm font-bold ${eloDelta && eloDelta > 0 ? 'bg-emerald-400/15 text-emerald-300' : 'bg-rose-400/15 text-rose-300'}`}>
-              {match.player.score > match.opponent.score ? 'Victory' : match.player.score === match.opponent.score ? 'Draw' : 'Defeat'}
-              {eloDelta !== null && ` · ${eloDelta >= 0 ? '+' : ''}${eloDelta} Elo`}
-            </div>
-          )}
-        </div>
-      )}
-
-      {phase === 'selecting' && (
-        <button
-          type="button"
-          onClick={onPlay}
-          disabled={playDisabled}
-          className="btn-glow mt-4 w-full rounded-2xl px-5 py-4 text-base font-black disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {loading
-            ? 'Finding match...'
-            : country.strikes30s <= 0
-              ? 'Waiting for live strikes'
-              : playScope === 'area'
-                ? area ? 'Play this area' : 'Waiting for active area'
-                : 'Play on this country'}
-        </button>
-      )}
-      {phase === 'finding' && (
-        <div className="mt-4 rounded-2xl border border-bolt/20 bg-bolt/10 p-4 text-center text-sm font-bold text-bolt">
-          Match being found...
-        </div>
-      )}
-      {phase === 'preparing' && match && (
-        <div className="mt-4 rounded-2xl border border-bolt/20 bg-bolt/10 p-4 text-center">
-          <div className="text-xs uppercase tracking-wider text-bolt/70">Get ready</div>
-          <div className="font-display text-5xl font-black text-bolt">{secondsUntil(match.timing.startedAt)}</div>
-        </div>
-      )}
-      {phase === 'active' && match && (
-        <div className="mt-4 rounded-2xl border border-electric/20 bg-electric/10 p-4 text-center">
-          <div className="text-xs uppercase tracking-wider text-electric/70">Time left</div>
-          <div className="font-display text-5xl font-black text-electric">{secondsUntil(match.timing.endsAt)}</div>
-        </div>
-      )}
-      {phase === 'settled' && (
-        <button
-          type="button"
-          onClick={onPlay}
-          disabled={loading || country.strikes30s <= 0}
-          className="mt-4 w-full rounded-2xl border border-white/15 bg-white/10 px-5 py-4 text-base font-black text-white transition hover:bg-white/15 disabled:opacity-50"
-        >
-          Play again
-        </button>
-      )}
-      {error && <p className="mt-3 text-center text-xs text-rose-300">{error}</p>}
+      <PlayerCard match={match} />
     </aside>
   );
 }
@@ -680,10 +680,14 @@ function GameLayersPanel({
   country,
   match,
   strikes,
+  layers,
+  onToggleLayer,
 }: {
   country: GridActiveCountry;
   match: GridMatchState | null;
   strikes: CountryStrike[];
+  layers: LayerState;
+  onToggleLayer: (key: LayerKey) => void;
 }) {
   const visibleStrikes = useMemo(() => {
     if (!match) return [];
@@ -693,7 +697,7 @@ function GameLayersPanel({
         const receivedAt = Date.parse(strike.received_at);
         return Number.isFinite(receivedAt) && receivedAt >= startedAt;
       })
-      .slice(0, 5);
+      .slice(0, 3);
   }, [match, strikes]);
 
   return (
@@ -705,19 +709,48 @@ function GameLayersPanel({
           Tactical layers will appear here: live storm paths, multipliers, strike density and player zones.
         </p>
         <div className="mt-5 space-y-2">
-          {['Strike density', 'Multiplier zones', 'Opponent heat', 'Storm movement'].map((label) => (
-            <div key={label} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.045] px-3 py-3">
-              <span className="text-sm font-semibold text-white/70">{label}</span>
-              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/35">Soon</span>
-            </div>
-          ))}
+          {LAYER_DEFS.map((layer) => {
+            const active = layers[layer.key];
+            return (
+              <button
+                key={layer.key}
+                type="button"
+                disabled={!layer.available}
+                onClick={() => onToggleLayer(layer.key)}
+                className={`flex w-full items-center justify-between gap-3 rounded-2xl border px-3 py-3 text-left transition ${
+                  layer.available
+                    ? active
+                      ? 'border-cyan-300/40 bg-cyan-300/10'
+                      : 'border-white/10 bg-white/[0.045] hover:bg-white/[0.07]'
+                    : 'cursor-not-allowed border-white/10 bg-white/[0.03] opacity-60'
+                }`}
+              >
+                <span className="min-w-0">
+                  <span className={`block text-sm font-semibold ${active && layer.available ? 'text-white' : 'text-white/70'}`}>{layer.label}</span>
+                  <span className="mt-0.5 block truncate text-[10px] text-white/35">{layer.hint}</span>
+                </span>
+                {layer.available ? (
+                  <span
+                    aria-hidden
+                    className={`relative h-5 w-9 shrink-0 rounded-full transition ${active ? 'bg-cyan-400/80' : 'bg-white/15'}`}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${active ? 'left-[1.15rem]' : 'left-0.5'}`}
+                    />
+                  </span>
+                ) : (
+                  <span className="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/35">Soon</span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       <div className="mt-auto rounded-2xl border border-white/10 bg-black/25 p-3">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">Strike console</span>
-          <span className="text-[10px] text-white/30">last 5</span>
+          <span className="text-[10px] text-white/30">last 3</span>
         </div>
         <div className="grid grid-cols-[2.2rem_4.4rem_1fr] gap-2 border-b border-white/10 pb-1 text-[10px] font-bold uppercase tracking-wider text-white/35">
           <span>Strike</span>
@@ -740,39 +773,109 @@ function GameLayersPanel({
   );
 }
 
-function GameBottomHud({ match, phase, country }: { match: GridMatchState | null; phase: Phase; country: GridActiveCountry }) {
-  const timeLabel = match
-    ? phase === 'preparing'
-      ? `${secondsUntil(match.timing.startedAt)}s`
-      : phase === 'active'
-        ? `${secondsUntil(match.timing.endsAt)}s`
-        : 'Done'
-    : '...';
+// Alpha (0-255) -> RGBA color ramp for the strike-density heatmap. Built lazily
+// on the client (no DOM needed) and cached; low density reads cool, high reads hot.
+const HEAT_STOPS: { t: number; c: [number, number, number] }[] = [
+  { t: 0.0, c: [56, 189, 248] },
+  { t: 0.35, c: [34, 197, 94] },
+  { t: 0.6, c: [250, 204, 21] },
+  { t: 0.82, c: [249, 115, 22] },
+  { t: 1.0, c: [239, 68, 68] },
+];
+const HEAT_GRADIENT_CSS = `linear-gradient(to right, ${HEAT_STOPS.map(
+  (stop) => `rgb(${stop.c[0]},${stop.c[1]},${stop.c[2]}) ${Math.round(stop.t * 100)}%`,
+).join(', ')})`;
+let heatRamp: Uint8ClampedArray | null = null;
+function getHeatRamp() {
+  if (heatRamp) return heatRamp;
+  const ramp = new Uint8ClampedArray(256 * 4);
+  for (let a = 0; a < 256; a += 1) {
+    const t = a / 255;
+    let lo = HEAT_STOPS[0];
+    let hi = HEAT_STOPS[HEAT_STOPS.length - 1];
+    for (let i = 0; i < HEAT_STOPS.length - 1; i += 1) {
+      if (t >= HEAT_STOPS[i].t && t <= HEAT_STOPS[i + 1].t) {
+        lo = HEAT_STOPS[i];
+        hi = HEAT_STOPS[i + 1];
+        break;
+      }
+    }
+    const f = (t - lo.t) / Math.max(1e-6, hi.t - lo.t);
+    ramp[a * 4] = lo.c[0] + (hi.c[0] - lo.c[0]) * f;
+    ramp[a * 4 + 1] = lo.c[1] + (hi.c[1] - lo.c[1]) * f;
+    ramp[a * 4 + 2] = lo.c[2] + (hi.c[2] - lo.c[2]) * f;
+    ramp[a * 4 + 3] = Math.min(190, a * 1.7);
+  }
+  heatRamp = ramp;
+  return ramp;
+}
+
+// Canvas heatmap of strike density. Accumulates soft alpha blobs (recent strikes
+// weigh more), then recolors through the ramp. Kept translucent and layered below
+// the grid so cells, selections and bolts stay readable on top of it.
+function StrikeDensityLayer({
+  strikes,
+  bounds,
+  width,
+  height,
+}: {
+  strikes: CountryStrike[];
+  bounds: Bounds;
+  width: number;
+  height: number;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const w = Math.max(1, Math.round(width));
+    const h = Math.max(1, Math.round(height));
+    if (canvas.width !== w) canvas.width = w;
+    if (canvas.height !== h) canvas.height = h;
+    ctx.clearRect(0, 0, w, h);
+    if (!strikes.length) return;
+
+    const radius = Math.max(16, Math.min(w, h) * 0.055);
+    const now = Date.now();
+    for (const strike of strikes) {
+      const p = projectPx(bounds, w, h, strike.lat, strike.lon);
+      if (p.x < -radius || p.x > w + radius || p.y < -radius || p.y > h + radius) continue;
+      const receivedAt = Date.parse(strike.received_at);
+      const age = Number.isFinite(receivedAt) ? now - receivedAt : Infinity;
+      const weight = age < 30_000 ? 0.3 : age < 120_000 ? 0.18 : 0.1;
+      const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius);
+      gradient.addColorStop(0, `rgba(0,0,0,${weight})`);
+      gradient.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const image = ctx.getImageData(0, 0, w, h);
+    const data = image.data;
+    const ramp = getHeatRamp();
+    for (let i = 0; i < data.length; i += 4) {
+      const a = data[i + 3];
+      if (!a) continue;
+      const idx = a * 4;
+      data[i] = ramp[idx];
+      data[i + 1] = ramp[idx + 1];
+      data[i + 2] = ramp[idx + 2];
+      data[i + 3] = ramp[idx + 3];
+    }
+    ctx.putImageData(image, 0, 0);
+  }, [strikes, bounds, width, height]);
+
   return (
-    <div className="pointer-events-auto mt-3 w-full rounded-3xl border border-white/10 bg-slate-950/75 p-3 shadow-2xl backdrop-blur-xl transition-all duration-700">
-      <div className="grid grid-cols-3 items-center gap-2 text-center">
-        <div className="rounded-2xl bg-white/[0.055] px-2 py-2">
-          <div className="text-[10px] uppercase tracking-wider text-white/35">You</div>
-          <div className="font-display text-xl font-black text-electric">{match?.player.score ?? 0}</div>
-        </div>
-        <div className="min-w-0">
-          <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-bolt/70">
-            {phase === 'preparing' ? 'Prepare' : phase === 'active' ? 'Live round' : phase === 'settled' ? 'Result' : 'Finding'}
-          </div>
-          <div className="font-display mt-1 text-2xl font-black text-white">{timeLabel}</div>
-          <div className="mt-1 truncate text-[10px] text-white/45">{country.strikes30s.toLocaleString()} strikes · 30s</div>
-        </div>
-        <div className="rounded-2xl bg-white/[0.055] px-2 py-2">
-          <div className="text-[10px] uppercase tracking-wider text-white/35">Bot</div>
-          <div className="font-display text-xl font-black text-rose-300">{match?.opponent.score ?? 0}</div>
-        </div>
-      </div>
-      {phase === 'preparing' && (
-        <p className="mt-3 text-center text-[11px] leading-relaxed text-white/55">
-          Click cells to score. Your selected zone resets when a new strike appears.
-        </p>
-      )}
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="pointer-events-none absolute inset-0 z-[5] h-full w-full"
+      style={{ opacity: 0.72, mixBlendMode: 'screen' }}
+      aria-hidden
+    />
   );
 }
 
@@ -781,46 +884,81 @@ function SatelliteCountryMap({
   strikes,
   match,
   phase,
-  playScope,
   area,
+  activeAreaCount,
+  loading,
+  onPlay,
+  playerScore,
+  botScore,
   now,
   gameStarted,
-  opponentPlays,
   selectedCell,
-  vanishedCell,
+  botSelectedCell,
   onCellClick,
+  onDominantCountry,
+  onAspectChange,
+  showDensity,
+  showOpponentHeat,
+  opponentHeat,
 }: {
   country: GridActiveCountry;
   strikes: CountryStrike[];
   match: GridMatchState | null;
   phase: Phase;
-  playScope: PlayScope;
   area: AreaCandidate | null;
+  activeAreaCount: number;
+  loading: boolean;
+  onPlay: () => void;
+  playerScore: number;
+  botScore: number;
   now: number;
   gameStarted: boolean;
-  opponentPlays: OpponentPlay[];
-  selectedCell: number | null;
-  vanishedCell: number | null;
+  selectedCell: SelectedCell;
+  botSelectedCell: SelectedCell;
   onCellClick: (cell: number) => void;
+  onDominantCountry: (iso: string) => void;
+  onAspectChange: (aspect: number) => void;
+  showDensity: boolean;
+  showOpponentHeat: boolean;
+  opponentHeat: { cells: number[]; count: number } | null;
 }) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ width: 1, height: 1 });
-  const [polygons, setPolygons] = useState<CountryPolygon[]>([]);
+  const [features, setFeatures] = useState<CountryFeature[]>([]);
+  const [preparedCountries, setPreparedCountries] = useState<PreparedCountry[]>([]);
+  const polygons = useMemo(() => {
+    const feature = features.find((item) => featureIso(item) === country.country.toUpperCase());
+    return feature ? featurePolygons(feature) : [];
+  }, [features, country.country]);
   const baseBounds = useMemo(() => countryBounds(country.country), [country.country]);
   const countryRender = useMemo(
     () => selectCountryRender(polygons, strikes, baseBounds),
     [polygons, strikes, baseBounds],
   );
-  const bounds = playScope === 'area' && area ? area.bounds : countryRender.bounds;
+  const zoomToArea = gameStarted && area;
+  const bounds = zoomToArea ? area.bounds : countryRender.bounds;
   const aspect = size.width / Math.max(1, size.height);
   const tiles = useMemo(() => mapTiles(bounds, aspect), [bounds, aspect]);
-  const countryPath = useMemo(
-    () => pathForPolygons(countryRender.polygons, bounds, size.width, size.height),
-    [countryRender.polygons, bounds, size.width, size.height],
+  const grid = useMemo(() => ({ cols: AREA_GRID_COLS, rows: AREA_GRID_ROWS }), []);
+  // Once a match is running, the playable rectangle can span the ocean or two
+  // countries — label it after whichever country owns the most grid cells.
+  const dominant = useMemo(
+    () => (gameStarted && area ? dominantCountryForArea(preparedCountries, bounds, grid) : null),
+    [gameStarted, area, preparedCountries, bounds, grid],
   );
-  const grid = playScope === 'area' ? { cols: AREA_GRID_COLS, rows: AREA_GRID_ROWS } : match?.grid ?? { cols: 8, rows: 10 };
-  const clipId = `grid-country-clip-${country.country.toLowerCase()}`;
-  const outsideMaskId = `grid-country-mask-${country.country.toLowerCase()}`;
+  const dominantPath = useMemo(
+    () => (dominant ? pathForPolygons(dominant.renderPolygons, bounds, size.width, size.height) : ''),
+    [dominant, bounds, size.width, size.height],
+  );
+  const displayIso = dominant?.iso ?? country.country;
+  const preparingCounts = useMemo(
+    () => (phase === 'preparing' ? cellStrikeCounts(strikes, bounds, grid, aspect, now) : []),
+    [phase, strikes, bounds, grid, aspect, now],
+  );
+  const locatorRect = useMemo(
+    () => (!gameStarted && area ? areaRectPx(countryRender.bounds, area.bounds, size.width, size.height) : null),
+    [gameStarted, area, countryRender.bounds, size.width, size.height],
+  );
 
   useEffect(() => {
     const el = mapRef.current;
@@ -836,21 +974,31 @@ function SatelliteCountryMap({
   }, []);
 
   useEffect(() => {
+    onDominantCountry(displayIso);
+  }, [displayIso, onDominantCountry]);
+
+  useEffect(() => {
+    onAspectChange(aspect);
+  }, [aspect, onAspectChange]);
+
+  useEffect(() => {
     let alive = true;
     fetch('/geo/countries.geojson')
       .then((response) => response.json() as Promise<CountryFeatureCollection>)
       .then((data) => {
         if (!alive) return;
-        const feature = data.features.find((item) => featureIso(item) === country.country.toUpperCase());
-        setPolygons(feature ? featurePolygons(feature) : []);
+        setFeatures(data.features);
+        setPreparedCountries(prepareCountries(data.features));
       })
       .catch(() => {
-        if (alive) setPolygons([]);
+        if (!alive) return;
+        setFeatures([]);
+        setPreparedCountries([]);
       });
     return () => {
       alive = false;
     };
-  }, [country.country]);
+  }, []);
 
   const cells = [];
   for (let row = 0; row < grid.rows; row += 1) {
@@ -877,6 +1025,90 @@ function SatelliteCountryMap({
       </div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(250,204,21,0.06),transparent_42%),linear-gradient(to_bottom,rgba(2,6,23,0.02),rgba(2,6,23,0.36))]" />
 
+      {gameStarted && showDensity && (
+        <StrikeDensityLayer strikes={strikes} bounds={bounds} width={size.width} height={size.height} />
+      )}
+
+      {gameStarted && showDensity && (
+        <div className="pointer-events-none absolute left-4 top-4 z-20 w-[168px] rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2.5 shadow-2xl backdrop-blur-md">
+          <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/50">Strike density</div>
+          <div className="mt-2 h-2 w-full rounded-full" style={{ background: HEAT_GRADIENT_CSS }} />
+          <div className="mt-1 flex justify-between text-[9px] font-semibold text-white/45">
+            <span>Low</span>
+            <span>High</span>
+          </div>
+          <div className="mt-1 text-[9px] leading-tight text-white/35">Recent strikes per area</div>
+        </div>
+      )}
+
+      {gameStarted && (
+        <div className="pointer-events-none absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-4 rounded-2xl border border-white/10 bg-slate-950/70 px-5 py-2 shadow-2xl backdrop-blur-md">
+          <div className="text-center">
+            <div className="text-[9px] font-bold uppercase tracking-wider text-white/45">You</div>
+            <div className="font-display text-2xl font-black leading-none text-electric">{playerScore}</div>
+          </div>
+          <div className="h-8 w-px bg-white/15" />
+          <div className="text-center">
+            <div className="text-[9px] font-bold uppercase tracking-wider text-white/45">Bot</div>
+            <div className="font-display text-2xl font-black leading-none text-rose-300">{botScore}</div>
+          </div>
+        </div>
+      )}
+
+      {locatorRect && area && (
+        <svg
+          className="pointer-events-none absolute inset-0 z-[12] h-full w-full"
+          viewBox={`0 0 ${size.width} ${size.height}`}
+          preserveAspectRatio="none"
+          aria-hidden
+        >
+          <line
+            x1={Math.min(size.width - 92, locatorRect.cx + 72)}
+            y1={Math.max(46, locatorRect.cy - 70)}
+            x2={locatorRect.cx}
+            y2={locatorRect.cy}
+            stroke="rgba(125,211,252,0.82)"
+            strokeWidth="2"
+            strokeDasharray="6 6"
+            vectorEffect="non-scaling-stroke"
+          />
+          <rect
+            x={locatorRect.x}
+            y={locatorRect.y}
+            width={Math.max(18, locatorRect.w)}
+            height={Math.max(18, locatorRect.h)}
+            rx="8"
+            fill="rgba(56,189,248,0.12)"
+            stroke="rgba(125,211,252,0.95)"
+            strokeWidth="2"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+      )}
+
+      {locatorRect && area && (
+        <div
+          className="pointer-events-auto absolute z-[18] flex w-[260px] items-center justify-between gap-3 rounded-2xl border border-cyan-200/25 bg-slate-950/80 px-3 py-2 text-xs text-cyan-50 shadow-2xl backdrop-blur"
+          style={{
+            left: `${Math.min(size.width - 276, locatorRect.cx + 78)}px`,
+            top: `${Math.max(18, locatorRect.cy - 94)}px`,
+          }}
+        >
+          <div className="min-w-0">
+            <div className="font-black uppercase tracking-[0.18em] text-cyan-100/55">Playable area</div>
+            <div className="mt-0.5 font-bold">{activeAreaCount} active now</div>
+          </div>
+          <button
+            type="button"
+            onClick={onPlay}
+            disabled={loading || !area}
+            className="btn-glow shrink-0 rounded-xl px-3 py-2 text-xs font-black disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? 'Finding...' : 'Play this area'}
+          </button>
+        </div>
+      )}
+
       {strikes.slice(0, 90).map((strike, index) => {
         const p = projectPx(bounds, size.width, size.height, strike.lat, strike.lon);
         if (p.x < 0 || p.x > size.width || p.y < 0 || p.y > size.height) return null;
@@ -901,94 +1133,191 @@ function SatelliteCountryMap({
         );
       })}
 
-      {gameStarted && countryPath && (
+      {gameStarted && (
         <svg
           className="pointer-events-none absolute inset-0 z-[8] h-full w-full"
           viewBox={`0 0 ${size.width} ${size.height}`}
           preserveAspectRatio="none"
           aria-hidden
         >
-          <defs>
-            <clipPath id={clipId}>
-              <path d={countryPath} fillRule="evenodd" clipRule="evenodd" />
-            </clipPath>
-            <mask id={outsideMaskId}>
-              <rect x="0" y="0" width={size.width} height={size.height} fill="white" />
-              <path d={countryPath} fill="black" fillRule="evenodd" />
-            </mask>
-          </defs>
-          <rect x="0" y="0" width={size.width} height={size.height} fill="rgba(0,0,0,0.84)" mask={`url(#${outsideMaskId})`} />
-          <g clipPath={`url(#${clipId})`} className="pointer-events-auto">
+          <g className="pointer-events-auto">
             {cells.map((cell) => {
-              const disabled = phase !== 'active' || vanishedCell === cell.index;
-              const selected = selectedCell === cell.index;
-              const vanished = vanishedCell === cell.index;
+              const selected = selectedCell?.cell === cell.index && selectedCell.expiresAt > now;
+              const botSelected = phase === 'active' && botSelectedCell?.cell === cell.index && botSelectedCell.expiresAt > now;
+              const lockActive = Boolean(selectedCell && selectedCell.expiresAt > now);
+              const disabled = phase !== 'active' || (lockActive && !selected);
+              const countdown = selectedCell && selected ? Math.max(1, Math.ceil((selectedCell.expiresAt - now) / 1000)) : 0;
+              const botCountdown = botSelectedCell && botSelected ? Math.max(1, Math.ceil((botSelectedCell.expiresAt - now) / 1000)) : 0;
               return (
-                <rect
-                  key={cell.index}
-                  x={(cell.col / grid.cols) * size.width}
-                  y={(cell.row / grid.rows) * size.height}
-                  width={size.width / grid.cols}
-                  height={size.height / grid.rows}
-                  rx="0.8"
-                  vectorEffect="non-scaling-stroke"
-                  className={`transition ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
-                  fill={selected ? 'rgba(148,163,184,0.34)' : vanished ? 'rgba(0,0,0,0.5)' : 'rgba(148,163,184,0.16)'}
-                  stroke={selected ? 'rgba(226,232,240,0.72)' : 'rgba(226,232,240,0.26)'}
-                  strokeWidth={selected ? 0.28 : 0.16}
-                  opacity={vanished ? 0.25 : 1}
-                  onClick={() => {
-                    if (!disabled) onCellClick(cell.index);
-                  }}
-                />
+                <g key={cell.index}>
+                  <rect
+                    x={(cell.col / grid.cols) * size.width}
+                    y={(cell.row / grid.rows) * size.height}
+                    width={size.width / grid.cols}
+                    height={size.height / grid.rows}
+                    rx="0.8"
+                    vectorEffect="non-scaling-stroke"
+                    className={`transition ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
+                    fill={
+                      selected
+                        ? 'rgba(148,163,184,0.34)'
+                        : botSelected
+                          ? 'rgba(244,63,94,0.34)'
+                          : 'rgba(148,163,184,0.16)'
+                    }
+                    stroke={
+                      selected
+                        ? 'rgba(226,232,240,0.72)'
+                        : botSelected
+                          ? 'rgba(251,113,133,0.9)'
+                          : 'rgba(226,232,240,0.26)'
+                    }
+                    strokeWidth={selected || botSelected ? 0.28 : 0.16}
+                    onClick={() => {
+                      if (!disabled) onCellClick(cell.index);
+                    }}
+                  />
+                  {selected && (
+                    <text
+                      x={((cell.col + 0.5) / grid.cols) * size.width}
+                      y={((cell.row + 0.5) / grid.rows) * size.height}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="pointer-events-none fill-white/70 text-[22px] font-black"
+                    >
+                      {countdown}
+                    </text>
+                  )}
+                  {botSelected && !selected && (
+                    <text
+                      x={((cell.col + 0.5) / grid.cols) * size.width}
+                      y={((cell.row + 0.5) / grid.rows) * size.height}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="pointer-events-none fill-white text-[22px] font-black"
+                    >
+                      {botCountdown}
+                    </text>
+                  )}
+                  {phase === 'preparing' && (preparingCounts[cell.row]?.[cell.col] ?? 0) > 0 && (
+                    <text
+                      x={((cell.col + 0.5) / grid.cols) * size.width}
+                      y={((cell.row + 0.54) / grid.rows) * size.height}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="pointer-events-none fill-white text-[10px] font-black"
+                    >
+                      {preparingCounts[cell.row][cell.col]}
+                    </text>
+                  )}
+                </g>
               );
             })}
-            {opponentPlays.slice(-12).map((play) => {
-              const col = play.cell % grid.cols;
-              const row = Math.floor(play.cell / grid.cols);
-              return (
+          </g>
+          {showOpponentHeat && opponentHeat && opponentHeat.cells.map((idx) => {
+            const col = idx % grid.cols;
+            const row = Math.floor(idx / grid.cols);
+            return (
+              <g key={`opponent-heat-${idx}`} className="pointer-events-none">
                 <rect
-                  key={play.id}
                   x={(col / grid.cols) * size.width}
                   y={(row / grid.rows) * size.height}
                   width={size.width / grid.cols}
                   height={size.height / grid.rows}
                   rx="0.8"
+                  fill="rgba(244,63,94,0.22)"
+                  stroke="rgba(251,113,133,0.95)"
+                  strokeWidth="0.42"
+                  strokeDasharray="2.4 1.6"
                   vectorEffect="non-scaling-stroke"
-                  fill="rgba(244,63,94,0.34)"
-                  stroke="rgba(251,113,133,0.9)"
-                  strokeWidth="0.3"
-                  className="animate-pulse"
+                  className="grid-opponent-heat"
                 />
-              );
-            })}
-          </g>
-          <path
-            d={countryPath}
-            fill="rgba(56,189,248,0.045)"
-            stroke="rgba(125,211,252,0.92)"
-            strokeWidth="0.28"
-            vectorEffect="non-scaling-stroke"
-            fillRule="evenodd"
-            className="drop-shadow-[0_0_14px_rgba(56,189,248,0.65)]"
-          />
+                <text
+                  x={((col + 0.5) / grid.cols) * size.width}
+                  y={((row + 0.28) / grid.rows) * size.height}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  className="fill-rose-100 text-[9px] font-black"
+                >
+                  🤖 ×{opponentHeat.count}
+                </text>
+              </g>
+            );
+          })}
+          {dominantPath && (
+            <path
+              d={dominantPath}
+              fill="none"
+              stroke="rgba(125,211,252,0.92)"
+              strokeWidth="0.28"
+              vectorEffect="non-scaling-stroke"
+              fillRule="evenodd"
+              className="drop-shadow-[0_0_14px_rgba(56,189,248,0.65)]"
+            />
+          )}
         </svg>
       )}
 
-      {phase === 'selecting' && (
-        <div className="absolute inset-x-6 bottom-6 rounded-3xl border border-white/10 bg-black/45 p-5 backdrop-blur">
-          <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/40">
-            {playScope === 'area' ? 'Area Game · Beta' : 'Grid Game'}
+      {phase === 'settled' && match && (
+        <div className="pointer-events-none absolute inset-0 z-[30] grid place-items-center bg-black/25 backdrop-blur-[1px]">
+          {(() => {
+            const eloBefore = match.player.eloBefore;
+            const eloDelta =
+              match.eloDelta ??
+              (match.player.eloAfter != null
+                ? match.player.eloAfter - eloBefore
+                : playerScore === botScore
+                  ? 0
+                  : playerScore > botScore
+                    ? 12
+                    : -12);
+            const eloAfter = match.player.eloAfter ?? eloBefore + eloDelta;
+            return (
+          <div className={`rounded-[2rem] border px-8 py-7 text-center shadow-2xl ${
+            playerScore > botScore
+              ? 'border-emerald-300/30 bg-emerald-300/15'
+              : 'border-rose-300/30 bg-rose-300/15'
+          }`}>
+            <div className="text-[11px] font-black uppercase tracking-[0.32em] text-white/55">Match finished</div>
+            <div className="font-display mt-2 text-5xl font-black text-white">
+              {playerScore > botScore ? 'You WON' : playerScore === botScore ? 'DRAW' : 'You LOST'}
+            </div>
+            <div className={`mt-3 text-2xl font-black ${eloDelta >= 0 ? 'text-emerald-200' : 'text-rose-200'}`}>
+              {eloDelta >= 0 ? '+' : ''}{eloDelta} Elo
+            </div>
+            <div className="mt-1 text-sm font-semibold text-white/70">
+              Grid Elo <span className="font-black text-white">{eloAfter}</span>
+            </div>
+            <div className="mt-3 text-sm font-semibold text-white/65">
+              {playerScore} - {botScore}
+            </div>
           </div>
-          <div className="mt-1 text-lg font-bold text-white sm:text-xl">
-            {playScope === 'area'
-              ? area
-                ? 'A hot storm area is ready. Play the smaller grid.'
-                : 'Searching for a storm area with enough active cells.'
-              : 'Pick the active country you want and start playing.'}
+            );
+          })()}
+        </div>
+      )}
+
+      {phase === 'preparing' && match && (
+        <div className="pointer-events-none absolute inset-0 z-[30] grid place-items-center bg-black/20 backdrop-blur-[1px]">
+          <div className="rounded-[2rem] border border-bolt/25 bg-slate-950/78 px-8 py-7 text-center shadow-2xl">
+            <div className="text-[11px] font-black uppercase tracking-[0.32em] text-bolt/70">Prepare</div>
+            <div className="font-display mt-2 text-7xl font-black text-bolt">{secondsUntil(match.timing.startedAt)}</div>
+            <p className="mt-4 max-w-sm text-sm font-semibold leading-relaxed text-white/70">
+              Pick a cell. It stays selected for 3 seconds, and every strike landing inside it adds to your score.
+            </p>
           </div>
         </div>
       )}
+
+      {phase === 'finding' && (
+        <div className="pointer-events-none absolute inset-0 z-[30] grid place-items-center bg-black/20 backdrop-blur-[1px]">
+          <div className="rounded-[2rem] border border-cyan-200/25 bg-slate-950/80 px-8 py-7 text-center shadow-2xl">
+            <div className="text-[11px] font-black uppercase tracking-[0.32em] text-cyan-100/60">Area Game</div>
+            <div className="font-display mt-2 text-4xl font-black text-white">Match being found...</div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
@@ -996,31 +1325,76 @@ function SatelliteCountryMap({
 export default function GridGameClient() {
   const [countries, setCountries] = useState<GridActiveCountry[]>(DEFAULT_COUNTRIES);
   const [countryIndex, setCountryIndex] = useState(0);
-  const [playScope, setPlayScope] = useState<PlayScope>('country');
+  const [areaIndex, setAreaIndex] = useState(0);
   const [match, setMatch] = useState<GridMatchState | null>(null);
+  const [activeAreas, setActiveAreas] = useState<AreaCandidate[]>([]);
+  const [matchArea, setMatchArea] = useState<AreaCandidate | null>(null);
   const [strikes, setStrikes] = useState<CountryStrike[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCell, setSelectedCell] = useState<number | null>(null);
-  const [vanishedCell, setVanishedCell] = useState<number | null>(null);
-  const [opponentPlays, setOpponentPlays] = useState<OpponentPlay[]>([]);
+  const [selectedCell, setSelectedCell] = useState<SelectedCell>(null);
+  const [botSelectedCell, setBotSelectedCell] = useState<SelectedCell>(null);
+  const [playerScore, setPlayerScore] = useState(0);
+  const [botScore, setBotScore] = useState(0);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [dominantIso, setDominantIso] = useState<string | null>(null);
+  const [mapAspect, setMapAspect] = useState(1.4);
+  const [layers, setLayers] = useState<LayerState>(DEFAULT_LAYERS);
+  const [botCellCounts, setBotCellCounts] = useState<number[]>([]);
   const lastStrikeRef = useRef<string | null>(null);
-  const lastOpponentScoreRef = useRef(0);
+  const countedStrikeRef = useRef(new Set<string>());
+  const botCountedStrikeRef = useRef(new Set<string>());
+  const botPickTimerRef = useRef<number | null>(null);
   const phase = loading && !match ? 'finding' : phaseFor(match);
   const gameStarted = phase !== 'selecting';
   const matchId = match?.matchId ?? null;
   const matchStatus = match?.status ?? null;
   const selectedCountry = countries[Math.min(countryIndex, countries.length - 1)] ?? DEFAULT_COUNTRIES[0];
-  const selectedArea = useMemo(() => {
-    if (playScope !== 'area') return null;
-    const base = countryBounds(selectedCountry.country);
-    return (
-      buildAreaCandidates(strikes, base, nowMs, AREA_WINDOW_MS)[0] ??
-      buildAreaCandidates(strikes, base, nowMs, AREA_FALLBACK_WINDOW_MS)[0] ??
-      null
-    );
-  }, [playScope, selectedCountry.country, strikes, nowMs]);
+  const safeAreaIndex = activeAreas.length ? areaIndex % activeAreas.length : 0;
+  const selectedArea = activeAreas[safeAreaIndex] ?? null;
+  const displayedArea = gameStarted ? matchArea : selectedArea;
+  const handleDominantCountry = useCallback((iso: string) => setDominantIso(iso), []);
+  const handleAspectChange = useCallback((aspect: number) => setMapAspect(aspect), []);
+  const toggleLayer = useCallback((key: LayerKey) => {
+    setLayers((current) => ({ ...current, [key]: !current[key] }));
+  }, []);
+  const opponentHeat = useMemo(() => {
+    let count = 0;
+    let cells: number[] = [];
+    botCellCounts.forEach((value, index) => {
+      if (value > count) {
+        count = value;
+        cells = [index];
+      } else if (value === count && value > 0) {
+        cells.push(index);
+      }
+    });
+    return count > 0 ? { cells, count } : null;
+  }, [botCellCounts]);
+  const displayCountry = useMemo(
+    () => (gameStarted && dominantIso ? { ...selectedCountry, country: dominantIso } : selectedCountry),
+    [gameStarted, dominantIso, selectedCountry],
+  );
+
+  useEffect(() => {
+    if (phase !== 'selecting') return;
+    const refreshAreas = () => {
+      const now = Date.now();
+      const base = countryBounds(selectedCountry.country);
+      const fresh = buildAreaCandidates(strikes, base, now, AREA_WINDOW_MS);
+      const candidates = fresh.length ? fresh : buildAreaCandidates(strikes, base, now, AREA_FALLBACK_WINDOW_MS);
+      setActiveAreas((current) => {
+        const byId = new Map(current.filter((area) => (area.expiresAt ?? 0) > now).map((area) => [area.id, area]));
+        for (const candidate of candidates) {
+          byId.set(candidate.id, { ...candidate, expiresAt: now + AREA_TTL_MS });
+        }
+        return [...byId.values()].sort((a, b) => b.score - a.score);
+      });
+    };
+    refreshAreas();
+    const timer = window.setInterval(refreshAreas, AREA_SCAN_MS);
+    return () => window.clearInterval(timer);
+  }, [phase, selectedCountry.country, strikes]);
 
   useEffect(() => {
     const init = useSessionStore.getState().init;
@@ -1060,10 +1434,6 @@ export default function GridGameClient() {
         .then((data) => {
           if (!alive) return;
           const latest = data.strikes[0]?.received_at ?? null;
-          if (latest && lastStrikeRef.current && latest !== lastStrikeRef.current) {
-            setVanishedCell(selectedCell);
-            setSelectedCell(null);
-          }
           lastStrikeRef.current = latest;
           setStrikes(data.strikes);
         })
@@ -1075,7 +1445,7 @@ export default function GridGameClient() {
       alive = false;
       window.clearInterval(timer);
     };
-  }, [selectedCountry.country, phase, selectedCell]);
+  }, [selectedCountry.country, phase]);
 
   useEffect(() => {
     if (!match || match.status === 'settled') return;
@@ -1095,29 +1465,58 @@ export default function GridGameClient() {
   }, [match, matchId, matchStatus]);
 
   useEffect(() => {
-    if (!match) {
-      lastOpponentScoreRef.current = 0;
+    if (phase !== 'active') {
+      if (botPickTimerRef.current) {
+        window.clearTimeout(botPickTimerRef.current);
+        botPickTimerRef.current = null;
+      }
       return;
     }
-    const previous = lastOpponentScoreRef.current;
-    const next = match.opponent.score;
-    if (next <= previous) {
-      lastOpponentScoreRef.current = next;
-      return;
-    }
-    const plays: OpponentPlay[] = [];
-    const grid = playScope === 'area' ? { cols: AREA_GRID_COLS, rows: AREA_GRID_ROWS } : match.grid;
-    const maxCell = grid.cols * grid.rows;
-    for (let score = previous + 1; score <= next; score += 1) {
-      plays.push({
-        id: `${match.matchId}:${score}`,
-        cell: Math.floor(Math.random() * maxCell),
-        at: Date.now(),
+    let cancelled = false;
+    const pick = () => {
+      if (cancelled) return;
+      const now = Date.now();
+      const maxCell = AREA_GRID_COLS * AREA_GRID_ROWS;
+      const cell = Math.floor(Math.random() * maxCell);
+      setBotSelectedCell({
+        cell,
+        startedAt: now,
+        expiresAt: now + CELL_LOCK_MS,
       });
+      setBotCellCounts((current) => {
+        const next = current.slice();
+        next[cell] = (next[cell] ?? 0) + 1;
+        return next;
+      });
+      botPickTimerRef.current = window.setTimeout(pick, CELL_LOCK_MS);
+    };
+    pick();
+    return () => {
+      cancelled = true;
+      if (botPickTimerRef.current) {
+        window.clearTimeout(botPickTimerRef.current);
+        botPickTimerRef.current = null;
+      }
+    };
+  }, [phase]);
+
+  useEffect(() => {
+    if (!botSelectedCell || phase !== 'active') return;
+    if (nowMs >= botSelectedCell.expiresAt) return;
+    const grid = { cols: AREA_GRID_COLS, rows: AREA_GRID_ROWS };
+    const bounds = matchArea ? matchArea.bounds : countryBounds(selectedCountry.country);
+    let gained = 0;
+    for (const strike of strikes) {
+      const receivedAt = Date.parse(strike.received_at);
+      if (!Number.isFinite(receivedAt) || receivedAt < botSelectedCell.startedAt || receivedAt > botSelectedCell.expiresAt) continue;
+      const key = `bot:${strike.received_at}:${strike.lat}:${strike.lon}`;
+      if (botCountedStrikeRef.current.has(key)) continue;
+      if (cellForStrike(strike, bounds, grid, mapAspect) !== botSelectedCell.cell) continue;
+      botCountedStrikeRef.current.add(key);
+      gained += 1;
     }
-    lastOpponentScoreRef.current = next;
-    setOpponentPlays((current) => [...current, ...plays].slice(-30));
-  }, [match, playScope]);
+    if (gained) window.setTimeout(() => setBotScore((score) => score + gained), 0);
+  }, [nowMs, botSelectedCell, phase, matchArea, selectedCountry.country, strikes, mapAspect]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNowMs(Date.now()), 250);
@@ -1131,29 +1530,56 @@ export default function GridGameClient() {
     }
   }, [nowMs, match]);
 
+  useEffect(() => {
+    if (!selectedCell) return;
+    const timeout = window.setTimeout(() => setSelectedCell(null), Math.max(0, selectedCell.expiresAt - Date.now()));
+    return () => window.clearTimeout(timeout);
+  }, [selectedCell]);
+
+  useEffect(() => {
+    if (!selectedCell || phase !== 'active') return;
+    if (nowMs >= selectedCell.expiresAt) return;
+    const grid = { cols: AREA_GRID_COLS, rows: AREA_GRID_ROWS };
+    const bounds = matchArea ? matchArea.bounds : countryBounds(selectedCountry.country);
+    let gained = 0;
+    for (const strike of strikes) {
+      const receivedAt = Date.parse(strike.received_at);
+      if (!Number.isFinite(receivedAt) || receivedAt < selectedCell.startedAt || receivedAt > selectedCell.expiresAt) continue;
+      const key = `${strike.received_at}:${strike.lat}:${strike.lon}`;
+      if (countedStrikeRef.current.has(key)) continue;
+      if (cellForStrike(strike, bounds, grid, mapAspect) !== selectedCell.cell) continue;
+      countedStrikeRef.current.add(key);
+      gained += 1;
+    }
+    if (gained) window.setTimeout(() => setPlayerScore((score) => score + gained), 0);
+  }, [nowMs, selectedCell, phase, matchArea, selectedCountry.country, strikes, mapAspect]);
+
   const selectPrevious = () => {
-    if (phase !== 'selecting') return;
-    setCountryIndex((index) => (index - 1 + countries.length) % countries.length);
+    if (phase !== 'selecting' || !activeAreas.length) return;
+    setAreaIndex((index) => (index - 1 + activeAreas.length) % activeAreas.length);
     setSelectedCell(null);
-    setVanishedCell(null);
   };
 
   const selectNext = () => {
-    if (phase !== 'selecting') return;
-    setCountryIndex((index) => (index + 1) % countries.length);
+    if (phase !== 'selecting' || !activeAreas.length) return;
+    setAreaIndex((index) => (index + 1) % activeAreas.length);
     setSelectedCell(null);
-    setVanishedCell(null);
   };
 
   const onPlay = useCallback(() => {
-    if (playScope === 'area' && !selectedArea) return;
+    if (!selectedArea) return;
     setLoading(true);
     setError(null);
     setMatch(null);
+    setMatchArea(selectedArea);
     setSelectedCell(null);
-    setVanishedCell(null);
-    setOpponentPlays([]);
-    lastOpponentScoreRef.current = 0;
+    setBotSelectedCell(null);
+    setPlayerScore(0);
+    setBotScore(0);
+    setDominantIso(null);
+    setBotCellCounts([]);
+    countedStrikeRef.current = new Set();
+    botCountedStrikeRef.current = new Set();
     window.setTimeout(() => {
       ensureGameSession()
         .then(() => startGridMatch(selectedCountry.country))
@@ -1161,23 +1587,13 @@ export default function GridGameClient() {
         .catch((err) => setError(err instanceof Error ? err.message : 'Could not start match'))
         .finally(() => setLoading(false));
     }, 650);
-  }, [playScope, selectedArea, selectedCountry.country]);
+  }, [selectedArea, selectedCountry.country]);
 
   const onCellClick = useCallback((cell: number) => {
     if (!match || phase !== 'active') return;
-    setSelectedCell(cell);
-    setVanishedCell(null);
-    clickGridMatchCell(match.matchId, cell)
-      .then((state) => setMatch(state))
-      .catch(() => setSelectedCell(null));
+    const now = Date.now();
+    setSelectedCell({ cell, startedAt: now, expiresAt: now + CELL_LOCK_MS });
   }, [match, phase]);
-
-  const onScopeChange = useCallback((next: PlayScope) => {
-    if (phase !== 'selecting') return;
-    setPlayScope(next);
-    setSelectedCell(null);
-    setVanishedCell(null);
-  }, [phase]);
 
   return (
     <main className="min-h-svh overflow-hidden bg-storm px-4 pb-8 pt-24 text-white sm:px-6">
@@ -1186,13 +1602,6 @@ export default function GridGameClient() {
           <Link href="/" className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-semibold text-white/75 transition hover:bg-white/10 hover:text-white">
             Back to globe
           </Link>
-          {!gameStarted && (
-            <GameScopeSwitch
-              value={playScope}
-              onChange={onScopeChange}
-              disabled={phase !== 'selecting'}
-            />
-          )}
         </div>
         <div className="hidden text-right sm:block">
           <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-100/50">Lightning Map Game</div>
@@ -1207,8 +1616,7 @@ export default function GridGameClient() {
       >
         {gameStarted && (
           <div className="animate-[fade-up_0.45s_cubic-bezier(0.22,1,0.36,1)_both]">
-            <GameLayersPanel country={selectedCountry} match={match} strikes={strikes} />
-            <GameBottomHud match={match} phase={phase} country={selectedCountry} />
+            <GameLayersPanel country={displayCountry} match={match} strikes={strikes} layers={layers} onToggleLayer={toggleLayer} />
           </div>
         )}
 
@@ -1218,21 +1626,29 @@ export default function GridGameClient() {
             strikes={strikes}
             match={match}
             phase={phase}
-            playScope={playScope}
-            area={selectedArea}
+            area={displayedArea}
+            activeAreaCount={activeAreas.length}
+            loading={loading}
+            onPlay={onPlay}
+            playerScore={playerScore}
+            botScore={botScore}
             now={nowMs}
             gameStarted={gameStarted}
-            opponentPlays={opponentPlays}
             selectedCell={selectedCell}
-            vanishedCell={vanishedCell}
+            botSelectedCell={botSelectedCell}
             onCellClick={onCellClick}
+            onDominantCountry={handleDominantCountry}
+            onAspectChange={handleAspectChange}
+            showDensity={layers.density}
+            showOpponentHeat={layers.opponent}
+            opponentHeat={opponentHeat}
           />
           <button
             type="button"
             onClick={selectPrevious}
             disabled={phase !== 'selecting'}
             className={`absolute left-4 top-1/2 z-20 grid size-12 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/40 text-3xl text-white backdrop-blur transition hover:bg-black/60 disabled:opacity-35 ${gameStarted ? 'pointer-events-none opacity-0' : ''}`}
-            aria-label="Previous active country"
+            aria-label="Previous active area"
           >
             ‹
           </button>
@@ -1241,7 +1657,7 @@ export default function GridGameClient() {
             onClick={selectNext}
             disabled={phase !== 'selecting'}
             className={`absolute right-4 top-1/2 z-20 grid size-12 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/40 text-3xl text-white backdrop-blur transition hover:bg-black/60 disabled:opacity-35 ${gameStarted ? 'pointer-events-none opacity-0' : ''}`}
-            aria-label="Next active country"
+            aria-label="Next active area"
           >
             ›
           </button>
@@ -1257,13 +1673,8 @@ export default function GridGameClient() {
           <ControlPanel
             country={selectedCountry}
             match={match}
-            phase={phase}
-            loading={loading}
-            error={error}
-            playScope={playScope}
-            area={selectedArea}
-            onPlay={onPlay}
           />
+          {error && <p className="mt-3 text-center text-xs text-rose-300">{error}</p>}
         </div>
       </div>
     </main>

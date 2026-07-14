@@ -111,6 +111,14 @@
         "url": "https://lightningmapgame.com/cn/shandian-ditu"
       },
       {
+        "hreflang": "tl-PH",
+        "url": "https://lightningmapgame.com/ph/mapa-ng-kidlat"
+      },
+      {
+        "hreflang": "es-MX",
+        "url": "https://lightningmapgame.com/mx/tormenta-electrica"
+      },
+      {
         "hreflang": "x-default",
         "url": "https://lightningmapgame.com/"
       }
@@ -357,7 +365,21 @@
           }
         ]
       },
-      "hreflangClusterKey": "seo_map"
+      "hreflangClusterKey": "seo_map",
+      "hreflangAlternates": [
+        {
+          "hreflang": "en-gb",
+          "url": "https://lightningmapgame.com/gb/lightning-map"
+        },
+        {
+          "hreflang": "tl-ph",
+          "url": "https://lightningmapgame.com/ph/mapa-ng-kidlat"
+        },
+        {
+          "hreflang": "x-default",
+          "url": "https://lightningmapgame.com/gb/lightning-map"
+        }
+      ]
     },
     {
       "priority": 3,
@@ -2902,6 +2924,306 @@
           {
             "q": "能准确预测闪电会打在哪里吗？",
             "a": "不能准确预测具体地点和时间，但闪电密度和风暴移动方向可以帮助判断雷暴是否正在靠近。"
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 27,
+      "locale": "ph",
+      "localePath": "/ph",
+      "country": "Philippines",
+      "language": "Filipino",
+      "hreflang": "tl-PH",
+      "slug": "/ph/mapa-ng-kidlat",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "mapa ng kidlat",
+      "primaryKeyword": "mapa ng kidlat",
+      "primaryVolume": null,
+      "primaryKd": null,
+      "keywords": [
+        {
+          "term": "mapa ng kidlat",
+          "role": "primary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "kidlat live",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "tagasubaybay ng kidlat",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "real-time na kidlat",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "lightning map philippines",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "storm tracker",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "storm",
+          "isBrand": true
+        },
+        {
+          "term": "bagyo tracker",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "blitzortung",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "weather game online",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "product",
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": null,
+      "hreflangAlternates": [
+        {
+          "hreflang": "en-gb",
+          "url": "https://lightningmapgame.com/gb/lightning-map"
+        },
+        {
+          "hreflang": "tl-ph",
+          "url": "https://lightningmapgame.com/ph/mapa-ng-kidlat"
+        },
+        {
+          "hreflang": "x-default",
+          "url": "https://lightningmapgame.com/gb/lightning-map"
+        }
+      ],
+      "content": {
+        "translated": true,
+        "breadcrumb": [
+          "Home",
+          "Mapa ng Kidlat"
+        ],
+        "h1": "Mapa ng Kidlat – Live na Pagsubaybay sa Kidlat sa Real Time",
+        "title": "Mapa ng Kidlat – Live na Pagsubaybay sa Kidlat sa Real Time | lightningmapgame",
+        "ogTitle": "Mapa ng Kidlat – Live na Pagsubaybay sa Kidlat (Pilipinas) | lightningmapgame",
+        "metaDescription": "Subaybayan ang kidlat sa Pilipinas gamit ang live na mapa ng kidlat. Makita ang bawat kidlat habang nangyayari – tapos hulaan kung tataas o bababa ang bilang sa susunod na minuto.",
+        "imageAlt": "Mapa ng kidlat – live na kidlat sa mapa ng Pilipinas sa real time",
+        "sections": [
+          {
+            "h2": "Saan tumatama ang kidlat ngayon?",
+            "body": "Ipinapakita ng live na mapa ng kidlat ang bawat kidlat sa sandaling ito ay ma-detect. Ang mga pula at amber na bahagi ay nagpapakita kung saan may aktibong bagyo ngayon at kung saang direksyon ito papunta. I-allow ang location at i-tap ang «near me» para makita ang pinakamalapit na kidlat at kung ilan na ang tumama sa nakaraang 60 minuto sa paligid mo."
+          },
+          {
+            "h2": "Isang live na mapa ng kidlat sa real time",
+            "body": "Ang map — kilala rin bilang lightning tracker o storm tracker — ay awtomatikong nag-a-update kada segundo. Habang mas dumadami ang kidlat sa isang lugar, mas malakas ang storm cell doon. Bantayan ang strike density at kung paano gumagalaw ang cell para malaman kung lumalakas o humihina ang bagyo."
+          },
+          {
+            "h2": "Paano gumagana ang mapa ng kidlat?",
+            "body": "Ang datos ng kidlat ay galing sa isang volunteer na network ng mga receiving station na pinapatakbo ng mga volunteer. Sinusukat ng mga station kung kailan dumating ang radio pulse ng bawat kidlat, at ang posisyon nito ay natutukoy sa pamamagitan ng triangulation mula sa ilang station. Habang mas maraming station ang naka-detect ng parehong kidlat, mas tumpak ang posisyon. Tinatawag din itong lightning tracker o blitzortung, pero iisa lang ito: isang real time na mapa ng kidlat."
+          },
+          {
+            "h2": "Hulaan ang susunod na 30 segundo",
+            "body": "Mas marami o mas kaunting kidlat ba ang tatama sa susunod na minuto? Gawin ang iyong tawag at panoorin itong maganap nang live. Libreng laro ito — walang totoong pera.",
+            "isFunnel": true,
+            "ctaText": "Maglaro: hulaan ang susunod na 30 segundo",
+            "ctaPrompt": "Mas marami o mas kaunting kidlat ba sa susunod na minuto?"
+          }
+        ],
+        "faqHeading": "Mga madalas na tanong",
+        "faq": [
+          {
+            "q": "Ano ang mapa ng kidlat?",
+            "a": "Ang mapa ng kidlat ay isang real time na mapa na nagpapakita ng mga na-detect na kidlat habang nangyayari, para makita mo agad kung nasaan ang bagyo at kung saan ito papunta."
+          },
+          {
+            "q": "Gaano ito katumpak?",
+            "a": "Depende ang katumpakan sa kung ilang station ang naka-detect ng parehong kidlat. Kapag marami ang nakakuha, kadalasan tumpak ang posisyon sa loob ng ilang kilometro."
+          },
+          {
+            "q": "Saan galing ang datos ng kidlat?",
+            "a": "Galing ito sa isang volunteer na network ng pag-detect ng kidlat, kung saan tinutukoy ng mga volunteer na station ang posisyon ng kidlat gamit ang triangulation."
+          },
+          {
+            "q": "Gaano kadalas nag-a-update ang map?",
+            "a": "Sa real time: lumalabas ang mga bagong kidlat ilang segundo lang matapos ma-detect."
+          },
+          {
+            "q": "Puwede bang hulaan kung saan tatama ang kidlat?",
+            "a": "Hindi mahuhulaan ang eksaktong sandali, pero ipinapakita ng strike density at galaw ng cell kung papalapit ang bagyo. Puwede mo ring subukan ang iyong instinct sa laro: hulaan kung mas marami o mas kaunting kidlat ang tatama sa susunod na 30 segundo."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 28,
+      "locale": "mx",
+      "localePath": "/mx",
+      "country": "Mexico",
+      "language": "Spanish",
+      "hreflang": "es-MX",
+      "slug": "/mx/tormenta-electrica",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "tormenta eléctrica",
+      "primaryKeyword": "tormenta eléctrica",
+      "primaryVolume": null,
+      "primaryKd": null,
+      "keywords": [
+        {
+          "term": "tormenta eléctrica",
+          "role": "primary",
+          "volume": null,
+          "kd": null,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "mapa de rayos",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "rayo",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "radar meteorológico",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "relámpago",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "trueno",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "mapa de tormentas",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "weather game online",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "product",
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": null,
+      "content": {
+        "translated": true,
+        "breadcrumb": [
+          "Inicio",
+          "Tormenta eléctrica"
+        ],
+        "h1": "Mapa de Tormenta Eléctrica – Rayos en Vivo en Tiempo Real",
+        "title": "Mapa de Tormenta Eléctrica – Rayos en Vivo en Tiempo Real | lightningmapgame",
+        "ogTitle": "Mapa de Tormenta Eléctrica – Rayos en Vivo en Tiempo Real (México) | lightningmapgame",
+        "metaDescription": "Sigue los rayos en México en un mapa de tormenta eléctrica en vivo. Mira cada rayo en tiempo real – luego adivina si caerán más o menos rayos en el próximo minuto.",
+        "imageAlt": "Mapa de tormenta eléctrica – rayos en el mapa de México en tiempo real",
+        "sections": [
+          {
+            "h2": "¿Dónde están cayendo rayos ahora?",
+            "body": "El mapa de tormenta eléctrica muestra cada rayo en el momento en que se detecta. Las zonas rojas y amarillas indican dónde hay tormenta en México ahora y hacia dónde se desplaza. Permite la ubicación y toca «mostrar cerca de mí» para ver los rayos más cercanos y cuántos han caído en los últimos 60 minutos en tu zona."
+          },
+          {
+            "h2": "Rayos en vivo en tiempo real",
+            "body": "El mapa se actualiza automáticamente cada segundo. Cuanto más juntos caen los rayos en la misma zona, más intensa es la célula de tormenta y más cerca sonará el trueno. Observa la densidad de rayos y el movimiento de la célula —como en un radar meteorológico— para ver si la tormenta eléctrica se intensifica o se debilita."
+          },
+          {
+            "h2": "¿Cómo funciona el mapa de tormenta eléctrica?",
+            "body": "Los datos proceden de una red de detección de rayos, una red de estaciones receptoras gestionada por voluntarios. Cada estación mide cuándo llega el impulso de radio de un rayo, y la posición se calcula por triangulación desde varias estaciones. Cuantas más estaciones detectan el mismo rayo, más precisa es la posición. El servicio también se conoce como radar meteorológico o lightning map, pero es el mismo mapa de rayos en tiempo real."
+          },
+          {
+            "h2": "Adivina los próximos 30 segundos",
+            "body": "¿Caerán más o menos rayos en el próximo minuto? Haz tu pronóstico y mira qué pasa en tiempo real. Es un juego gratuito, sin dinero real.",
+            "isFunnel": true,
+            "ctaText": "Jugar: adivina los próximos 30 segundos",
+            "ctaPrompt": "¿Más o menos rayos en el próximo minuto?"
+          }
+        ],
+        "faqHeading": "Preguntas frecuentes",
+        "faq": [
+          {
+            "q": "¿Qué es un mapa de tormenta eléctrica?",
+            "a": "Es un mapa en tiempo real que muestra los rayos detectados a medida que caen, para que veas enseguida dónde hay tormenta eléctrica en México y hacia dónde se mueve."
+          },
+          {
+            "q": "¿Qué precisión tiene?",
+            "a": "La precisión depende de cuántas estaciones detecten el mismo rayo. Cuando varias lo captan, la posición suele ser precisa hasta unos pocos kilómetros."
+          },
+          {
+            "q": "¿De dónde proceden los datos?",
+            "a": "De una red de detección de rayos, donde estaciones receptoras gestionadas por voluntarios localizan cada rayo por triangulación."
+          },
+          {
+            "q": "¿Cada cuánto se actualiza el mapa?",
+            "a": "En tiempo real: los nuevos rayos aparecen en cuestión de segundos, más rápido que un radar meteorológico convencional."
+          },
+          {
+            "q": "¿Se pueden predecir los rayos y los truenos?",
+            "a": "El momento exacto no se puede predecir, pero la densidad de rayos y el movimiento de la célula indican si la tormenta se acerca y si pronto oirás un trueno. También puedes poner a prueba tu intuición en el juego: adivina si en los próximos 30 segundos caerán más o menos rayos."
           }
         ]
       },

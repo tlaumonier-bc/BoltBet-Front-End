@@ -24,7 +24,8 @@ export type UiLanguage =
   | 'sk'
   | 'sr'
   | 'ro'
-  | 'zh';
+  | 'zh'
+  | 'tl';
 
 export const UI_LANGUAGES: { code: UiLanguage; label: string; nativeLabel: string }[] = [
   { code: 'en', label: 'English', nativeLabel: 'English' },
@@ -49,6 +50,7 @@ export const UI_LANGUAGES: { code: UiLanguage; label: string; nativeLabel: strin
   { code: 'sr', label: 'Serbian', nativeLabel: 'Srpski' },
   { code: 'ro', label: 'Romanian', nativeLabel: 'Română' },
   { code: 'zh', label: 'Chinese', nativeLabel: '中文' },
+  { code: 'tl', label: 'Filipino', nativeLabel: 'Tagalog' },
 ];
 
 const LANGUAGE_SET = new Set(UI_LANGUAGES.map((language) => language.code));
@@ -324,6 +326,14 @@ export const UI_COPY = {
     layers: { recent1h: '闪电 · 1 小时', recent1hDescription: '过去一小时的闪电。', recent3h: '闪电 · 3 小时', recent3hDescription: '1 到 3 小时前的闪电。', recent6h: '闪电 · 6 小时', recent6hDescription: '3 到 6 小时前的闪电。', clouds: '云层', cloudsDescription: '全球实时云量。', rain: '降雨', rainDescription: '逐分钟实时降雨。', temperature: '温度', temperatureDescription: '全球温度，从蓝到红。', wind: '风', windDescription: '全球空气流动。' },
     gamePanel: { strikeGame: '闪电游戏', notPlayable: '暂不可玩', notPlayableBody: '这里过去 30 秒内没有检测到闪电。请选择一个有实时活动的国家，或挑战整个地球。', findPlayableCountry: '寻找可玩的国家', or: '或', playWholeGlobe: '挑战整个地球', points: '积分', nextTrophy: '下一个奖杯', allTrophiesUnlocked: '所有奖杯已解锁', leaderboard: '排行榜', loadingRanking: '正在加载排名...', activity: '活动', playAnytime: '随时可玩', secondsToResult: '{value} 秒后出结果', lastGames: '最近 3 局' },
   },
+  tl: {
+    nav: { byCountry: 'Ayon sa bansa', howItWorks: 'Paano ito gumagana', leaderboard: 'Leaderboard', play: 'Maglaro', playGame: 'Maglaro', gridGame: 'Grid Game', comingSoon: 'Malapit na', menu: 'Buksan ang menu', language: 'Wika' },
+    live: { console: 'Live console', globeActivity: 'Aktibidad ng globe', orbitTo: 'Pumunta sa', wholeGlobe: 'Buong globe', backToGlobe: 'Balik sa globe', nearMe: 'Malapit sa akin', findingNearby: 'Naghahanap ng malalapit na kidlat…', nearbyStrikes: '{count} malalapit na kidlat', layers: 'Layers', layersPro: 'Layers · Pro', free: 'Free', beginner: 'Baguhan', pro: 'Pro', game: 'Laro', day: 'Araw', night: 'Gabi', good: 'maganda', medium: 'katamtaman', bad: 'mahina', close: 'Isara', preparingProfile: 'Inihahanda ang iyong game profile…' },
+    countryPanel: { live: 'Live', idle: 'Tahimik', noStrikeData: 'Walang datos ng kidlat', unavailable: 'Hindi available ang datos para sa teritoryong ito: wala itong ISO country code.', loading: 'Nilo-load ang mga kamakailang kidlat…', learnMore: 'Matuto pa tungkol sa {country}', strikesLastHour: 'kidlat · nakaraang oras', recentRate: 'kamakailang rate', lastStrike: 'huling kidlat', latest: 'Pinakabagong {count} kidlat · {span} window', now: 'Ngayon', secondsAgo: '{value}s ang nakalipas', minutesAgo: '{value}m ang nakalipas', hoursAgo: '{value}h ang nakalipas', intensity: { intense: 'Matindi', active: 'Aktibo', moderate: 'Katamtaman', light: 'Mahina', calm: 'Kalmado' } },
+    seo: { dataSource: 'Live na datos ng kidlat mula sa community network na Blitzortung.', play: 'Maglaro' },
+    layers: { recent1h: 'Kidlat · 1 h', recent1hDescription: 'Kidlat sa nakaraang oras.', recent3h: 'Kidlat · 3 h', recent3hDescription: 'Kidlat mula 1 hanggang 3 oras ang nakalipas.', recent6h: 'Kidlat · 6 h', recent6hDescription: 'Kidlat mula 3 hanggang 6 oras ang nakalipas.', clouds: 'Ulap', cloudsDescription: 'Live na saklaw ng ulap sa buong mundo.', rain: 'Ulan', rainDescription: 'Live na ulan, minuto-minuto.', temperature: 'Temperatura', temperatureDescription: 'Init ng planeta, asul hanggang pula.', wind: 'Hangin', windDescription: 'Gumagalaw na hangin sa buong mundo.' },
+    gamePanel: { strikeGame: 'Laro ng kidlat', notPlayable: 'Hindi mapaglaruan', notPlayableBody: 'Walang na-detect na kidlat dito sa nakaraang 30 segundo. Pumili ng bansang may live na aktibidad o maglaro sa buong globe.', findPlayableCountry: 'Maghanap ng bansang mapaglaruan', or: 'o', playWholeGlobe: 'Maglaro sa buong globe', points: 'Puntos', nextTrophy: 'Susunod na tropeo', allTrophiesUnlocked: 'Lahat ng tropeo ay na-unlock', leaderboard: 'Leaderboard', loadingRanking: 'Nilo-load ang ranking...', activity: 'Aktibidad', playAnytime: 'maglaro kahit kailan', secondsToResult: '{value}s bago ang resulta', lastGames: 'Huling 3 laro' },
+  },
 } as const satisfies Record<string, CopyTree>;
 
 const UI_COPY_RECORD: Record<string, CopyTree> = UI_COPY;
@@ -422,6 +432,8 @@ const EXTRA_LANGUAGE_ALIASES: Record<string, UiLanguage> = {
   ee: 'et',
   gr: 'el',
   rs: 'sr',
+  fil: 'tl',
+  ph: 'tl',
 };
 
 function normalizeLanguage(value: string | null | undefined): UiLanguage | null {

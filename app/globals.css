@@ -197,6 +197,14 @@ body {
   45% { opacity: 0.95; transform: translateX(-50%) scaleY(0.85); }
 }
 
+.grid-opponent-heat {
+  animation: grid-opponent-heat 1.6s ease-in-out infinite;
+}
+@keyframes grid-opponent-heat {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
 /* slim scrollbar for the /live console panels */
 .panel-scroll {
   scrollbar-width: thin;

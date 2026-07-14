@@ -39,6 +39,7 @@ export interface PageContent {
   breadcrumb: string[];
   h1: string;
   title: string;          // <title> tag
+  ogTitle?: string;       // og:title when it should differ from <title>
   metaDescription: string;
   imageAlt: string;
   sections: ContentSection[];
@@ -64,6 +65,10 @@ export interface LocalePage {
   leadSecondary: LeadSecondary | null; // term to feature in an early H2
   keywords: Keyword[];
   content: PageContent;
+  // Explicit head hreflang alternates for pages that opt into cross-language
+  // linking (e.g. the reciprocal /gb ↔ /ph pair). Emitted by buildMetadata when
+  // present; other pages stay canonical-only.
+  hreflangAlternates?: HreflangEntry[];
 }
 
 export interface HreflangEntry {
