@@ -395,8 +395,8 @@ function strikeVisual(strike: CountryStrike, now: number) {
     age,
     fresh,
     recent,
-    opacity: fresh ? 0.35 + life * 0.65 : recent ? 0.35 : 0.16,
-    scale: fresh ? 0.75 + life * 0.55 : 0.7,
+    opacity: fresh ? 0.4 + life * 0.6 : recent ? 0.7 : 0.4,
+    scale: fresh ? 0.75 + life * 0.55 : 0.72,
   };
 }
 
@@ -1170,7 +1170,9 @@ function SatelliteCountryMap({
               top: `${p.y}px`,
               opacity: visual.opacity,
               transform: `translate(-50%, -50%) scale(${visual.scale})`,
-              zIndex: visual.fresh ? 14 : 6,
+              // Above the grid-cell overlay (z-12) so recent/older strikes are
+              // visible on the grid, not just the brief fresh flashes.
+              zIndex: visual.fresh ? 16 : 13,
             }}
           >
             {visual.fresh && <span className="grid-strike-bolt" />}
