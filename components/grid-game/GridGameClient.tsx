@@ -1387,6 +1387,7 @@ export default function GridGameClient() {
   const [activeAreas, setActiveAreas] = useState<AreaCandidate[]>([]);
   const [nextScanAt, setNextScanAt] = useState(() => Date.now() + AREA_SCAN_MS);
   const areasCountryRef = useRef<string | null>(null);
+  const strikesRef = useRef<CountryStrike[]>([]);
   const [matchArea, setMatchArea] = useState<AreaCandidate | null>(null);
   const [strikes, setStrikes] = useState<CountryStrike[]>([]);
   const [loading, setLoading] = useState(false);
@@ -1437,32 +1438,48 @@ export default function GridGameClient() {
     [gameStarted, dominantIso, selectedCountry],
   );
 
+  strikesRef.current = strikes;
+
+  const scanForAreas = useCallback(() => {
+    const now = Date.now();
+    const src = strikesRef.current;
+    // Areas are country-scoped; drop the previous country's areas on switch so
+    // stale/cross-country candidates (and colliding ids) never linger.
+    const countryChanged = areasCountryRef.current !== selectedCountry.country;
+    areasCountryRef.current = selectedCountry.country;
+    if (countryChanged) setAreaIndex(0);
+    const base = countryBounds(selectedCountry.country);
+    const fresh = buildAreaCandidates(src, base, now, AREA_WINDOW_MS);
+    const candidates = fresh.length ? fresh : buildAreaCandidates(src, base, now, AREA_FALLBACK_WINDOW_MS);
+    setActiveAreas((current) => {
+      const prior = countryChanged ? [] : current;
+      const byId = new Map(prior.filter((area) => (area.expiresAt ?? 0) > now).map((area) => [area.id, area]));
+      for (const candidate of candidates) {
+        byId.set(candidate.id, { ...candidate, expiresAt: now + AREA_TTL_MS });
+      }
+      return [...byId.values()].sort((a, b) => b.score - a.score);
+    });
+    setNextScanAt(now + AREA_SCAN_MS);
+  }, [selectedCountry.country]);
+
+  // The real search: a STABLE 10s timer that reads the latest strikes via a ref.
+  // It used to have `strikes` as a dependency, so every feed update (~2.5s) tore
+  // the effect down and re-scanned immediately — which is why the countdown kept
+  // snapping back to 10 and never hit 0. Now it fires exactly every AREA_SCAN_MS.
   useEffect(() => {
     if (phase !== 'selecting') return;
-    const refreshAreas = () => {
-      const now = Date.now();
-      // Areas are country-scoped; drop the previous country's areas on switch so
-      // stale/cross-country candidates (and colliding ids) never linger.
-      const countryChanged = areasCountryRef.current !== selectedCountry.country;
-      areasCountryRef.current = selectedCountry.country;
-      if (countryChanged) setAreaIndex(0);
-      const base = countryBounds(selectedCountry.country);
-      const fresh = buildAreaCandidates(strikes, base, now, AREA_WINDOW_MS);
-      const candidates = fresh.length ? fresh : buildAreaCandidates(strikes, base, now, AREA_FALLBACK_WINDOW_MS);
-      setActiveAreas((current) => {
-        const prior = countryChanged ? [] : current;
-        const byId = new Map(prior.filter((area) => (area.expiresAt ?? 0) > now).map((area) => [area.id, area]));
-        for (const candidate of candidates) {
-          byId.set(candidate.id, { ...candidate, expiresAt: now + AREA_TTL_MS });
-        }
-        return [...byId.values()].sort((a, b) => b.score - a.score);
-      });
-      setNextScanAt(now + AREA_SCAN_MS);
-    };
-    refreshAreas();
-    const timer = window.setInterval(refreshAreas, AREA_SCAN_MS);
+    scanForAreas();
+    const timer = window.setInterval(scanForAreas, AREA_SCAN_MS);
     return () => window.clearInterval(timer);
-  }, [phase, selectedCountry.country, strikes]);
+  }, [phase, scanForAreas]);
+
+  // One extra scan the moment the feed first has data (or on a country switch),
+  // so areas appear without waiting up to 10s. The dep only flips on the
+  // empty<->non-empty transition, so it never resets the countdown mid-cycle.
+  const hasStrikes = strikes.length > 0;
+  useEffect(() => {
+    if (phase === 'selecting' && hasStrikes) scanForAreas();
+  }, [phase, hasStrikes, scanForAreas]);
 
   useEffect(() => {
     const init = useSessionStore.getState().init;
