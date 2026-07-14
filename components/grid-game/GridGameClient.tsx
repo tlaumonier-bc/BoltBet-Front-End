@@ -613,7 +613,7 @@ async function ensureGameSession() {
   useSessionStore.getState().setGuest(session.username, session.token, session);
 }
 
-function PlayerCard({ match }: { match: GridMatchState | null }) {
+function PlayerCard({ match, model }: { match: GridMatchState | null; model?: string | null }) {
   const username = useSessionStore((s) => s.username);
   const country = useSessionStore((s) => s.country);
   const [elo, setElo] = useState(1200);
@@ -644,6 +644,12 @@ function PlayerCard({ match }: { match: GridMatchState | null }) {
           <div className="font-display text-2xl font-black text-electric">{match?.player.score ?? 0}</div>
         </div>
       </div>
+      {model && (
+        <div className="mt-3 flex items-center justify-between rounded-lg bg-black/15 px-3 py-1.5">
+          <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">Zoning model</span>
+          <span className="font-mono text-[11px] font-bold text-cyan-200/80">{model}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -651,9 +657,11 @@ function PlayerCard({ match }: { match: GridMatchState | null }) {
 function ControlPanel({
   country,
   match,
+  model,
 }: {
   country: GridActiveCountry;
   match: GridMatchState | null;
+  model?: string | null;
 }) {
   const name = countryName(country.country);
   return (
@@ -677,7 +685,7 @@ function ControlPanel({
           </div>
         </div>
       </div>
-      <PlayerCard match={match} />
+      <PlayerCard match={match} model={model} />
     </aside>
   );
 }
@@ -765,7 +773,7 @@ function GameLayersPanel({
         </div>
         <div className="mt-1 space-y-1">
           {visibleStrikes.length ? visibleStrikes.map((strike, index) => (
-            <div key={`${strike.received_at}-${strike.lat}-${strike.lon}`} className="grid grid-cols-[2.2rem_4.4rem_1fr] gap-2 rounded-lg bg-white/[0.035] px-2 py-1.5 text-[11px] text-white/65">
+            <div key={`${strike.received_at}-${strike.lat}-${strike.lon}-${index}`} className="grid grid-cols-[2.2rem_4.4rem_1fr] gap-2 rounded-lg bg-white/[0.035] px-2 py-1.5 text-[11px] text-white/65">
               <span className="font-bold text-bolt">{visibleStrikes.length - index}</span>
               <span className="tabular-nums text-white/75">{formatMatchOffset(strike.received_at, match)}</span>
               <span className="truncate tabular-nums">{strike.lat.toFixed(3)}, {strike.lon.toFixed(3)}</span>
@@ -1164,7 +1172,6 @@ function SatelliteCountryMap({
               const lockActive = Boolean(selectedCell && selectedCell.expiresAt > now);
               const disabled = phase !== 'active' || (lockActive && !selected);
               const countdown = selectedCell && selected ? Math.max(1, Math.ceil((selectedCell.expiresAt - now) / 1000)) : 0;
-              const botCountdown = botSelectedCell && botSelected ? Math.max(1, Math.ceil((botSelectedCell.expiresAt - now) / 1000)) : 0;
               return (
                 <g key={cell.index}>
                   <rect
@@ -1211,9 +1218,9 @@ function SatelliteCountryMap({
                       y={((cell.row + 0.5) / grid.rows) * size.height}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      className="pointer-events-none fill-white text-[22px] font-black"
+                      className="pointer-events-none text-[18px]"
                     >
-                      {botCountdown}
+                      🤖
                     </text>
                   )}
                   {phase === 'preparing' && (preparingCounts[cell.row]?.[cell.col] ?? 0) > 0 && (
@@ -1341,6 +1348,7 @@ function SatelliteCountryMap({
 
 export default function GridGameClient() {
   const [countries, setCountries] = useState<GridActiveCountry[]>(DEFAULT_COUNTRIES);
+  const [activeModel, setActiveModel] = useState<string | null>(null);
   const [countryIndex, setCountryIndex] = useState(0);
   const [areaIndex, setAreaIndex] = useState(0);
   const [match, setMatch] = useState<GridMatchState | null>(null);
@@ -1428,6 +1436,7 @@ export default function GridGameClient() {
       try {
         const data = await getGridActiveCountries(10);
         supported = data.countries;
+        if (alive && data.model) setActiveModel(data.model);
       } catch {
         supported = [];
       }
@@ -1632,6 +1641,7 @@ export default function GridGameClient() {
           <ControlPanel
             country={selectedCountry}
             match={match}
+            model={match?.model ?? activeModel}
           />
           {error && <p className="mt-3 text-center text-xs text-rose-300">{error}</p>}
         </div>

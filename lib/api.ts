@@ -381,6 +381,7 @@ export interface GridActiveCountriesResponse {
   countries: GridActiveCountry[];
   windowSeconds: number;
   fallbackWindowSeconds: number;
+  model?: string;
 }
 
 export type GridMatchStatus = 'preparing' | 'active' | 'settled';
