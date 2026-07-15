@@ -25,7 +25,8 @@ export type UiLanguage =
   | 'sr'
   | 'ro'
   | 'zh'
-  | 'tl';
+  | 'tl'
+  | 'id';
 
 export const UI_LANGUAGES: { code: UiLanguage; label: string; nativeLabel: string }[] = [
   { code: 'en', label: 'English', nativeLabel: 'English' },
@@ -51,6 +52,7 @@ export const UI_LANGUAGES: { code: UiLanguage; label: string; nativeLabel: strin
   { code: 'ro', label: 'Romanian', nativeLabel: 'Română' },
   { code: 'zh', label: 'Chinese', nativeLabel: '中文' },
   { code: 'tl', label: 'Filipino', nativeLabel: 'Tagalog' },
+  { code: 'id', label: 'Indonesian', nativeLabel: 'Bahasa Indonesia' },
 ];
 
 const LANGUAGE_SET = new Set(UI_LANGUAGES.map((language) => language.code));

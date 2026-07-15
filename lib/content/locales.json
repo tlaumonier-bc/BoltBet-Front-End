@@ -3228,6 +3228,119 @@
         ]
       },
       "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 29,
+      "locale": "id",
+      "localePath": "/id",
+      "country": "Indonesia",
+      "language": "Indonesian",
+      "hreflang": "id-ID",
+      "slug": "/id/peta-petir",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "peta petir",
+      "primaryKeyword": "peta petir",
+      "primaryVolume": null,
+      "primaryKd": null,
+      "keywords": [
+        {
+          "term": "peta petir",
+          "role": "primary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "peta sambaran petir",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "peta petir real-time",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "pelacak petir",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "lightningmaps",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": null,
+      "content": {
+        "translated": true,
+        "breadcrumb": [
+          "Beranda",
+          "Peta Petir"
+        ],
+        "h1": "Peta petir – peta sambaran petir langsung secara real-time",
+        "title": "Peta Petir – Peta Sambaran Petir Langsung (AS) | lightningmapgame",
+        "metaDescription": "Pantau petir di Amerika Serikat lewat peta petir real-time. Lihat sambaran petir saat terjadi, lalu tebak apakah makin banyak atau sedikit di menit berikutnya.",
+        "imageAlt": "Peta petir – sambaran petir di peta Amerika Serikat secara real-time",
+        "sections": [
+          {
+            "h2": "Di mana petir sedang menyambar sekarang?",
+            "body": "Peta petir menampilkan sambaran begitu terdeteksi. Area merah dan oranye menunjukkan di mana badai petir sedang aktif saat ini dan ke arah mana pergerakannya. Izinkan lokasi dan ketuk «tampilkan di dekat saya» untuk melihat sambaran terdekat dan berapa banyak yang terjadi dalam 60 menit terakhir di sekitarmu."
+          },
+          {
+            "h2": "Peta sambaran petir langsung secara real-time",
+            "body": "Peta sambaran petir diperbarui otomatis setiap detik. Semakin padat sambaran di satu area, semakin kuat sel badainya. Perhatikan kepadatan sambaran dan bagaimana sel badai bergerak untuk melihat apakah badai sedang menguat atau melemah."
+          },
+          {
+            "h2": "Bagaimana cara kerja peta petir ini?",
+            "body": "Data sambaran berasal dari jaringan deteksi petir sukarelawan yang dijalankan oleh stasiun penerima yang dioperasikan para sukarelawan. Stasiun mengukur waktu tibanya pulsa radio dari setiap sambaran, lalu posisinya ditentukan lewat triangulasi dari beberapa stasiun. Semakin banyak stasiun yang mendeteksi sambaran yang sama, semakin akurat posisinya — sering kali hingga beberapa kilometer. Kadang disebut juga pelacak petir (lightning tracker), tetapi ini adalah peta petir real-time yang sama."
+          },
+          {
+            "h2": "Tebak 30 detik berikutnya",
+            "body": "Akan lebih banyak atau lebih sedikit sambaran petir di menit berikutnya? Tentukan pilihanmu dan lihat hasilnya secara real-time. Ini game gratis — tanpa uang sungguhan.",
+            "isFunnel": true,
+            "ctaText": "Main: tebak 30 detik berikutnya",
+            "ctaPrompt": "Akan lebih banyak atau lebih sedikit sambaran petir di menit berikutnya?"
+          }
+        ],
+        "faqHeading": "Pertanyaan yang sering diajukan",
+        "faq": [
+          {
+            "q": "Apa itu peta petir?",
+            "a": "Peta petir adalah peta real-time yang menampilkan sambaran petir yang terdeteksi begitu terjadi, sehingga kamu bisa langsung melihat di mana badai berada dan ke arah mana ia bergerak."
+          },
+          {
+            "q": "Seberapa akurat peta sambaran petir ini?",
+            "a": "Akurasi tergantung pada berapa banyak stasiun yang mendeteksi sambaran yang sama. Ketika beberapa stasiun menangkapnya, posisinya biasanya akurat hingga beberapa kilometer."
+          },
+          {
+            "q": "Dari mana data petir ini berasal?",
+            "a": "Dari jaringan deteksi petir sukarelawan, tempat stasiun penerima sukarelawan menentukan lokasi sambaran lewat triangulasi."
+          },
+          {
+            "q": "Seberapa sering peta ini diperbarui?",
+            "a": "Secara real-time: sambaran baru muncul dalam hitungan detik setelah terdeteksi."
+          },
+          {
+            "q": "Bisakah lokasi petir diprediksi?",
+            "a": "Waktu pastinya tidak bisa diprediksi, tapi kepadatan sambaran dan pergerakan sel badai menunjukkan apakah badai sedang mendekat. Kamu juga bisa menguji intuisimu lewat game ini: tebak apakah lebih banyak atau lebih sedikit sambaran yang terjadi dalam 30 detik berikutnya."
+          }
+        ]
+      }
     }
   ]
 }
