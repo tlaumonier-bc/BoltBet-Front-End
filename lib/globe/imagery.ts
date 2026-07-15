@@ -9,7 +9,7 @@
 import * as Cesium from 'cesium';
 import { useLiveStore, type GlobeMapStyle } from '@/store/liveStore';
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+const API = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '');
 const DEFAULT_SCREEN_SPACE_ERROR = 2;
 const HIGH_DETAIL_SCREEN_SPACE_ERROR = 0.5;
 const DEFAULT_TILE_CACHE_SIZE = 100;

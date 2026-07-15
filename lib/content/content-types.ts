@@ -1,6 +1,6 @@
-// content-types.ts — shape of content/locales.json (generated in Phase 1).
-// Drop into the frontend repo at lib/content/content-types.ts.
-// Do not edit locales.json by hand; re-run generate_content_config.py.
+// content-types.ts — shape of content/locales.json.
+// locales.json is now maintained by hand (the generate_content_config.py
+// generator is no longer used); edit pages directly and keep them to this shape.
 
 export type IntentTier = 'lightning' | 'storm' | 'product';
 export type PageType = 'seo_map' | 'seo_storm' | 'product_funnel';
@@ -39,6 +39,7 @@ export interface PageContent {
   breadcrumb: string[];
   h1: string;
   title: string;          // <title> tag
+  ogTitle?: string;       // og:title when it should differ from <title>
   metaDescription: string;
   imageAlt: string;
   sections: ContentSection[];
@@ -64,6 +65,10 @@ export interface LocalePage {
   leadSecondary: LeadSecondary | null; // term to feature in an early H2
   keywords: Keyword[];
   content: PageContent;
+  // Explicit head hreflang alternates for pages that opt into cross-language
+  // linking (e.g. the reciprocal /gb ↔ /ph pair). Emitted by buildMetadata when
+  // present; other pages stay canonical-only.
+  hreflangAlternates?: HreflangEntry[];
 }
 
 export interface HreflangEntry {

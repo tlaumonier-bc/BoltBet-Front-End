@@ -111,6 +111,14 @@
         "url": "https://lightningmapgame.com/cn/shandian-ditu"
       },
       {
+        "hreflang": "tl-PH",
+        "url": "https://lightningmapgame.com/ph/mapa-ng-kidlat"
+      },
+      {
+        "hreflang": "es-MX",
+        "url": "https://lightningmapgame.com/mx/tormenta-electrica"
+      },
+      {
         "hreflang": "x-default",
         "url": "https://lightningmapgame.com/"
       }
@@ -357,7 +365,21 @@
           }
         ]
       },
-      "hreflangClusterKey": "seo_map"
+      "hreflangClusterKey": "seo_map",
+      "hreflangAlternates": [
+        {
+          "hreflang": "en-gb",
+          "url": "https://lightningmapgame.com/gb/lightning-map"
+        },
+        {
+          "hreflang": "tl-ph",
+          "url": "https://lightningmapgame.com/ph/mapa-ng-kidlat"
+        },
+        {
+          "hreflang": "x-default",
+          "url": "https://lightningmapgame.com/gb/lightning-map"
+        }
+      ]
     },
     {
       "priority": 3,
@@ -2906,6 +2928,647 @@
         ]
       },
       "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 27,
+      "locale": "ph",
+      "localePath": "/ph",
+      "country": "Philippines",
+      "language": "Filipino",
+      "hreflang": "tl-PH",
+      "slug": "/ph/mapa-ng-kidlat",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "mapa ng kidlat",
+      "primaryKeyword": "mapa ng kidlat",
+      "primaryVolume": null,
+      "primaryKd": null,
+      "keywords": [
+        {
+          "term": "mapa ng kidlat",
+          "role": "primary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "kidlat live",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "tagasubaybay ng kidlat",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "real-time na kidlat",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "lightning map philippines",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "storm tracker",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "storm",
+          "isBrand": true
+        },
+        {
+          "term": "bagyo tracker",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "blitzortung",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": true
+        },
+        {
+          "term": "weather game online",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "product",
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": null,
+      "hreflangAlternates": [
+        {
+          "hreflang": "en-gb",
+          "url": "https://lightningmapgame.com/gb/lightning-map"
+        },
+        {
+          "hreflang": "tl-ph",
+          "url": "https://lightningmapgame.com/ph/mapa-ng-kidlat"
+        },
+        {
+          "hreflang": "x-default",
+          "url": "https://lightningmapgame.com/gb/lightning-map"
+        }
+      ],
+      "content": {
+        "translated": true,
+        "breadcrumb": [
+          "Home",
+          "Mapa ng Kidlat"
+        ],
+        "h1": "Mapa ng Kidlat – Live na Pagsubaybay sa Kidlat sa Real Time",
+        "title": "Mapa ng Kidlat – Live na Pagsubaybay sa Kidlat sa Real Time | lightningmapgame",
+        "ogTitle": "Mapa ng Kidlat – Live na Pagsubaybay sa Kidlat (Pilipinas) | lightningmapgame",
+        "metaDescription": "Subaybayan ang kidlat sa Pilipinas gamit ang live na mapa ng kidlat. Makita ang bawat kidlat habang nangyayari – tapos hulaan kung tataas o bababa ang bilang sa susunod na minuto.",
+        "imageAlt": "Mapa ng kidlat – live na kidlat sa mapa ng Pilipinas sa real time",
+        "sections": [
+          {
+            "h2": "Saan tumatama ang kidlat ngayon?",
+            "body": "Ipinapakita ng live na mapa ng kidlat ang bawat kidlat sa sandaling ito ay ma-detect. Ang mga pula at amber na bahagi ay nagpapakita kung saan may aktibong bagyo ngayon at kung saang direksyon ito papunta. I-allow ang location at i-tap ang «near me» para makita ang pinakamalapit na kidlat at kung ilan na ang tumama sa nakaraang 60 minuto sa paligid mo."
+          },
+          {
+            "h2": "Isang live na mapa ng kidlat sa real time",
+            "body": "Ang map — kilala rin bilang lightning tracker o storm tracker — ay awtomatikong nag-a-update kada segundo. Habang mas dumadami ang kidlat sa isang lugar, mas malakas ang storm cell doon. Bantayan ang strike density at kung paano gumagalaw ang cell para malaman kung lumalakas o humihina ang bagyo."
+          },
+          {
+            "h2": "Paano gumagana ang mapa ng kidlat?",
+            "body": "Ang datos ng kidlat ay galing sa isang volunteer na network ng mga receiving station na pinapatakbo ng mga volunteer. Sinusukat ng mga station kung kailan dumating ang radio pulse ng bawat kidlat, at ang posisyon nito ay natutukoy sa pamamagitan ng triangulation mula sa ilang station. Habang mas maraming station ang naka-detect ng parehong kidlat, mas tumpak ang posisyon. Tinatawag din itong lightning tracker o blitzortung, pero iisa lang ito: isang real time na mapa ng kidlat."
+          },
+          {
+            "h2": "Hulaan ang susunod na 30 segundo",
+            "body": "Mas marami o mas kaunting kidlat ba ang tatama sa susunod na minuto? Gawin ang iyong tawag at panoorin itong maganap nang live. Libreng laro ito — walang totoong pera.",
+            "isFunnel": true,
+            "ctaText": "Maglaro: hulaan ang susunod na 30 segundo",
+            "ctaPrompt": "Mas marami o mas kaunting kidlat ba sa susunod na minuto?"
+          }
+        ],
+        "faqHeading": "Mga madalas na tanong",
+        "faq": [
+          {
+            "q": "Ano ang mapa ng kidlat?",
+            "a": "Ang mapa ng kidlat ay isang real time na mapa na nagpapakita ng mga na-detect na kidlat habang nangyayari, para makita mo agad kung nasaan ang bagyo at kung saan ito papunta."
+          },
+          {
+            "q": "Gaano ito katumpak?",
+            "a": "Depende ang katumpakan sa kung ilang station ang naka-detect ng parehong kidlat. Kapag marami ang nakakuha, kadalasan tumpak ang posisyon sa loob ng ilang kilometro."
+          },
+          {
+            "q": "Saan galing ang datos ng kidlat?",
+            "a": "Galing ito sa isang volunteer na network ng pag-detect ng kidlat, kung saan tinutukoy ng mga volunteer na station ang posisyon ng kidlat gamit ang triangulation."
+          },
+          {
+            "q": "Gaano kadalas nag-a-update ang map?",
+            "a": "Sa real time: lumalabas ang mga bagong kidlat ilang segundo lang matapos ma-detect."
+          },
+          {
+            "q": "Puwede bang hulaan kung saan tatama ang kidlat?",
+            "a": "Hindi mahuhulaan ang eksaktong sandali, pero ipinapakita ng strike density at galaw ng cell kung papalapit ang bagyo. Puwede mo ring subukan ang iyong instinct sa laro: hulaan kung mas marami o mas kaunting kidlat ang tatama sa susunod na 30 segundo."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 28,
+      "locale": "mx",
+      "localePath": "/mx",
+      "country": "Mexico",
+      "language": "Spanish",
+      "hreflang": "es-MX",
+      "slug": "/mx/tormenta-electrica",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "tormenta eléctrica",
+      "primaryKeyword": "tormenta eléctrica",
+      "primaryVolume": null,
+      "primaryKd": null,
+      "keywords": [
+        {
+          "term": "tormenta eléctrica",
+          "role": "primary",
+          "volume": null,
+          "kd": null,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "mapa de rayos",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "rayo",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "radar meteorológico",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "relámpago",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "trueno",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "mapa de tormentas",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "storm",
+          "isBrand": false
+        },
+        {
+          "term": "weather game online",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "product",
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": null,
+      "content": {
+        "translated": true,
+        "breadcrumb": [
+          "Inicio",
+          "Tormenta eléctrica"
+        ],
+        "h1": "Mapa de Tormenta Eléctrica – Rayos en Vivo en Tiempo Real",
+        "title": "Mapa de Tormenta Eléctrica – Rayos en Vivo en Tiempo Real | lightningmapgame",
+        "ogTitle": "Mapa de Tormenta Eléctrica – Rayos en Vivo en Tiempo Real (México) | lightningmapgame",
+        "metaDescription": "Sigue los rayos en México en un mapa de tormenta eléctrica en vivo. Mira cada rayo en tiempo real – luego adivina si caerán más o menos rayos en el próximo minuto.",
+        "imageAlt": "Mapa de tormenta eléctrica – rayos en el mapa de México en tiempo real",
+        "sections": [
+          {
+            "h2": "¿Dónde están cayendo rayos ahora?",
+            "body": "El mapa de tormenta eléctrica muestra cada rayo en el momento en que se detecta. Las zonas rojas y amarillas indican dónde hay tormenta en México ahora y hacia dónde se desplaza. Permite la ubicación y toca «mostrar cerca de mí» para ver los rayos más cercanos y cuántos han caído en los últimos 60 minutos en tu zona."
+          },
+          {
+            "h2": "Rayos en vivo en tiempo real",
+            "body": "El mapa se actualiza automáticamente cada segundo. Cuanto más juntos caen los rayos en la misma zona, más intensa es la célula de tormenta y más cerca sonará el trueno. Observa la densidad de rayos y el movimiento de la célula —como en un radar meteorológico— para ver si la tormenta eléctrica se intensifica o se debilita."
+          },
+          {
+            "h2": "¿Cómo funciona el mapa de tormenta eléctrica?",
+            "body": "Los datos proceden de una red de detección de rayos, una red de estaciones receptoras gestionada por voluntarios. Cada estación mide cuándo llega el impulso de radio de un rayo, y la posición se calcula por triangulación desde varias estaciones. Cuantas más estaciones detectan el mismo rayo, más precisa es la posición. El servicio también se conoce como radar meteorológico o lightning map, pero es el mismo mapa de rayos en tiempo real."
+          },
+          {
+            "h2": "Adivina los próximos 30 segundos",
+            "body": "¿Caerán más o menos rayos en el próximo minuto? Haz tu pronóstico y mira qué pasa en tiempo real. Es un juego gratuito, sin dinero real.",
+            "isFunnel": true,
+            "ctaText": "Jugar: adivina los próximos 30 segundos",
+            "ctaPrompt": "¿Más o menos rayos en el próximo minuto?"
+          }
+        ],
+        "faqHeading": "Preguntas frecuentes",
+        "faq": [
+          {
+            "q": "¿Qué es un mapa de tormenta eléctrica?",
+            "a": "Es un mapa en tiempo real que muestra los rayos detectados a medida que caen, para que veas enseguida dónde hay tormenta eléctrica en México y hacia dónde se mueve."
+          },
+          {
+            "q": "¿Qué precisión tiene?",
+            "a": "La precisión depende de cuántas estaciones detecten el mismo rayo. Cuando varias lo captan, la posición suele ser precisa hasta unos pocos kilómetros."
+          },
+          {
+            "q": "¿De dónde proceden los datos?",
+            "a": "De una red de detección de rayos, donde estaciones receptoras gestionadas por voluntarios localizan cada rayo por triangulación."
+          },
+          {
+            "q": "¿Cada cuánto se actualiza el mapa?",
+            "a": "En tiempo real: los nuevos rayos aparecen en cuestión de segundos, más rápido que un radar meteorológico convencional."
+          },
+          {
+            "q": "¿Se pueden predecir los rayos y los truenos?",
+            "a": "El momento exacto no se puede predecir, pero la densidad de rayos y el movimiento de la célula indican si la tormenta se acerca y si pronto oirás un trueno. También puedes poner a prueba tu intuición en el juego: adivina si en los próximos 30 segundos caerán más o menos rayos."
+          }
+        ]
+      },
+      "hreflangClusterKey": "seo_map"
+    },
+    {
+      "priority": 29,
+      "locale": "id",
+      "localePath": "/id",
+      "country": "Indonesia",
+      "language": "Indonesian",
+      "hreflang": "id-ID",
+      "slug": "/id/peta-petir",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "primaryKeywordOriginal": "peta petir",
+      "primaryKeyword": "peta petir",
+      "primaryVolume": null,
+      "primaryKd": null,
+      "keywords": [
+        {
+          "term": "peta petir",
+          "role": "primary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "peta sambaran petir",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "peta petir real-time",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "pelacak petir",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "lightningmaps",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": true
+        }
+      ],
+      "leadSecondary": null,
+      "content": {
+        "translated": true,
+        "breadcrumb": [
+          "Beranda",
+          "Peta Petir"
+        ],
+        "h1": "Peta petir – peta sambaran petir langsung secara real-time",
+        "title": "Peta Petir Indonesia – Peta Sambaran Petir Langsung | lightningmapgame",
+        "metaDescription": "Pantau petir di Indonesia lewat peta petir real-time. Lihat sambaran petir saat terjadi, lalu tebak apakah makin banyak atau sedikit di menit berikutnya.",
+        "imageAlt": "Peta petir – sambaran petir di peta Indonesia secara real-time",
+        "sections": [
+          {
+            "h2": "Di mana petir sedang menyambar sekarang?",
+            "body": "Peta petir menampilkan sambaran begitu terdeteksi. Area merah dan oranye menunjukkan di mana badai petir sedang aktif saat ini dan ke arah mana pergerakannya. Izinkan lokasi dan ketuk «tampilkan di dekat saya» untuk melihat sambaran terdekat dan berapa banyak yang terjadi dalam 60 menit terakhir di sekitarmu."
+          },
+          {
+            "h2": "Peta sambaran petir langsung secara real-time",
+            "body": "Peta sambaran petir diperbarui otomatis setiap detik. Semakin padat sambaran di satu area, semakin kuat sel badainya. Perhatikan kepadatan sambaran dan bagaimana sel badai bergerak untuk melihat apakah badai sedang menguat atau melemah."
+          },
+          {
+            "h2": "Bagaimana cara kerja peta petir ini?",
+            "body": "Data sambaran berasal dari jaringan deteksi petir sukarelawan yang dijalankan oleh stasiun penerima yang dioperasikan para sukarelawan. Stasiun mengukur waktu tibanya pulsa radio dari setiap sambaran, lalu posisinya ditentukan lewat triangulasi dari beberapa stasiun. Semakin banyak stasiun yang mendeteksi sambaran yang sama, semakin akurat posisinya — sering kali hingga beberapa kilometer. Kadang disebut juga pelacak petir (lightning tracker), tetapi ini adalah peta petir real-time yang sama."
+          },
+          {
+            "h2": "Tebak 30 detik berikutnya",
+            "body": "Akan lebih banyak atau lebih sedikit sambaran petir di menit berikutnya? Tentukan pilihanmu dan lihat hasilnya secara real-time. Ini game gratis — tanpa uang sungguhan.",
+            "isFunnel": true,
+            "ctaText": "Main: tebak 30 detik berikutnya",
+            "ctaPrompt": "Akan lebih banyak atau lebih sedikit sambaran petir di menit berikutnya?"
+          }
+        ],
+        "faqHeading": "Pertanyaan yang sering diajukan",
+        "faq": [
+          {
+            "q": "Apa itu peta petir?",
+            "a": "Peta petir adalah peta real-time yang menampilkan sambaran petir yang terdeteksi begitu terjadi, sehingga kamu bisa langsung melihat di mana badai berada dan ke arah mana ia bergerak."
+          },
+          {
+            "q": "Seberapa akurat peta sambaran petir ini?",
+            "a": "Akurasi tergantung pada berapa banyak stasiun yang mendeteksi sambaran yang sama. Ketika beberapa stasiun menangkapnya, posisinya biasanya akurat hingga beberapa kilometer."
+          },
+          {
+            "q": "Dari mana data petir ini berasal?",
+            "a": "Dari jaringan deteksi petir sukarelawan, tempat stasiun penerima sukarelawan menentukan lokasi sambaran lewat triangulasi."
+          },
+          {
+            "q": "Seberapa sering peta ini diperbarui?",
+            "a": "Secara real-time: sambaran baru muncul dalam hitungan detik setelah terdeteksi."
+          },
+          {
+            "q": "Bisakah lokasi petir diprediksi?",
+            "a": "Waktu pastinya tidak bisa diprediksi, tapi kepadatan sambaran dan pergerakan sel badai menunjukkan apakah badai sedang mendekat. Kamu juga bisa menguji intuisimu lewat game ini: tebak apakah lebih banyak atau lebih sedikit sambaran yang terjadi dalam 30 detik berikutnya."
+          }
+        ]
+      }
+    },
+    {
+      "priority": 30,
+      "locale": "pt",
+      "localePath": "/pt",
+      "country": "Portugal",
+      "language": "Portuguese",
+      "hreflang": "pt-PT",
+      "slug": "/pt/mapa-de-raios",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "hreflangClusterKey": "seo_map",
+      "primaryKeywordOriginal": "mapa de raios",
+      "primaryKeyword": "mapa de raios",
+      "primaryVolume": null,
+      "primaryKd": null,
+      "leadSecondary": null,
+      "keywords": [
+        {
+          "term": "mapa de raios",
+          "role": "primary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "mapa de trovoadas",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "raios em tempo real",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "rastreador de raios",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "lightningmaps",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": true
+        }
+      ],
+      "content": {
+        "translated": true,
+        "breadcrumb": [
+          "Início",
+          "Mapa de Raios"
+        ],
+        "h1": "Mapa de raios – mapa de raios em tempo real",
+        "title": "Mapa de Raios – Mapa de Raios em Tempo Real (Portugal) | lightningmapgame",
+        "metaDescription": "Acompanhe os raios em tempo real com o nosso mapa de raios. Veja onde há trovoada agora e tenta adivinhar se vão cair mais ou menos raios no minuto seguinte.",
+        "imageAlt": "Mapa de raios – raios em tempo real no mapa de Portugal",
+        "sections": [
+          {
+            "h2": "Onde estão a cair raios agora?",
+            "body": "O mapa de raios mostra as ocorrências assim que são detetadas. As zonas a vermelho e laranja indicam onde há trovoada ativa neste momento e para onde se está a mover. Permite a localização e toca em «mostrar perto de mim» para ver os raios mais próximos e quantos caíram nos últimos 60 minutos à tua volta."
+          },
+          {
+            "h2": "Um mapa de raios em tempo real",
+            "body": "O mapa de raios é atualizado automaticamente a cada segundo. Quanto mais densos os raios numa zona, mais intensa é a célula de tempestade. Observa a densidade dos raios e o movimento da célula para veres se a trovoada está a intensificar-se ou a dissipar-se."
+          },
+          {
+            "h2": "Como funciona este mapa de raios?",
+            "body": "Os dados dos raios vêm de uma rede de deteção de raios voluntária, mantida por estações recetoras operadas por voluntários. As estações medem quando chega o pulso de rádio de cada raio e a sua posição é calculada por triangulação a partir de várias estações. Quantas mais estações detetam o mesmo raio, mais precisa é a posição — normalmente com um erro de poucos quilómetros. Por vezes é chamado rastreador de raios (lightning tracker), mas é o mesmo mapa de raios em tempo real."
+          },
+          {
+            "h2": "Adivinha os próximos 30 segundos",
+            "body": "Vão cair mais ou menos raios no minuto seguinte? Faz a tua escolha e vê o que acontece em tempo real. É um jogo gratuito — sem dinheiro real.",
+            "isFunnel": true,
+            "ctaText": "Jogar: adivinha os próximos 30 segundos",
+            "ctaPrompt": "Vão cair mais ou menos raios no minuto seguinte?"
+          }
+        ],
+        "faqHeading": "Perguntas frequentes",
+        "faq": [
+          {
+            "q": "O que é um mapa de raios?",
+            "a": "Um mapa de raios é um mapa em tempo real que mostra os raios detetados assim que ocorrem, para veres num relance onde está a tempestade e para onde se dirige."
+          },
+          {
+            "q": "Quão preciso é o mapa de raios?",
+            "a": "Depende de quantas estações detetam o mesmo raio. Quando várias o captam, a posição costuma ter um erro de apenas poucos quilómetros."
+          },
+          {
+            "q": "De onde vêm os dados dos raios?",
+            "a": "De uma rede de deteção de raios voluntária, onde estações recetoras de voluntários localizam os raios por triangulação."
+          },
+          {
+            "q": "Com que frequência é atualizado o mapa?",
+            "a": "Em tempo real: os novos raios aparecem poucos segundos após serem detetados."
+          },
+          {
+            "q": "É possível prever onde vai cair um raio?",
+            "a": "O momento exato não pode ser previsto, mas a densidade dos raios e o movimento da célula mostram se a trovoada se está a aproximar. Também podes testar o teu instinto no jogo: adivinha se vão cair mais ou menos raios nos próximos 30 segundos."
+          }
+        ]
+      }
+    },
+    {
+      "priority": 31,
+      "locale": "br",
+      "localePath": "/br",
+      "country": "Brazil",
+      "language": "Portuguese",
+      "hreflang": "pt-BR",
+      "slug": "/br/mapa-de-raios",
+      "pageType": "seo_map",
+      "intentTier": "lightning",
+      "hreflangClusterKey": "seo_map",
+      "primaryKeywordOriginal": "mapa de raios",
+      "primaryKeyword": "mapa de raios",
+      "primaryVolume": null,
+      "primaryKd": null,
+      "leadSecondary": null,
+      "keywords": [
+        {
+          "term": "mapa de raios",
+          "role": "primary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "mapa de temporais",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "raios em tempo real",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "rastreador de raios",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": false
+        },
+        {
+          "term": "lightningmaps",
+          "role": "secondary",
+          "volume": null,
+          "kd": null,
+          "tier": "lightning",
+          "isBrand": true
+        }
+      ],
+      "content": {
+        "translated": true,
+        "breadcrumb": [
+          "Início",
+          "Mapa de Raios"
+        ],
+        "h1": "Mapa de raios – mapa de raios em tempo real",
+        "title": "Mapa de Raios – Mapa de Raios em Tempo Real (Brasil) | lightningmapgame",
+        "metaDescription": "Acompanhe os raios em tempo real com o nosso mapa de raios. Veja onde está caindo raio agora e tente adivinhar se vão cair mais ou menos raios no próximo minuto.",
+        "imageAlt": "Mapa de raios – raios em tempo real no mapa do Brasil",
+        "sections": [
+          {
+            "h2": "Onde está caindo raio agora?",
+            "body": "O mapa de raios mostra as ocorrências assim que são detectadas. As áreas em vermelho e laranja indicam onde há temporal ativo agora e para onde ele está se movendo. Permita a localização e toque em «mostrar perto de mim» para ver os raios mais próximos e quantos caíram nos últimos 60 minutos ao seu redor."
+          },
+          {
+            "h2": "Um mapa de raios em tempo real",
+            "body": "O mapa de raios é atualizado automaticamente a cada segundo. Quanto mais densos os raios em uma área, mais intensa é a célula de tempestade. Observe a densidade dos raios e o movimento da célula para ver se o temporal está se intensificando ou se dissipando."
+          },
+          {
+            "h2": "Como funciona esse mapa de raios?",
+            "body": "Os dados dos raios vêm de uma rede de detecção de raios voluntária, mantida por estações receptoras operadas por voluntários. As estações medem quando chega o pulso de rádio de cada raio, e a posição é calculada por triangulação a partir de várias estações. Quanto mais estações detectam o mesmo raio, mais precisa é a posição — geralmente com margem de poucos quilômetros. Às vezes é chamado de rastreador de raios (lightning tracker), mas é o mesmo mapa de raios em tempo real."
+          },
+          {
+            "h2": "Adivinhe os próximos 30 segundos",
+            "body": "Vão cair mais ou menos raios no próximo minuto? Faça sua escolha e veja o que acontece em tempo real. É um jogo gratuito — sem dinheiro real.",
+            "isFunnel": true,
+            "ctaText": "Jogar: adivinhe os próximos 30 segundos",
+            "ctaPrompt": "Vão cair mais ou menos raios no próximo minuto?"
+          }
+        ],
+        "faqHeading": "Perguntas frequentes",
+        "faq": [
+          {
+            "q": "O que é um mapa de raios?",
+            "a": "Um mapa de raios é um mapa em tempo real que mostra os raios detectados assim que acontecem, para você ver num relance onde está a tempestade e para onde ela está indo."
+          },
+          {
+            "q": "Quão preciso é o mapa de raios?",
+            "a": "Depende de quantas estações detectam o mesmo raio. Quando várias captam, a posição costuma ter margem de apenas poucos quilômetros."
+          },
+          {
+            "q": "De onde vêm os dados dos raios?",
+            "a": "De uma rede de detecção de raios voluntária, onde estações receptoras de voluntários localizam os raios por triangulação."
+          },
+          {
+            "q": "Com que frequência o mapa é atualizado?",
+            "a": "Em tempo real: os novos raios aparecem poucos segundos após serem detectados."
+          },
+          {
+            "q": "É possível prever onde vai cair um raio?",
+            "a": "O momento exato não pode ser previsto, mas a densidade dos raios e o movimento da célula mostram se o temporal está se aproximando. Você também pode testar seu instinto no jogo: adivinhe se vão cair mais ou menos raios nos próximos 30 segundos."
+          }
+        ]
+      }
     }
   ]
 }

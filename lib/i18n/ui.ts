@@ -24,7 +24,9 @@ export type UiLanguage =
   | 'sk'
   | 'sr'
   | 'ro'
-  | 'zh';
+  | 'zh'
+  | 'tl'
+  | 'id';
 
 export const UI_LANGUAGES: { code: UiLanguage; label: string; nativeLabel: string }[] = [
   { code: 'en', label: 'English', nativeLabel: 'English' },
@@ -49,6 +51,8 @@ export const UI_LANGUAGES: { code: UiLanguage; label: string; nativeLabel: strin
   { code: 'sr', label: 'Serbian', nativeLabel: 'Srpski' },
   { code: 'ro', label: 'Romanian', nativeLabel: 'Română' },
   { code: 'zh', label: 'Chinese', nativeLabel: '中文' },
+  { code: 'tl', label: 'Filipino', nativeLabel: 'Tagalog' },
+  { code: 'id', label: 'Indonesian', nativeLabel: 'Bahasa Indonesia' },
 ];
 
 const LANGUAGE_SET = new Set(UI_LANGUAGES.map((language) => language.code));
@@ -155,6 +159,14 @@ export const UI_COPY = {
       secondsToResult: '{value}s to result',
       lastGames: 'Last 3 games',
     },
+  },
+  id: {
+    nav: { byCountry: 'Menurut negara', howItWorks: 'Cara kerja', leaderboard: 'Papan peringkat', play: 'Main', playGame: 'Mainkan game', gridGame: 'Grid Game', comingSoon: 'Segera hadir', menu: 'Buka menu', language: 'Bahasa' },
+    live: { console: 'Konsol langsung', globeActivity: 'Aktivitas global', orbitTo: 'Menuju', wholeGlobe: 'Seluruh dunia', backToGlobe: 'Kembali ke globe', nearMe: 'Dekat saya', findingNearby: 'Mencari sambaran terdekat…', nearbyStrikes: '{count} sambaran terdekat', layers: 'Lapisan', layersPro: 'Lapisan · Pro', free: 'Bebas', beginner: 'Pemula', pro: 'Pro', game: 'Game', day: 'Siang', night: 'Malam', good: 'baik', medium: 'sedang', bad: 'buruk', close: 'Tutup', preparingProfile: 'Menyiapkan profil game-mu…' },
+    countryPanel: { live: 'Langsung', idle: 'Sepi', noStrikeData: 'Tidak ada data sambaran', unavailable: 'Data sambaran tidak tersedia untuk wilayah ini — tidak memiliki kode negara ISO.', loading: 'Memuat sambaran terbaru…', learnMore: 'Pelajari lebih lanjut tentang {country}', strikesLastHour: 'sambaran · 1 jam terakhir', recentRate: 'laju terkini', lastStrike: 'sambaran terakhir', latest: '{count} sambaran terbaru · jendela {span}', now: 'Sekarang', secondsAgo: '{value} dtk lalu', minutesAgo: '{value} mnt lalu', hoursAgo: '{value} jam lalu', intensity: { intense: 'Sangat kuat', active: 'Aktif', moderate: 'Sedang', light: 'Ringan', calm: 'Tenang' } },
+    seo: { dataSource: 'Data sambaran langsung dari jaringan deteksi komunitas Blitzortung.', play: 'Main' },
+    layers: { recent1h: 'Sambaran · 1 j', recent1hDescription: 'Sambaran dari satu jam terakhir.', recent3h: 'Sambaran · 3 j', recent3hDescription: 'Sambaran berusia 1 hingga 3 jam.', recent6h: 'Sambaran · 6 j', recent6hDescription: 'Sambaran berusia 3 hingga 6 jam.', clouds: 'Awan', cloudsDescription: 'Tutupan awan langsung di seluruh dunia.', rain: 'Hujan', rainDescription: 'Hujan langsung, menit demi menit.', temperature: 'Suhu', temperatureDescription: 'Panas planet, dari biru ke merah.', wind: 'Angin', windDescription: 'Udara bergerak, di seluruh dunia.' },
+    gamePanel: { strikeGame: 'Game sambaran', notPlayable: 'Tidak bisa dimainkan', notPlayableBody: 'Tidak ada sambaran terdeteksi di sini dalam 30 detik terakhir, jadi belum ada yang bisa ditebak. Pilih negara dengan aktivitas langsung, atau mainkan seluruh dunia.', findPlayableCountry: 'Cari negara yang bisa dimainkan', or: 'atau', playWholeGlobe: 'Mainkan seluruh dunia', points: 'Poin', nextTrophy: 'Trofi berikutnya', allTrophiesUnlocked: 'Semua trofi terbuka', leaderboard: 'Papan peringkat', loadingRanking: 'Memuat peringkat...', activity: 'Aktivitas', playAnytime: 'main kapan saja', secondsToResult: '{value} dtk menuju hasil', lastGames: '3 game terakhir' },
   },
   es: {
     nav: { byCountry: 'Por país', howItWorks: 'Cómo funciona', leaderboard: 'Clasificación', play: 'Jugar', playGame: 'Jugar', gridGame: 'Juego de cuadrícula', comingSoon: 'Próximamente', menu: 'Abrir menú', language: 'Idioma' },
@@ -324,6 +336,14 @@ export const UI_COPY = {
     layers: { recent1h: '闪电 · 1 小时', recent1hDescription: '过去一小时的闪电。', recent3h: '闪电 · 3 小时', recent3hDescription: '1 到 3 小时前的闪电。', recent6h: '闪电 · 6 小时', recent6hDescription: '3 到 6 小时前的闪电。', clouds: '云层', cloudsDescription: '全球实时云量。', rain: '降雨', rainDescription: '逐分钟实时降雨。', temperature: '温度', temperatureDescription: '全球温度，从蓝到红。', wind: '风', windDescription: '全球空气流动。' },
     gamePanel: { strikeGame: '闪电游戏', notPlayable: '暂不可玩', notPlayableBody: '这里过去 30 秒内没有检测到闪电。请选择一个有实时活动的国家，或挑战整个地球。', findPlayableCountry: '寻找可玩的国家', or: '或', playWholeGlobe: '挑战整个地球', points: '积分', nextTrophy: '下一个奖杯', allTrophiesUnlocked: '所有奖杯已解锁', leaderboard: '排行榜', loadingRanking: '正在加载排名...', activity: '活动', playAnytime: '随时可玩', secondsToResult: '{value} 秒后出结果', lastGames: '最近 3 局' },
   },
+  tl: {
+    nav: { byCountry: 'Ayon sa bansa', howItWorks: 'Paano ito gumagana', leaderboard: 'Leaderboard', play: 'Maglaro', playGame: 'Maglaro', gridGame: 'Grid Game', comingSoon: 'Malapit na', menu: 'Buksan ang menu', language: 'Wika' },
+    live: { console: 'Live console', globeActivity: 'Aktibidad ng globe', orbitTo: 'Pumunta sa', wholeGlobe: 'Buong globe', backToGlobe: 'Balik sa globe', nearMe: 'Malapit sa akin', findingNearby: 'Naghahanap ng malalapit na kidlat…', nearbyStrikes: '{count} malalapit na kidlat', layers: 'Layers', layersPro: 'Layers · Pro', free: 'Free', beginner: 'Baguhan', pro: 'Pro', game: 'Laro', day: 'Araw', night: 'Gabi', good: 'maganda', medium: 'katamtaman', bad: 'mahina', close: 'Isara', preparingProfile: 'Inihahanda ang iyong game profile…' },
+    countryPanel: { live: 'Live', idle: 'Tahimik', noStrikeData: 'Walang datos ng kidlat', unavailable: 'Hindi available ang datos para sa teritoryong ito: wala itong ISO country code.', loading: 'Nilo-load ang mga kamakailang kidlat…', learnMore: 'Matuto pa tungkol sa {country}', strikesLastHour: 'kidlat · nakaraang oras', recentRate: 'kamakailang rate', lastStrike: 'huling kidlat', latest: 'Pinakabagong {count} kidlat · {span} window', now: 'Ngayon', secondsAgo: '{value}s ang nakalipas', minutesAgo: '{value}m ang nakalipas', hoursAgo: '{value}h ang nakalipas', intensity: { intense: 'Matindi', active: 'Aktibo', moderate: 'Katamtaman', light: 'Mahina', calm: 'Kalmado' } },
+    seo: { dataSource: 'Live na datos ng kidlat mula sa community network na Blitzortung.', play: 'Maglaro' },
+    layers: { recent1h: 'Kidlat · 1 h', recent1hDescription: 'Kidlat sa nakaraang oras.', recent3h: 'Kidlat · 3 h', recent3hDescription: 'Kidlat mula 1 hanggang 3 oras ang nakalipas.', recent6h: 'Kidlat · 6 h', recent6hDescription: 'Kidlat mula 3 hanggang 6 oras ang nakalipas.', clouds: 'Ulap', cloudsDescription: 'Live na saklaw ng ulap sa buong mundo.', rain: 'Ulan', rainDescription: 'Live na ulan, minuto-minuto.', temperature: 'Temperatura', temperatureDescription: 'Init ng planeta, asul hanggang pula.', wind: 'Hangin', windDescription: 'Gumagalaw na hangin sa buong mundo.' },
+    gamePanel: { strikeGame: 'Laro ng kidlat', notPlayable: 'Hindi mapaglaruan', notPlayableBody: 'Walang na-detect na kidlat dito sa nakaraang 30 segundo. Pumili ng bansang may live na aktibidad o maglaro sa buong globe.', findPlayableCountry: 'Maghanap ng bansang mapaglaruan', or: 'o', playWholeGlobe: 'Maglaro sa buong globe', points: 'Puntos', nextTrophy: 'Susunod na tropeo', allTrophiesUnlocked: 'Lahat ng tropeo ay na-unlock', leaderboard: 'Leaderboard', loadingRanking: 'Nilo-load ang ranking...', activity: 'Aktibidad', playAnytime: 'maglaro kahit kailan', secondsToResult: '{value}s bago ang resulta', lastGames: 'Huling 3 laro' },
+  },
 } as const satisfies Record<string, CopyTree>;
 
 const UI_COPY_RECORD: Record<string, CopyTree> = UI_COPY;
@@ -351,6 +371,7 @@ const UI_EXTRA_COPY: Record<string, CopyTree> = {
   sr: { liveSecondary: { recentStrikes: 'Nedavne munje', waitingForStrikes: 'Čekaju se munje…', strikes: 'Munje', last60s: 'poslednjih 60 s', last10Min: 'poslednjih 10 min', hottestRegion: 'Najaktivniji region', telemetry: 'Telemetrija', feed: 'Feed', avgLatency: 'Prosečna latencija', activity15: 'Aktivnost · poslednjih 15 min', peak: 'vrh', now: 'sada' } },
   ro: { liveSecondary: { recentStrikes: 'Fulgere recente', waitingForStrikes: 'Se așteaptă fulgere…', strikes: 'Fulgere', last60s: 'ultimele 60 s', last10Min: 'ultimele 10 min', hottestRegion: 'Cea mai activă regiune', telemetry: 'Telemetrie', feed: 'Flux', avgLatency: 'Latență medie', activity15: 'Activitate · ultimele 15 min', peak: 'vârf', now: 'acum' } },
   zh: { liveSecondary: { recentStrikes: '近期闪电', waitingForStrikes: '等待闪电…', strikes: '闪电', last60s: '过去 60 秒', last10Min: '过去 10 分钟', hottestRegion: '最活跃区域', telemetry: '遥测', feed: '数据流', avgLatency: '平均延迟', activity15: '活动 · 过去 15 分钟', peak: '峰值', now: '现在' } },
+  id: { liveSecondary: { recentStrikes: 'Sambaran terbaru', waitingForStrikes: 'Menunggu sambaran…', strikes: 'Sambaran', last60s: '60 dtk terakhir', last10Min: '10 mnt terakhir', hottestRegion: 'Wilayah paling aktif', telemetry: 'Telemetri', feed: 'Umpan', avgLatency: 'Latensi rata-rata', activity15: 'Aktivitas · 15 mnt terakhir', peak: 'puncak', now: 'sekarang' } },
 };
 
 const UI_PAGE_COPY: Record<string, CopyTree> = {
@@ -369,6 +390,10 @@ const UI_PAGE_COPY: Record<string, CopyTree> = {
       rankingOffline: 'The live strike feed is offline right now. The ranking will appear here once it reconnects.', rankingConnecting: 'Connecting to the live strike feed…', rankingSummary: 'strikes tracked live · most active {mode} right now', activeCountries: 'countries', activeRegions: 'regions', rankingRegionNote: 'Regions are derived from each strike’s coordinates, so the board fills even when the feed does not tag a country.', rankingCountryNote: 'Countries come tagged on the live strike feed; territories without an ISO code are not ranked.',
     },
     leaderboard: { disabled: 'The leaderboard goes live once the game backend is connected.', error: 'The leaderboard could not be reached right now. Check back soon.', empty: 'No games played yet. Be the first on the board.', trophyRoad: 'Trophy Road', nextMilestone: 'Your next milestone', playersByTrophy: 'Players by trophy', noTrophy: 'No trophy yet', lessThanPoints: 'Less than {points} points', pointsPlus: '{points}+ points', title: 'Leaderboard', subtitle: 'Top lightning predictors by points won.', verified: 'Verified', record: '{wins} wins · {games} games' },
+  },
+  id: {
+    how: { eyebrow: 'Cara kerja', heroBefore: 'Tonton petir', heroHighlight: 'sungguhan', heroAfter: 'Lalu prediksi', intro: '{brand} adalah globe 3D langsung berisi sambaran petir nyata dari seluruh dunia, plus game prediksi cepat. Klik negara mana pun untuk terbang masuk dan membuka panel berisi jumlah sambaran dalam satu jam terakhir, seberapa aktif saat ini, dan grafik riwayat.', modesTitle: 'Empat cara menjelajah', modesIntro: 'Berpindah mode dari bilah mode, plus sakelar citra Siang / Malam.', mode: { free: { name: 'Bebas', blurb: 'Hanya globe, dengan sambaran berkelip di seluruh dunia dan tidak ada yang lain di layar.' }, beginner: { name: 'Pemula', blurb: 'Menambahkan konsol langsung: pintasan orbit, sambaran satu jam terakhir, lapisan awan dan hujan, serta pembacaan aktivitas berjalan.' }, pro: { name: 'Pro', blurb: 'Semua fitur Pemula plus jejak sambaran 3 jam / 6 jam, lapisan suhu dan angin, kesehatan umpan, latensi, dan telemetri kualitas sinyal.' }, game: { name: 'Game', blurb: 'Tebak apakah 30 detik berikutnya menghadirkan lebih banyak atau lebih sedikit sambaran daripada sebelumnya, untuk poin virtual gratis.' } }, weatherNote: 'Di mode Pemula dan Pro kamu bisa melapisi cuaca langsung di atas globe: awan, hujan, suhu, dan angin, plus jejak sambaran dari 1, 3, atau 6 jam terakhir.', gameTitle: 'Main: Lebih banyak atau lebih sedikit', gameBodyBefore: 'Mode Game mengubah globe menjadi game prediksi cepat. Main kapan pun kamu mau, selama belum ada yang sedang berjalan. Game mengambil cuplikan 30 detik terakhir, lalu kamu menebak apakah 30 detik berikutnya akan menghadirkan', higher: 'Lebih banyak', gameBodyMiddle: 'atau', lower: 'Lebih sedikit', gameBodyAfter: 'sambaran.', payoutBody: 'Jika benar, kamu memenangkan 2x poinmu. Seri mengembalikan poinmu; tebakan salah kehilangannya.', timelinePrevious: '30 dtk sebelumnya', timelinePlay: 'Mainmu · 30 dtk berikutnya', timelineCounted: 'sambaran dihitung', timelineNote: 'Tidak ada timer ronde bersama. Jendela 30 detikmu dimulai saat mainmu diterima.', card: { scope: { title: 'Cakupan', body: 'Mainkan seluruh dunia, atau klik sebuah negara untuk memprediksi hanya sambarannya. Perlu aktivitas terkini agar bisa dimainkan.' }, points: { title: 'Poin', body: 'Mulai dengan 100 poin virtual gratis dan klaim 100 lagi setiap kali habis. Tidak ada uang sungguhan.' }, leaderboard: { title: 'Papan peringkat', body: 'Masuk dengan Google untuk menyimpan poinmu di semua perangkat dan naik di papan peringkat, diperingkat berdasarkan poin yang dimenangkan.' } }, liveTitleBefore: 'Di mana petir menyambar', liveTitleHighlight: 'sekarang', liveIntro: 'Peringkat langsung tempat sambaran sedang jatuh saat ini, dibuat dari umpan yang sama yang menggerakkan globe.', liveNote: 'Dalam jangka panjang, tempat paling rawan petir di Bumi adalah Danau Maracaibo di Venezuela. Namun peringkat di atas bersifat langsung: menampilkan di mana sambaran benar-benar jatuh saat ini.', rankingOffline: 'Umpan sambaran langsung sedang offline. Peringkat akan muncul di sini setelah tersambung kembali.', rankingConnecting: 'Menyambung ke umpan sambaran langsung…', rankingSummary: 'sambaran dilacak langsung · {mode} paling aktif saat ini', activeCountries: 'negara', activeRegions: 'wilayah', rankingRegionNote: 'Wilayah diturunkan dari koordinat tiap sambaran, sehingga papan tetap terisi meski umpan tidak menandai negara.', rankingCountryNote: 'Negara datang tertandai pada umpan langsung; wilayah tanpa kode ISO tidak diperingkat.' },
+    leaderboard: { disabled: 'Papan peringkat aktif setelah backend game tersambung.', error: 'Papan peringkat tidak dapat dijangkau saat ini. Cek lagi nanti.', empty: 'Belum ada game dimainkan. Jadilah yang pertama di papan.', trophyRoad: 'Jalur Trofi', nextMilestone: 'Tonggak berikutnya', playersByTrophy: 'Pemain berdasarkan trofi', noTrophy: 'Belum ada trofi', lessThanPoints: 'Kurang dari {points} poin', pointsPlus: '{points}+ poin', title: 'Papan peringkat', subtitle: 'Prediktor petir terbaik berdasarkan poin yang dimenangkan.', verified: 'Terverifikasi', record: '{wins} menang · {games} game' },
   },
   fr: {
     how: {
@@ -422,6 +447,8 @@ const EXTRA_LANGUAGE_ALIASES: Record<string, UiLanguage> = {
   ee: 'et',
   gr: 'el',
   rs: 'sr',
+  fil: 'tl',
+  ph: 'tl',
 };
 
 function normalizeLanguage(value: string | null | undefined): UiLanguage | null {

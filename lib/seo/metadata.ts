@@ -12,20 +12,25 @@ export function buildMetadata(page: LocalePage): Metadata {
   // (Phase 6), or Google sees thin English duplicates across locales.
   const indexable = page.content.translated;
 
+  // By default, country pages are canonical local landing pages with no hreflang
+  // alternates (France and the UK are not equivalent translations). A page may
+  // opt into cross-language linking via `hreflangAlternates` — e.g. the
+  // reciprocal /gb/lightning-map ↔ /ph/mapa-ng-kidlat pair, with x-default → UK.
+  const languages = page.hreflangAlternates?.length
+    ? Object.fromEntries(page.hreflangAlternates.map((a) => [a.hreflang, a.url]))
+    : undefined;
+
   return {
     title: page.content.title,
     description: page.content.metaDescription,
-    // Country pages are canonical local landing pages. Do not emit hreflang
-    // alternates until the content model supports the same country in multiple
-    // languages; France and the UK are not equivalent translations.
-    alternates: { canonical },
+    alternates: languages ? { canonical, languages } : { canonical },
     robots: indexable
       ? { index: true, follow: true }
       : { index: false, follow: false },
     openGraph: {
       type: 'website',
       siteName: site.brand,
-      title: page.content.title,
+      title: page.content.ogTitle ?? page.content.title,
       description: page.content.metaDescription,
       url: canonical,
       locale: page.hreflang.replace('-', '_'),

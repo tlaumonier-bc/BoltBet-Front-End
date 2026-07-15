@@ -26,6 +26,8 @@ const FLAGS: Record<UiLanguage, string> = {
   sr: '🇷🇸',
   ro: '🇷🇴',
   zh: '🇨🇳',
+  tl: '🇵🇭',
+  id: '🇮🇩',
 };
 
 export default function UiLanguageSwitcher({ className = '' }: { className?: string }) {

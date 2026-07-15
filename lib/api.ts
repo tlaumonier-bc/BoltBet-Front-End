@@ -1,9 +1,9 @@
 // lib/api.ts — REST client for the BoltBet strike-prediction game backend.
 import { sessionToken } from '@/store/sessionStore';
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
-const STRIKES_API = process.env.NEXT_PUBLIC_STRIKES_API_URL ?? API;
-export const LEADERBOARD_API = process.env.NEXT_PUBLIC_LEADERBOARD_API_URL ?? API;
+const API = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '');
+const STRIKES_API = (process.env.NEXT_PUBLIC_STRIKES_API_URL || API).replace(/\/$/, '');
+export const LEADERBOARD_API = (process.env.NEXT_PUBLIC_LEADERBOARD_API_URL || API).replace(/\/$/, '');
 export const TROPHIES: Trophy[] = [
   { key: 'bolt-tracker', points: 200, image: 'trophy-200.png', label: 'Bolt Tracker Trophy' },
   { key: 'could-reader', points: 500, image: 'trophy-500.png', label: 'Could Reader Trophy' },
@@ -219,6 +219,52 @@ export async function getCountryStrikes(country: string, limit = 10000): Promise
   return result.strikes;
 }
 
+/** Recent strikes inside a lat/lon box (for feeding a zoomed grid-game zone). */
+export async function getStrikesInBounds(
+  bounds: { minLat: number; maxLat: number; minLon: number; maxLon: number },
+  seconds = 90,
+  limit = 800,
+): Promise<CountryStrike[]> {
+  const q = new URLSearchParams({
+    minLat: String(bounds.minLat),
+    maxLat: String(bounds.maxLat),
+    minLon: String(bounds.minLon),
+    maxLon: String(bounds.maxLon),
+    seconds: String(seconds),
+    limit: String(limit),
+  });
+  const res = await fetch(`${STRIKES_API}/api/strikes/in-bounds/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`strikes in-bounds ${res.status}`);
+  const data = (await res.json()) as { strikes?: CountryStrike[] };
+  return data.strikes ?? [];
+}
+
+export interface CityLabel {
+  name: string;
+  admin1: string;
+  cc: string;
+  lat: number;
+  lon: number;
+}
+
+/** Town/city labels within a lat/lon box (to show where a play zone is). */
+export async function getCitiesInBounds(
+  bounds: { minLat: number; maxLat: number; minLon: number; maxLon: number },
+  limit = 8,
+): Promise<CityLabel[]> {
+  const q = new URLSearchParams({
+    minLat: String(bounds.minLat),
+    maxLat: String(bounds.maxLat),
+    minLon: String(bounds.minLon),
+    maxLon: String(bounds.maxLon),
+    limit: String(limit),
+  });
+  const res = await fetch(`${STRIKES_API}/api/cities/in-bounds/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`cities in-bounds ${res.status}`);
+  const data = (await res.json()) as { cities?: CityLabel[] };
+  return data.cities ?? [];
+}
+
 export async function getWeatherNow(lat: number, lon: number): Promise<WeatherNow> {
   const q = new URLSearchParams({ lat: String(lat), lon: String(lon) });
   const res = await fetch(`${API}/api/weather/now/?${q}`, { cache: 'no-store' });
@@ -381,6 +427,7 @@ export interface GridActiveCountriesResponse {
   countries: GridActiveCountry[];
   windowSeconds: number;
   fallbackWindowSeconds: number;
+  model?: string;
 }
 
 export type GridMatchStatus = 'preparing' | 'active' | 'settled';
@@ -389,7 +436,12 @@ export interface GridMatchState {
   matchId: string;
   status: GridMatchStatus;
   country: string;
-  grid: { cols: number; rows: number };
+  grid: {
+    cols: number;
+    rows: number;
+    bounds: { minLat: number; maxLat: number; minLon: number; maxLon: number } | null;
+    cellSizeKm: number | null;
+  };
   player: {
     username: string;
     score: number;
@@ -402,7 +454,11 @@ export interface GridMatchState {
     elo: number;
     eloAfter: number | null;
     bot: boolean;
+    selectedCell: number | null;
+    selectedCellExpiresAt: string | null;
   };
+  model?: string;
+  zone?: { hNorm: number | null; roundStrikes: number | null };
   timing: {
     createdAt: string;
     prepareEndsAt: string;
@@ -571,8 +627,8 @@ export async function getGridMatchState(matchId: string): Promise<GridMatchState
   return res.json();
 }
 
-export async function clickGridMatchCell(matchId: string, cell: number): Promise<GridMatchState> {
-  return postJson<GridMatchState>(`/api/game/grid/match/${matchId}/click/`, { cell });
+export async function selectGridCell(matchId: string, cell: number): Promise<GridMatchState> {
+  return postJson<GridMatchState>(`/api/game/grid/match/${matchId}/select-cell/`, { cell });
 }
 
 export async function getAdminAccountsGrowth(idToken: string, days = 180): Promise<AdminAccountsGrowthResponse> {
