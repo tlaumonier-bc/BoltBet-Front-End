@@ -239,6 +239,32 @@ export async function getStrikesInBounds(
   return data.strikes ?? [];
 }
 
+export interface CityLabel {
+  name: string;
+  admin1: string;
+  cc: string;
+  lat: number;
+  lon: number;
+}
+
+/** Town/city labels within a lat/lon box (to show where a play zone is). */
+export async function getCitiesInBounds(
+  bounds: { minLat: number; maxLat: number; minLon: number; maxLon: number },
+  limit = 8,
+): Promise<CityLabel[]> {
+  const q = new URLSearchParams({
+    minLat: String(bounds.minLat),
+    maxLat: String(bounds.maxLat),
+    minLon: String(bounds.minLon),
+    maxLon: String(bounds.maxLon),
+    limit: String(limit),
+  });
+  const res = await fetch(`${STRIKES_API}/api/cities/in-bounds/?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`cities in-bounds ${res.status}`);
+  const data = (await res.json()) as { cities?: CityLabel[] };
+  return data.cities ?? [];
+}
+
 export async function getWeatherNow(lat: number, lon: number): Promise<WeatherNow> {
   const q = new URLSearchParams({ lat: String(lat), lon: String(lon) });
   const res = await fetch(`${API}/api/weather/now/?${q}`, { cache: 'no-store' });

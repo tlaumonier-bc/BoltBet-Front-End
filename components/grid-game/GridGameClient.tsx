@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
+  getCitiesInBounds,
   getCountryStrikesResult,
   getGridActiveCountries,
   getGridMatchState,
@@ -12,6 +13,7 @@ import {
   registerUsername,
   selectGridCell,
   startGridMatch,
+  type CityLabel,
   type CountryStrike,
   type GridActiveCountry,
   type GridMatchState,
@@ -927,6 +929,7 @@ function SatelliteCountryMap({
   match,
   phase,
   area,
+  cities,
   activeAreaCount,
   secondsToScan,
   loading,
@@ -949,6 +952,7 @@ function SatelliteCountryMap({
   match: GridMatchState | null;
   phase: Phase;
   area: AreaCandidate | null;
+  cities: CityLabel[];
   activeAreaCount: number;
   secondsToScan: number;
   loading: boolean;
@@ -1198,6 +1202,25 @@ function SatelliteCountryMap({
         );
       })}
 
+      {cities.map((city, index) => {
+        const p = projectEqui(bounds, size.width, size.height, city.lat, city.lon);
+        if (p.x < 6 || p.x > size.width - 6 || p.y < 6 || p.y > size.height - 6) return null;
+        return (
+          <div
+            key={`${city.name}-${index}`}
+            className="pointer-events-none absolute z-[15] -translate-y-1/2"
+            style={{ left: `${p.x}px`, top: `${p.y}px` }}
+          >
+            <div className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-white/85 ring-1 ring-black/40" />
+              <span className="whitespace-nowrap text-[11px] font-semibold text-white [text-shadow:_0_1px_4px_rgba(0,0,0,0.95)]">
+                {city.name}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+
       {gameStarted && (
         <svg
           className="pointer-events-none absolute inset-0 z-[8] h-full w-full"
@@ -1415,6 +1438,7 @@ export default function GridGameClient() {
   const [areaIndex, setAreaIndex] = useState(0);
   const [match, setMatch] = useState<GridMatchState | null>(null);
   const [activeAreas, setActiveAreas] = useState<AreaCandidate[]>([]);
+  const [cities, setCities] = useState<CityLabel[]>([]);
   const [nextScanAt, setNextScanAt] = useState(() => Date.now() + AREA_SCAN_MS);
   const areasCountryRef = useRef<string | null>(null);
   const strikesRef = useRef<CountryStrike[]>([]);
@@ -1580,6 +1604,24 @@ export default function GridGameClient() {
     };
   }, [selectedCountry.country, phase, zoneKey]);
 
+  // City/town labels for the play zone (fetched once per zone, they don't move).
+  useEffect(() => {
+    if (!zoneKey) {
+      setCities([]);
+      return;
+    }
+    const [minLat, maxLat, minLon, maxLon] = zoneKey.split('|').map(Number);
+    let alive = true;
+    getCitiesInBounds({ minLat, maxLat, minLon, maxLon }, 8)
+      .then((list) => {
+        if (alive) setCities(list);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [zoneKey]);
+
   useEffect(() => {
     if (!match || match.status === 'settled') return;
     let alive = true;
@@ -1734,6 +1776,7 @@ export default function GridGameClient() {
             match={match}
             phase={phase}
             area={displayedArea}
+            cities={cities}
             activeAreaCount={activeAreas.length}
             secondsToScan={mounted ? Math.max(0, Math.min(10, Math.floor((nextScanAt - nowMs) / 1000))) : 10}
             loading={loading}
