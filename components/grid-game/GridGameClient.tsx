@@ -38,14 +38,16 @@ const AREA_GRID_COLS = 10;
 const AREA_GRID_ROWS = 8;
 const AREA_WINDOW_MS = 30_000;
 const AREA_FALLBACK_WINDOW_MS = 2 * 60_000;
-const AREA_SCAN_MS = 10_000;   // rescan for active areas every 10s (drives the countdown)
-const AREA_TTL_MS = 22_000;    // keep a detected area alive across a couple of scans
+const AREA_SCAN_MS = 10_000;       // rescan cadence when playable areas exist
+const AREA_SCAN_EMPTY_MS = 3_000;  // rescan faster while nothing is playable (find a game sooner)
+const AREA_TTL_MS = 22_000;        // keep a detected area alive across a couple of scans
 const DENSITY_WINDOW_MS = 60_000;   // heatmap reflects strikes from the last 60s (= a round)
 const DENSITY_REDRAW_MS = 1_000;    // recompute the heatmap every second
 const AREA_MIN_TRIGGERED_RATIO = 0.5;
 const AREA_MIN_TRIGGERED_CELLS = 3;
 const AREA_MIN_STRIKES = 3;
 const CELL_LOCK_MS = 3_000;
+const SCORE_GRACE_MS = 3_000;   // also credit strikes landing just BEFORE the pick
 
 type LayerKey = 'density' | 'multiplier' | 'opponent' | 'storm';
 const LAYER_DEFS: { key: LayerKey; label: string; available: boolean; hint: string }[] = [
@@ -1441,6 +1443,7 @@ export default function GridGameClient() {
   const areasCountryRef = useRef<string | null>(null);
   const strikesRef = useRef<CountryStrike[]>([]);
   const countedStrikeRef = useRef(new Set<string>());
+  const activeAreasRef = useRef<AreaCandidate[]>([]);
   const [matchArea, setMatchArea] = useState<AreaCandidate | null>(null);
   const [strikes, setStrikes] = useState<CountryStrike[]>([]);
   const [loading, setLoading] = useState(false);
@@ -1493,7 +1496,9 @@ export default function GridGameClient() {
   );
 
   strikesRef.current = strikes;
+  activeAreasRef.current = activeAreas;
 
+  // Recompute active areas from the latest strikes; returns how many are playable.
   const scanForAreas = useCallback(() => {
     const now = Date.now();
     const src = strikesRef.current;
@@ -1505,26 +1510,30 @@ export default function GridGameClient() {
     const base = countryBounds(selectedCountry.country);
     const fresh = buildAreaCandidates(src, base, now, AREA_WINDOW_MS);
     const candidates = fresh.length ? fresh : buildAreaCandidates(src, base, now, AREA_FALLBACK_WINDOW_MS);
-    setActiveAreas((current) => {
-      const prior = countryChanged ? [] : current;
-      const byId = new Map(prior.filter((area) => (area.expiresAt ?? 0) > now).map((area) => [area.id, area]));
-      for (const candidate of candidates) {
-        byId.set(candidate.id, { ...candidate, expiresAt: now + AREA_TTL_MS });
-      }
-      return [...byId.values()].sort((a, b) => b.score - a.score);
-    });
-    setNextScanAt(now + AREA_SCAN_MS);
+    const prior = countryChanged ? [] : activeAreasRef.current;
+    const byId = new Map(prior.filter((area) => (area.expiresAt ?? 0) > now).map((area) => [area.id, area]));
+    for (const candidate of candidates) {
+      byId.set(candidate.id, { ...candidate, expiresAt: now + AREA_TTL_MS });
+    }
+    const merged = [...byId.values()].sort((a, b) => b.score - a.score);
+    setActiveAreas(merged);
+    return merged.length;
   }, [selectedCountry.country]);
 
-  // The real search: a STABLE 10s timer that reads the latest strikes via a ref.
-  // It used to have `strikes` as a dependency, so every feed update (~2.5s) tore
-  // the effect down and re-scanned immediately — which is why the countdown kept
-  // snapping back to 10 and never hit 0. Now it fires exactly every AREA_SCAN_MS.
+  // The real search: a stable timer that reads the latest strikes via a ref and
+  // drives the "New search in" countdown. Cadence adapts — every 3s while nothing
+  // is playable (find a game sooner), every 10s once there are playable areas.
   useEffect(() => {
     if (phase !== 'selecting') return;
-    scanForAreas();
-    const timer = window.setInterval(scanForAreas, AREA_SCAN_MS);
-    return () => window.clearInterval(timer);
+    let timer: number;
+    const tick = () => {
+      const count = scanForAreas();
+      const delay = count > 0 ? AREA_SCAN_MS : AREA_SCAN_EMPTY_MS;
+      setNextScanAt(Date.now() + delay);
+      timer = window.setTimeout(tick, delay);
+    };
+    tick();
+    return () => window.clearTimeout(timer);
   }, [phase, scanForAreas]);
 
   // One extra scan the moment the feed first has data (or on a country switch),
@@ -1666,7 +1675,7 @@ export default function GridGameClient() {
     let gained = 0;
     for (const s of strikes) {
       const t = Date.parse(s.received_at);
-      if (!Number.isFinite(t) || t < selectedCell.startedAt || t > selectedCell.expiresAt) continue;
+      if (!Number.isFinite(t) || t < selectedCell.startedAt - SCORE_GRACE_MS || t > selectedCell.expiresAt) continue;
       const key = `${s.received_at}:${s.lat}:${s.lon}`;
       if (countedStrikeRef.current.has(key)) continue;
       const rx = (s.lon - b.minLon) / spanLon;
