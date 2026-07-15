@@ -1,6 +1,6 @@
-// content-types.ts — shape of content/locales.json (generated in Phase 1).
-// Drop into the frontend repo at lib/content/content-types.ts.
-// Do not edit locales.json by hand; re-run generate_content_config.py.
+// content-types.ts — shape of content/locales.json.
+// locales.json is now maintained by hand (the generate_content_config.py
+// generator is no longer used); edit pages directly and keep them to this shape.
 
 export type IntentTier = 'lightning' | 'storm' | 'product';
 export type PageType = 'seo_map' | 'seo_storm' | 'product_funnel';
