@@ -1413,6 +1413,7 @@ export default function GridGameClient() {
   const [playerScore, setPlayerScore] = useState(0);
   const [botScore, setBotScore] = useState(0);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [mounted, setMounted] = useState(false);
   const [dominantIso, setDominantIso] = useState<string | null>(null);
   const [layers, setLayers] = useState<LayerState>(DEFAULT_LAYERS);
   const [botCellCounts, setBotCellCounts] = useState<number[]>([]);
@@ -1625,6 +1626,7 @@ export default function GridGameClient() {
   }, [nowMs, selectedCell, phase, strikes, match?.grid?.bounds, match?.grid?.cols, match?.grid?.rows]);
 
   useEffect(() => {
+    setMounted(true); // gate time-derived UI so SSR/first paint stays deterministic
     const timer = window.setInterval(() => setNowMs(Date.now()), 250);
     return () => window.clearInterval(timer);
   }, []);
@@ -1718,7 +1720,7 @@ export default function GridGameClient() {
             phase={phase}
             area={displayedArea}
             activeAreaCount={activeAreas.length}
-            secondsToScan={Math.max(0, Math.min(10, Math.floor((nextScanAt - nowMs) / 1000)))}
+            secondsToScan={mounted ? Math.max(0, Math.min(10, Math.floor((nextScanAt - nowMs) / 1000))) : 10}
             loading={loading}
             onPlay={onPlay}
             playerScore={playerScore}
