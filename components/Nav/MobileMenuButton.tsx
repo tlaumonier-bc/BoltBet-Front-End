@@ -84,6 +84,13 @@ export default function MobileMenuButton({ countries }: { countries: CountryItem
           >
             {t('nav.leaderboard')}
           </Link>
+          <Link
+            href="/grid-game"
+            onClick={close}
+            className="block rounded-xl px-3 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-200/10"
+          >
+            {t('nav.gridGame')}
+          </Link>
 
           <button
             type="button"
