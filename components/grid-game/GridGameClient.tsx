@@ -203,6 +203,21 @@ function projectPx(bounds: Bounds, width: number, height: number, lat: number, l
   };
 }
 
+// Equirectangular (linear lat/lon) projection — MUST be used for anything that
+// has to line up with the grid cells (drawn at linear col/row fractions) and the
+// scoring (server + client both map strikes to cells equirectangularly). Using
+// the Mercator projectPx here would put a strike in a different grid row than the
+// cell it scores in, so it would look "inside your cell" yet never score.
+function projectEqui(bounds: Bounds, width: number, height: number, lat: number, lon: number) {
+  const spanLon = Math.max(1e-6, bounds.maxLon - bounds.minLon);
+  const spanLat = Math.max(1e-6, bounds.maxLat - bounds.minLat);
+  const nlon = normalizeLonToBounds(lon, bounds);
+  return {
+    x: ((nlon - bounds.minLon) / spanLon) * width,
+    y: ((bounds.maxLat - lat) / spanLat) * height,
+  };
+}
+
 function pathForPolygons(polygons: CountryPolygon[], bounds: Bounds, width: number, height: number) {
   return polygons
     .map((polygon) =>
@@ -868,7 +883,7 @@ function StrikeDensityLayer({
       const receivedAt = Date.parse(strike.received_at);
       const age = Number.isFinite(receivedAt) ? now - receivedAt : Infinity;
       if (age >= DENSITY_WINDOW_MS) continue; // only the last DENSITY_WINDOW_MS
-      const p = projectPx(bounds, w, h, strike.lat, strike.lon);
+      const p = projectEqui(bounds, w, h, strike.lat, strike.lon);
       if (p.x < -radius || p.x > w + radius || p.y < -radius || p.y > h + radius) continue;
       // Fade with age inside the window: freshest hottest, ~60s oldest faint.
       const weight = 0.12 + 0.28 * Math.max(0, 1 - age / DENSITY_WINDOW_MS);
@@ -1158,7 +1173,7 @@ function SatelliteCountryMap({
       )}
 
       {strikes.slice(0, 90).map((strike, index) => {
-        const p = projectPx(bounds, size.width, size.height, strike.lat, strike.lon);
+        const p = projectEqui(bounds, size.width, size.height, strike.lat, strike.lon);
         if (p.x < 0 || p.x > size.width || p.y < 0 || p.y > size.height) return null;
         const visual = strikeVisual(strike, now);
         return (
