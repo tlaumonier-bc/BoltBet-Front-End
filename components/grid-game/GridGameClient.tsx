@@ -429,13 +429,6 @@ function countryName(iso: string) {
   }
 }
 
-function msUntil(iso: string) {
-  return Math.max(0, new Date(iso).getTime() - Date.now());
-}
-
-function secondsUntil(iso: string) {
-  return Math.ceil(msUntil(iso) / 1000);
-}
 
 function formatMatchOffset(timestamp: string, match: GridMatchState | null) {
   if (!match) return '-';
@@ -1384,17 +1377,21 @@ function SatelliteCountryMap({
         </div>
       )}
 
-      {phase === 'preparing' && match && (
-        <div className="pointer-events-none absolute inset-0 z-[30] grid place-items-center bg-black/20 backdrop-blur-[1px]">
-          <div className="rounded-[2rem] border border-bolt/25 bg-slate-950/78 px-8 py-7 text-center shadow-2xl">
-            <div className="text-[11px] font-black uppercase tracking-[0.32em] text-bolt/70">Prepare</div>
-            <div className="font-display mt-2 text-7xl font-black text-bolt">{secondsUntil(match.timing.startedAt)}</div>
-            <p className="mt-4 max-w-sm text-sm font-semibold leading-relaxed text-white/70">
-              Pick a cell. It stays selected until you pick another, and every strike landing inside it adds to your score.
-            </p>
+      {phase === 'preparing' && match && (() => {
+        const go = new Date(match.timing.startedAt).getTime() - now <= 800;
+        return (
+          <div className="pointer-events-none absolute inset-0 z-[30] grid place-items-center bg-black/20 backdrop-blur-[1px]">
+            <div className="rounded-[2rem] border border-bolt/25 bg-slate-950/78 px-8 py-7 text-center shadow-2xl">
+              <div className="font-display text-6xl font-black text-bolt">{go ? 'Go!' : 'Ready?'}</div>
+              {!go && (
+                <p className="mt-3 max-w-sm text-sm font-semibold leading-relaxed text-white/70">
+                  Pick a cell — strikes landing in it score.
+                </p>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {phase === 'finding' && (
         <div className="pointer-events-none absolute inset-0 z-[30] grid place-items-center bg-black/20 backdrop-blur-[1px]">
