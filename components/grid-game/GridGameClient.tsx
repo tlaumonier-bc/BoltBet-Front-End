@@ -1403,6 +1403,7 @@ export default function GridGameClient() {
   const [nextScanAt, setNextScanAt] = useState(() => Date.now() + AREA_SCAN_MS);
   const areasCountryRef = useRef<string | null>(null);
   const strikesRef = useRef<CountryStrike[]>([]);
+  const countedStrikeRef = useRef(new Set<string>());
   const [matchArea, setMatchArea] = useState<AreaCandidate | null>(null);
   const [strikes, setStrikes] = useState<CountryStrike[]>([]);
   const [loading, setLoading] = useState(false);
@@ -1580,17 +1581,48 @@ export default function GridGameClient() {
     };
   }, [match, matchId, matchStatus]);
 
-  // Server-authoritative: scores and the bot's current cell come straight from
-  // the match payload (the backend counts strikes-in-cell). No client scoring.
+  // Bot score + bot cell come from the server. The player's score is scored
+  // OPTIMISTICALLY on the client for instant feedback (effect below), using the
+  // same equirectangular cell mapping + 3s window the server uses, so it agrees
+  // with the server's authoritative value applied at settle.
   useEffect(() => {
     if (!match) return;
-    setPlayerScore(match.player.score ?? 0);
     setBotScore(match.opponent.score ?? 0);
+    if (match.status === 'settled') setPlayerScore(match.player.score ?? 0);
     const bc = match.opponent.selectedCell ?? null;
     setBotSelectedCell(
       bc != null ? { cell: bc, startedAt: 0, expiresAt: Number.MAX_SAFE_INTEGER } : null,
     );
   }, [match]);
+
+  // Instant player scoring: the moment a strike lands in the selected cell within
+  // its 3s lock, bump the score locally (don't wait for the ~1s server poll).
+  useEffect(() => {
+    if (phase !== 'active' || !selectedCell || nowMs >= selectedCell.expiresAt) return;
+    const b = match?.grid?.bounds;
+    if (!b) return;
+    const cols = match.grid.cols;
+    const rows = match.grid.rows;
+    const spanLon = b.maxLon - b.minLon;
+    const spanLat = b.maxLat - b.minLat;
+    if (spanLon <= 0 || spanLat <= 0) return;
+    let gained = 0;
+    for (const s of strikes) {
+      const t = Date.parse(s.received_at);
+      if (!Number.isFinite(t) || t < selectedCell.startedAt || t > selectedCell.expiresAt) continue;
+      const key = `${s.received_at}:${s.lat}:${s.lon}`;
+      if (countedStrikeRef.current.has(key)) continue;
+      const rx = (s.lon - b.minLon) / spanLon;
+      const ry = (b.maxLat - s.lat) / spanLat;
+      if (rx < 0 || rx >= 1 || ry < 0 || ry >= 1) continue;
+      const col = Math.min(cols - 1, Math.floor(rx * cols));
+      const row = Math.min(rows - 1, Math.floor(ry * rows));
+      if (row * cols + col !== selectedCell.cell) continue;
+      countedStrikeRef.current.add(key);
+      gained += 1;
+    }
+    if (gained) setPlayerScore((score) => score + gained);
+  }, [nowMs, selectedCell, phase, strikes, match?.grid?.bounds, match?.grid?.cols, match?.grid?.rows]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNowMs(Date.now()), 250);
@@ -1634,6 +1666,7 @@ export default function GridGameClient() {
     setBotScore(0);
     setDominantIso(null);
     setBotCellCounts([]);
+    countedStrikeRef.current = new Set();
     window.setTimeout(() => {
       ensureGameSession()
         .then(() => startGridMatch(selectedCountry.country))
