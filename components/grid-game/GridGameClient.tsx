@@ -1228,6 +1228,7 @@ function SatelliteCountryMap({
               const lockActive = Boolean(selectedCell && selectedCell.expiresAt > now);
               const disabled = phase !== 'active' || (lockActive && !selected);
               const countdown = selectedCell && selected ? Math.max(1, Math.ceil((selectedCell.expiresAt - now) / 1000)) : 0;
+              const botCountdown = botSelectedCell && botSelected ? Math.min(3, Math.max(1, Math.ceil((botSelectedCell.expiresAt - now) / 1000))) : 0;
               return (
                 <g key={cell.index}>
                   <rect
@@ -1274,9 +1275,9 @@ function SatelliteCountryMap({
                       y={((cell.row + 0.5) / grid.rows) * size.height}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      className="pointer-events-none text-[18px]"
+                      className="pointer-events-none fill-rose-200/85 text-[22px] font-black"
                     >
-                      🤖
+                      {botCountdown}
                     </text>
                   )}
                   {phase === 'preparing' && (preparingCounts[cell.row]?.[cell.col] ?? 0) > 0 && (
@@ -1645,8 +1646,9 @@ export default function GridGameClient() {
     setBotScore(match.opponent.score ?? 0);
     if (match.status === 'settled') setPlayerScore(match.player.score ?? 0);
     const bc = match.opponent.selectedCell ?? null;
+    const bx = match.opponent.selectedCellExpiresAt;
     setBotSelectedCell(
-      bc != null ? { cell: bc, startedAt: 0, expiresAt: Number.MAX_SAFE_INTEGER } : null,
+      bc != null && bx ? { cell: bc, startedAt: 0, expiresAt: new Date(bx).getTime() } : null,
     );
   }, [match]);
 

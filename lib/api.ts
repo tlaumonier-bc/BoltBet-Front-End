@@ -455,6 +455,7 @@ export interface GridMatchState {
     eloAfter: number | null;
     bot: boolean;
     selectedCell: number | null;
+    selectedCellExpiresAt: string | null;
   };
   model?: string;
   zone?: { hNorm: number | null; roundStrikes: number | null };
