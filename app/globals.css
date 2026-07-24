@@ -205,6 +205,73 @@ body {
   50% { opacity: 1; }
 }
 
+/* v2: a struck cell you staked pops with a green glow at resolution. */
+.grid-cell-hit {
+  animation: grid-cell-hit 0.85s ease-out;
+}
+@keyframes grid-cell-hit {
+  0% { filter: drop-shadow(0 0 0 rgba(52, 211, 153, 0)); }
+  25% { filter: drop-shadow(0 0 11px rgba(52, 211, 153, 0.95)); }
+  100% { filter: drop-shadow(0 0 0 rgba(52, 211, 153, 0)); }
+}
+
+/* demo: lightning-strike pop on a struck cell in the how-to-play walkthrough. */
+.demo-zap {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: demo-zap 0.7s ease-out both;
+}
+@keyframes demo-zap {
+  0% { opacity: 0; transform: scale(0.4); }
+  40% { opacity: 1; transform: scale(1.25); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* v2: "place your bets" cue slides in at the start of a betting round. */
+.round-cue {
+  animation: round-cue 2.4s ease-out both;
+}
+@keyframes round-cue {
+  0% { opacity: 0; transform: translateY(-8px); }
+  12% { opacity: 1; transform: translateY(0); }
+  75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* v2: centered +X / −X payout burst at resolution. Pops, holds, then clears so
+   the per-cell results underneath stay visible. */
+.round-result {
+  animation: round-result 1.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes round-result {
+  0% { opacity: 0; transform: scale(0.5); }
+  18% { opacity: 1; transform: scale(1.12); }
+  30% { transform: scale(1); }
+  72% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.04); }
+}
+
+/* v2: the credit balance gives a quick pop each time it changes. */
+.credit-pop {
+  animation: credit-pop 0.3s ease-out;
+}
+@keyframes credit-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); color: #6ee7b7; }
+  100% { transform: scale(1); }
+}
+
+/* demo intro: bolts keep pulsing in the hot cells on the first step. */
+.demo-zap-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: demo-zap-pulse 1.2s ease-in-out infinite;
+}
+@keyframes demo-zap-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
 /* slim scrollbar for the /live console panels */
 .panel-scroll {
   scrollbar-width: thin;
