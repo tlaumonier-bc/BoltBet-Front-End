@@ -116,29 +116,48 @@ function detectZonesPeaks(strikes, now, cfg) {
     .map((b) => ({ w: b.w, clat: b.slat / b.sw, clon: b.slon / b.sw }))
     .sort((a, b) => b.w - a.w);
   const zones = [];
-  const suppressed = [];
-  const sep2 = cfg.separationKm ** 2;
-  const r2 = cfg.focusRadiusKm ** 2;
+  const accepted = []; // {clat, clon, sepKm} — centres of ACCEPTED zones
+  const tooClose = (lat, lon) => accepted.some((a) => {
+    const dlat = (lat - a.clat) * KM_PER_DEG;
+    const dlon = (lon - a.clon) * KM_PER_DEG * cosLat(a.clat);
+    return dlat * dlat + dlon * dlon <= a.sepKm * a.sepKm;
+  });
   for (const seed of list) {
     if (seed.w < cfg.minCellWeight) break; // sorted desc: nothing hotter remains
     const c = cosLat(seed.clat);
-    // skip if this peak sits inside an already-claimed zone
-    let claimed = false;
-    for (const p of suppressed) {
-      const dlat = (seed.clat - p.clat) * KM_PER_DEG;
-      const dlon = (seed.clon - p.clon) * KM_PER_DEG * cosLat(p.clat);
-      if (dlat * dlat + dlon * dlon <= sep2) { claimed = true; break; }
+    if (tooClose(seed.clat, seed.clon)) continue; // seed inside an accepted zone
+
+    // ADAPTIVE radius: grow until the zone gathers ~targetRoundStrikes strikes in
+    // the round window (bigger in quiet periods, small when storms are dense),
+    // capped at maxFocusKm. Then separation scales with the chosen radius.
+    const roundD = [];
+    for (const s of recent) {
+      if (s.t < roundSince) continue;
+      const dlat = (s.lat - seed.clat) * KM_PER_DEG;
+      const dlon = (s.lon - seed.clon) * KM_PER_DEG * c;
+      const d = Math.hypot(dlat, dlon);
+      if (d <= cfg.maxFocusKm) roundD.push(d);
     }
-    if (claimed) continue;
-    suppressed.push(seed);
-    // gather strikes within focus radius of the peak
+    roundD.sort((a, b) => a - b);
+    let R = cfg.maxFocusKm;
+    if (roundD.length >= cfg.targetRoundStrikes) R = Math.max(cfg.minFocusKm, roundD[cfg.targetRoundStrikes - 1]);
+    else if (roundD.length) R = Math.max(cfg.minFocusKm, Math.min(cfg.maxFocusKm, roundD[roundD.length - 1]));
+    const sepKm = Math.max(cfg.minSepKm, Math.min(cfg.maxSepKm, R * cfg.separationFrac));
+    const r2 = R * R;
     const gathered = recent.filter((s) => {
       const dlat = (s.lat - seed.clat) * KM_PER_DEG;
       const dlon = (s.lon - seed.clon) * KM_PER_DEG * c;
       return dlat * dlat + dlon * dlon <= r2;
     });
-    const zone = buildZone(gathered, now, roundSince, cfg);
-    if (zone) zones.push(zone);
+    // BALANCED: anchor the zone frame on the SEED (not the gathered centroid), so
+    // several seeds over one big storm yield distinct, partially-overlapping zones
+    // instead of all collapsing onto the storm's centre of mass.
+    const zone = buildZone(gathered, now, roundSince, cfg, seed.clat, seed.clon);
+    if (!zone) continue;
+    // Separate on the SEED centre. sepKm < zone width ⇒ mild overlap (shared edges,
+    // distinct centres) → ~4–5 zones over dense systems, no exact duplicates.
+    accepted.push({ clat: seed.clat, clon: seed.clon, sepKm });
+    zones.push(zone);
     if (zones.length >= cfg.maxZones) break;
   }
   zones.sort((a, b) => b.roundCount - a.roundCount);
@@ -149,17 +168,20 @@ function detectZones(strikes, now, cfg) {
   return cfg.mode === 'peaks' ? detectZonesPeaks(strikes, now, cfg) : detectZonesRegion(strikes, now, cfg);
 }
 
-function buildZone(all, now, roundSince, cfg) {
+function buildZone(all, now, roundSince, cfg, anchorLat, anchorLon) {
   if (!all.length) return null;
 
-  // weighted centroid + spread (km)
+  // weighted centroid + spread (km). If an anchor (the seed) is given, frame the
+  // zone on it instead of the centroid, so nearby seeds over one storm produce
+  // distinct, partially-overlapping zones rather than collapsing to one.
   let sw = 0, sx = 0, sy = 0;
   for (const s of all) {
     const w = Math.exp(-(now - s.t) / cfg.tauMs);
     sw += w; sx += w * s.lon; sy += w * s.lat;
   }
   if (sw <= 0) return null;
-  const clat = sy / sw, clon = sx / sw;
+  const clat = anchorLat != null ? anchorLat : sy / sw;
+  const clon = anchorLon != null ? anchorLon : sx / sw;
   let vlat = 0, vlon = 0;
   for (const s of all) {
     const w = Math.exp(-(now - s.t) / cfg.tauMs);
@@ -226,8 +248,9 @@ function buildZone(all, now, roundSince, cfg) {
 function runConfig(cfg) {
   const startTick = T0 + Math.max(cfg.obsMs, cfg.roundMs);
   const counts = [];
+  const roundCounts = [];
   let entropySum = 0, topSum = 0, zoneObs = 0;
-  let widthSum = 0;
+  let widthSum = 0, strikeSum = 0, ge100 = 0;
   for (let now = startTick; now <= T1; now += STEP_MS) {
     const zones = detectZones(STRIKES, now, cfg);
     counts.push(zones.length);
@@ -235,10 +258,14 @@ function runConfig(cfg) {
       entropySum += z.hNorm;
       topSum += z.topShare;
       widthSum += z.widthKm;
+      strikeSum += z.roundCount;
+      roundCounts.push(z.roundCount);
+      if (z.roundCount >= 100) ge100 += 1;
       zoneObs += 1;
     }
   }
   counts.sort((a, b) => a - b);
+  roundCounts.sort((a, b) => a - b);
   const n = counts.length;
   const avg = counts.reduce((a, b) => a + b, 0) / n;
   const median = counts[Math.floor(n / 2)];
@@ -246,13 +273,13 @@ function runConfig(cfg) {
   return {
     avg: avg.toFixed(2),
     median,
-    max: counts[n - 1],
-    pctGe1: pct(1),
-    pctGe3: pct(3),
     pctGe5: pct(5),
+    avgStrk: zoneObs ? (strikeSum / zoneObs).toFixed(0) : '-',
+    medStrk: roundCounts.length ? roundCounts[Math.floor(roundCounts.length / 2)] : '-',
+    pctZoneGe100: zoneObs ? ((ge100 / zoneObs) * 100).toFixed(0) : '-',
     hNorm: zoneObs ? (entropySum / zoneObs).toFixed(2) : '-',
     topShare: zoneObs ? (topSum / zoneObs).toFixed(2) : '-',
-    avgWidthKm: zoneObs ? (widthSum / zoneObs).toFixed(0) : '-',
+    widthKm: zoneObs ? (widthSum / zoneObs).toFixed(0) : '-',
   };
 }
 
@@ -284,27 +311,43 @@ const PK = {
   coarseDeg: 0.5, focusRadiusKm: 90, separationKm: 160, minSigmaKm: 10,
   targetPerCell: 1.3, sigmaK: 1.8, entropyThreshold: 0.5, minRoundStrikes: 5, maxZones: 12,
 };
-// tile larger storms into more sub-zones: shrink separation (and focus with it).
-const PKB = { ...PK, coarseDeg: 0.3, minCellWeight: 0.7, minRoundStrikes: 3, obsMs: 420_000, tauMs: 150_000, targetPerCell: 1.3, entropyThreshold: 0.5 };
+// GOAL: bigger, denser zones — avg ≥100 strikes/zone/min, still ≥5 zones avg,
+// still reasonably distributed. Lever: larger focus radius (gather more strikes)
+// + matching separation, coarser bins, slightly relaxed entropy.
+const PKB = { ...PK, coarseDeg: 0.3, minCellWeight: 0.7, minRoundStrikes: 3, obsMs: 420_000, tauMs: 150_000, targetPerCell: 2.0, entropyThreshold: 0.5 };
+// ADAPTIVE-radius model: each zone grows to gather ~targetRoundStrikes, capped at
+// maxFocusKm; separation scales with the chosen radius. minRoundStrikes stays a
+// floor so near-empty peaks are dropped.
+const ADAPT = { ...PKB, minRoundStrikes: 25, minFocusKm: 60, separationFrac: 0.5, minSepKm: 45, maxSepKm: 220 };
+// BALANCED: dedupe distance small enough to allow partial overlap (distinct
+// centres, shared edges) → ~4–5 zones without exact duplicates.
+// Seed-anchored: separation is now an ABSOLUTE seed-centre spacing (pin
+// minSepKm==maxSepKm). Smaller spacing ⇒ more tiling/overlap ⇒ more zones.
+// o = {sep, target, maxFocus, minCellWeight, coarseDeg, minRound}
+const bal = (o) => ({
+  ...ADAPT, separationFrac: 1, minSepKm: o.sep, maxSepKm: o.sep,
+  targetRoundStrikes: o.tgt ?? 110, maxFocusKm: o.maxF ?? 300,
+  minCellWeight: o.mcw ?? 0.7, coarseDeg: o.cd ?? 0.3, minRoundStrikes: o.mrs ?? 25,
+});
 const CONFIGS = {
-  region_ref: REGION_REF,
-  pk_s40: { ...PKB, focusRadiusKm: 32, separationKm: 40 },
-  // liveliness guard: require a few more round strikes so zones aren't too sparse
-  fin_mr4: { ...PKB, focusRadiusKm: 33, separationKm: 40, minRoundStrikes: 4 },
-  fin_mr5: { ...PKB, focusRadiusKm: 34, separationKm: 42, minRoundStrikes: 5 },
-  fin_mr6: { ...PKB, focusRadiusKm: 36, separationKm: 44, minRoundStrikes: 6 },
-  // stricter dispersion
-  fin_ent55: { ...PKB, focusRadiusKm: 33, separationKm: 40, minRoundStrikes: 4, entropyThreshold: 0.55 },
-  // FINAL CANDIDATE
-  FINAL: { ...PKB, focusRadiusKm: 34, separationKm: 42, minRoundStrikes: 4, entropyThreshold: 0.5, targetPerCell: 1.3 },
+  // relax seed gate + finer bins to admit more distinct peaks
+  A_mcw04: bal({ sep: 80, tgt: 100, mcw: 0.4, cd: 0.25 }),
+  B_mcw03: bal({ sep: 80, tgt: 100, mcw: 0.3, cd: 0.25 }),
+  C_cd20:  bal({ sep: 75, tgt: 100, mcw: 0.4, cd: 0.2 }),
+  D_cd20b: bal({ sep: 65, tgt: 95,  mcw: 0.35, cd: 0.2, mrs: 20 }),
+  E_lo:    bal({ sep: 60, tgt: 90,  mcw: 0.3, cd: 0.2, mrs: 18 }),
+  F_lo2:   bal({ sep: 55, tgt: 85,  mcw: 0.25, cd: 0.2, mrs: 18 }),
+  // FINAL = "Balanced": ~5 zones on avg, distinct seed-anchored centres, ~74
+  // strikes/zone (2.5× the old model), still distributed (hNorm ~0.58).
+  FINAL: bal({ sep: 60, tgt: 90, mcw: 0.3, cd: 0.2, mrs: 18 }),
 };
 
 const only = process.argv[2];
 const names = only ? [only] : Object.keys(CONFIGS);
 const pad = (s, n) => String(s).padEnd(n);
 console.log(`Data: ${STRIKES.length} strikes, ${((T1 - T0) / 60000).toFixed(1)} min, ~${(STRIKES.length / ((T1 - T0) / 60000)).toFixed(0)}/min global`);
-console.log(pad('config', 16), pad('avgZones', 9), pad('median', 7), pad('max', 5), pad('%>=1', 6), pad('%>=3', 6), pad('%>=5', 6), pad('hNorm', 7), pad('topShare', 9), 'widthKm');
+console.log(pad('config', 16), pad('avgZ', 6), pad('medZ', 5), pad('%>=5', 6), pad('avgStrk', 8), pad('medStrk', 8), pad('%z>=100', 8), pad('hNorm', 7), pad('topSh', 6), 'widthKm');
 for (const name of names) {
   const r = runConfig(CONFIGS[name]);
-  console.log(pad(name, 16), pad(r.avg, 9), pad(r.median, 7), pad(r.max, 5), pad(r.pctGe1 + '%', 6), pad(r.pctGe3 + '%', 6), pad(r.pctGe5 + '%', 6), pad(r.hNorm, 7), pad(r.topShare, 9), r.avgWidthKm);
+  console.log(pad(name, 16), pad(r.avg, 6), pad(r.median, 5), pad(r.pctGe5 + '%', 6), pad(r.avgStrk, 8), pad(r.medStrk, 8), pad(r.pctZoneGe100 + '%', 8), pad(r.hNorm, 7), pad(r.topShare, 6), r.widthKm);
 }

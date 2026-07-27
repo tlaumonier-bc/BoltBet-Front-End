@@ -26,10 +26,18 @@ export interface ZoneConfig {
   tauMs: number;          // recency decay constant
   coarseDeg: number;      // coarse bin size for peak detection
   minCellWeight: number;  // weighted-density floor for a bin to seed a zone
-  focusRadiusKm: number;  // radius of strikes gathered into a zone around a peak
-  separationKm: number;   // min distance between two zones (tiles big storms)
+  // ADAPTIVE radius: a zone grows around its peak until it gathers this many
+  // round-window strikes (bigger in quiet periods, small when storms are dense),
+  // clamped to [minFocusKm, maxFocusKm]. Separation between zones scales with the
+  // chosen radius (separationFrac), clamped to [minSepKm, maxSepKm].
+  targetRoundStrikes: number;
+  minFocusKm: number;
+  maxFocusKm: number;
+  separationFrac: number;
+  minSepKm: number;
+  maxSepKm: number;
   minSigmaKm: number;     // floor on a zone's spatial spread
-  minRoundStrikes: number;// min strikes in the zone over the round window
+  minRoundStrikes: number;// min strikes in the zone over the round window (drop near-empty peaks)
   targetPerCell: number;  // aim ~this many round strikes per cell (sets dims)
   sigmaK: number;         // grid half-extent = sigmaK · weighted std-dev
   minCols: number; minRows: number; maxCols: number; maxRows: number;
@@ -37,18 +45,28 @@ export interface ZoneConfig {
   maxZones: number;         // hard cap
 }
 
-// Backtested optimum (test/RESULTS.md → "FINAL").
+// Backtested "Balanced" optimum (test/RESULTS.md): seed-anchored adaptive-radius
+// zones — ~5 zones on avg (median 5, ≥5 on ~56% of ticks), median ~74
+// strikes/zone/min (2.5× the old model), still distributed (hNorm ~0.58), with
+// distinct seed-anchored centres (≥minSepKm apart → mild overlap, no duplicates).
+// At ~590 strikes/min globally, 5 zones EACH ≥100/min is physically impossible
+// (there aren't 5 storms that dense at once), so this trades per-zone strikes for
+// the ~5-zone count the game wants; each zone still auto-sizes to gather strikes.
 export const ZONE_CONFIG: ZoneConfig = {
   obsMs: 420_000,
   roundMs: 60_000,
   tauMs: 150_000,
-  coarseDeg: 0.3,
-  minCellWeight: 0.7,
-  focusRadiusKm: 34,
-  separationKm: 42,
+  coarseDeg: 0.2,
+  minCellWeight: 0.3,
+  targetRoundStrikes: 90,
+  minFocusKm: 60,
+  maxFocusKm: 300,
+  separationFrac: 1,
+  minSepKm: 60,
+  maxSepKm: 60,
   minSigmaKm: 10,
-  minRoundStrikes: 4,
-  targetPerCell: 1.3,
+  minRoundStrikes: 18,
+  targetPerCell: 2.0,
   sigmaK: 1.8,
   minCols: 5, minRows: 4, maxCols: 12, maxRows: 10,
   entropyThreshold: 0.5,
@@ -103,45 +121,69 @@ export function detectZones(strikes: CountryStrike[], now: number, cfg: ZoneConf
     .sort((a, b) => b.w - a.w);
 
   const zones: PlayableZone[] = [];
-  const claimed: { clat: number; clon: number }[] = [];
-  const sep2 = cfg.separationKm ** 2;
-  const r2 = cfg.focusRadiusKm ** 2;
+  const accepted: { clat: number; clon: number; sepKm: number }[] = []; // centres of ACCEPTED zones
+  const tooClose = (lat: number, lon: number) => accepted.some((a) => {
+    const dlat = (lat - a.clat) * KM_PER_DEG;
+    const dlon = (lon - a.clon) * KM_PER_DEG * cosLat(a.clat);
+    return dlat * dlat + dlon * dlon <= a.sepKm * a.sepKm;
+  });
   for (const seed of seeds) {
     if (seed.w < cfg.minCellWeight) break; // sorted desc: nothing hotter remains
-    // skip peaks that fall inside an already-claimed zone
-    let near = false;
-    for (const p of claimed) {
-      const dlat = (seed.clat - p.clat) * KM_PER_DEG;
-      const dlon = (seed.clon - p.clon) * KM_PER_DEG * cosLat(p.clat);
-      if (dlat * dlat + dlon * dlon <= sep2) { near = true; break; }
-    }
-    if (near) continue;
-    claimed.push({ clat: seed.clat, clon: seed.clon });
+    if (tooClose(seed.clat, seed.clon)) continue; // seed inside an accepted zone
     const c = cosLat(seed.clat);
+
+    // Adaptive radius: smallest radius (clamped) holding ~targetRoundStrikes of
+    // the last round-window's strikes, so a zone stays strike-rich in quiet times.
+    const roundD: number[] = [];
+    for (const s of recent) {
+      if (s.t < roundSince) continue;
+      const dlat = (s.lat - seed.clat) * KM_PER_DEG;
+      const dlon = (s.lon - seed.clon) * KM_PER_DEG * c;
+      const d = Math.hypot(dlat, dlon);
+      if (d <= cfg.maxFocusKm) roundD.push(d);
+    }
+    roundD.sort((a, b) => a - b);
+    let radius = cfg.maxFocusKm;
+    if (roundD.length >= cfg.targetRoundStrikes) radius = Math.max(cfg.minFocusKm, roundD[cfg.targetRoundStrikes - 1]);
+    else if (roundD.length) radius = Math.max(cfg.minFocusKm, Math.min(cfg.maxFocusKm, roundD[roundD.length - 1]));
+    const sepKm = Math.max(cfg.minSepKm, Math.min(cfg.maxSepKm, radius * cfg.separationFrac));
+    const r2 = radius * radius;
     const gathered = recent.filter((s) => {
       const dlat = (s.lat - seed.clat) * KM_PER_DEG;
       const dlon = (s.lon - seed.clon) * KM_PER_DEG * c;
       return dlat * dlat + dlon * dlon <= r2;
     });
-    const zone = buildZone(gathered, now, roundSince, cfg);
-    if (zone) zones.push(zone);
+    // Anchor the frame on the SEED (not the gathered centroid) so several seeds
+    // over one big storm yield distinct, partially-overlapping zones.
+    const zone = buildZone(gathered, now, roundSince, cfg, seed.clat, seed.clon);
+    if (!zone) continue;
+    // Separate on the seed centre. sepKm < zone width ⇒ mild overlap (distinct
+    // centres, shared edges), so dense systems tile into several playable zones.
+    accepted.push({ clat: seed.clat, clon: seed.clon, sepKm });
+    zones.push(zone);
     if (zones.length >= cfg.maxZones) break;
   }
   zones.sort((a, b) => b.score - a.score);
   return zones;
 }
 
-function buildZone(all: Pt[], now: number, roundSince: number, cfg: ZoneConfig): PlayableZone | null {
+function buildZone(
+  all: Pt[], now: number, roundSince: number, cfg: ZoneConfig,
+  anchorLat?: number, anchorLon?: number,
+): PlayableZone | null {
   if (!all.length) return null;
 
-  // recency-weighted centroid + spread (km)
+  // recency-weighted centroid + spread (km). If an anchor (the seed) is supplied
+  // we frame the zone on it rather than the centroid, so several seeds over one
+  // storm produce distinct, partially-overlapping zones instead of collapsing.
   let sw = 0, sx = 0, sy = 0;
   for (const s of all) {
     const w = Math.exp(-(now - s.t) / cfg.tauMs);
     sw += w; sx += w * s.lon; sy += w * s.lat;
   }
   if (sw <= 0) return null;
-  const clat = sy / sw, clon = sx / sw;
+  const clat = anchorLat != null ? anchorLat : sy / sw;
+  const clon = anchorLon != null ? anchorLon : sx / sw;
   let vlat = 0, vlon = 0;
   for (const s of all) {
     const w = Math.exp(-(now - s.t) / cfg.tauMs);

@@ -15,10 +15,10 @@ const cosLat = (lat) => Math.max(0.01, Math.cos((lat * Math.PI) / 180));
 
 // mirrors lib/grid-game/zones.ts ZONE_CONFIG (FINAL)
 const CFG = {
-  obsMs: 420_000, roundMs: 60_000, tauMs: 150_000, coarseDeg: 0.3, minCellWeight: 0.7,
-  focusRadiusKm: 34, separationKm: 42, minSigmaKm: 10, minRoundStrikes: 4,
-  targetPerCell: 1.3, sigmaK: 1.8, minCols: 5, minRows: 4, maxCols: 12, maxRows: 10,
-  entropyThreshold: 0.5, maxZones: 12,
+  obsMs: 420_000, roundMs: 60_000, tauMs: 150_000, coarseDeg: 0.2, minCellWeight: 0.3,
+  targetRoundStrikes: 90, minFocusKm: 60, maxFocusKm: 300, separationFrac: 1, minSepKm: 60, maxSepKm: 60,
+  minSigmaKm: 10, minRoundStrikes: 18, targetPerCell: 2.0, sigmaK: 1.8,
+  minCols: 5, minRows: 4, maxCols: 12, maxRows: 10, entropyThreshold: 0.5, maxZones: 12,
 };
 
 function detectZones(strikes, now) {
@@ -35,35 +35,48 @@ function detectZones(strikes, now) {
   }
   const seeds = [...bins.values()].map((b) => ({ w: b.w, clat: b.slat / b.sw, clon: b.slon / b.sw })).sort((a, b) => b.w - a.w);
   const zones = [];
-  const claimed = [];
-  const sep2 = CFG.separationKm ** 2, r2 = CFG.focusRadiusKm ** 2, rs = now - CFG.roundMs;
+  const accepted = [];
+  const rs = now - CFG.roundMs;
+  const tooClose = (lat, lon) => accepted.some((a) => {
+    const dlat = (lat - a.clat) * KM_PER_DEG, dlon = (lon - a.clon) * KM_PER_DEG * cosLat(a.clat);
+    return dlat * dlat + dlon * dlon <= a.sepKm * a.sepKm;
+  });
   for (const seed of seeds) {
     if (seed.w < CFG.minCellWeight) break;
-    let near = false;
-    for (const p of claimed) {
-      const dlat = (seed.clat - p.clat) * KM_PER_DEG, dlon = (seed.clon - p.clon) * KM_PER_DEG * cosLat(p.clat);
-      if (dlat * dlat + dlon * dlon <= sep2) { near = true; break; }
-    }
-    if (near) continue;
-    claimed.push(seed);
+    if (tooClose(seed.clat, seed.clon)) continue;
     const c = cosLat(seed.clat);
+    const roundD = [];
+    for (const s of recent) {
+      if (s.t < rs) continue;
+      const dlat = (s.lat - seed.clat) * KM_PER_DEG, dlon = (s.lon - seed.clon) * KM_PER_DEG * c;
+      const d = Math.hypot(dlat, dlon);
+      if (d <= CFG.maxFocusKm) roundD.push(d);
+    }
+    roundD.sort((a, b) => a - b);
+    let radius = CFG.maxFocusKm;
+    if (roundD.length >= CFG.targetRoundStrikes) radius = Math.max(CFG.minFocusKm, roundD[CFG.targetRoundStrikes - 1]);
+    else if (roundD.length) radius = Math.max(CFG.minFocusKm, Math.min(CFG.maxFocusKm, roundD[roundD.length - 1]));
+    const sepKm = Math.max(CFG.minSepKm, Math.min(CFG.maxSepKm, radius * CFG.separationFrac));
+    const r2 = radius * radius;
     const all = recent.filter((s) => {
       const dlat = (s.lat - seed.clat) * KM_PER_DEG, dlon = (s.lon - seed.clon) * KM_PER_DEG * c;
       return dlat * dlat + dlon * dlon <= r2;
     });
-    const z = buildZone(all, now, rs);
-    if (z) zones.push(z);
+    const z = buildZone(all, now, rs, seed.clat, seed.clon);
+    if (!z) continue;
+    accepted.push({ clat: seed.clat, clon: seed.clon, sepKm });
+    zones.push(z);
     if (zones.length >= CFG.maxZones) break;
   }
   return zones.sort((a, b) => b.roundStrikes - a.roundStrikes);
 }
 
-function buildZone(all, now, rs) {
+function buildZone(all, now, rs, anchorLat, anchorLon) {
   if (!all.length) return null;
   let sw = 0, sx = 0, sy = 0;
   for (const s of all) { const w = Math.exp(-(now - s.t) / CFG.tauMs); sw += w; sx += w * s.lon; sy += w * s.lat; }
   if (sw <= 0) return null;
-  const clat = sy / sw, clon = sx / sw;
+  const clat = anchorLat != null ? anchorLat : sy / sw, clon = anchorLon != null ? anchorLon : sx / sw;
   let vlat = 0, vlon = 0;
   for (const s of all) { const w = Math.exp(-(now - s.t) / CFG.tauMs); vlat += w * (s.lat - clat) ** 2; vlon += w * (s.lon - clon) ** 2; }
   const sigLat = Math.max(CFG.minSigmaKm, Math.sqrt(vlat / sw) * KM_PER_DEG);
@@ -183,16 +196,20 @@ async function checkZoneWeather(z, n = 4) {
   console.log(pad('zone', 20), pad('strk/min', 9), pad('Rain', 6), pad('Wind', 6), pad('CAPE', 6), 'Tracks');
   let failures = 0;
   const test = zones.slice(0, Math.min(zones.length, 8));
-  const results = await Promise.all(
-    test.map(async (z) => {
-      try {
-        const [r, t] = await Promise.all([checkZoneWeather(z), checkZoneTrack(z)]);
-        return { z, r, t };
-      } catch (e) {
-        return { z, err: String(e) };
-      }
-    }),
-  );
+  // Sequential + spaced: the Open-Meteo free tier is per-IP rate-limited, and
+  // firing every zone at once trips 429. The live app spaces calls out and the
+  // backend proxy caches, so this only matters for the test harness.
+  const results = [];
+  for (const z of test) {
+    try {
+      const r = await checkZoneWeather(z);
+      const t = await checkZoneTrack(z);
+      results.push({ z, r, t });
+    } catch (e) {
+      results.push({ z, err: String(e) });
+    }
+    await new Promise((res) => setTimeout(res, 400));
+  }
   for (const { z, r, t, err } of results) {
     const loc = `${z.clat >= 0 ? 'N' : 'S'}${Math.abs(z.clat).toFixed(1)} ${z.clon >= 0 ? 'E' : 'W'}${Math.abs(z.clon).toFixed(1)}`;
     if (err) { console.log(pad(loc, 20), pad('-', 9), 'ERROR', err); failures += 1; continue; }

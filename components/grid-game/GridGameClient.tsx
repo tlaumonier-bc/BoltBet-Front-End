@@ -41,7 +41,6 @@ import {
   pathForPolygons,
   prepareCountries,
   projectEqui,
-  strikeVisual,
   type CountryFeatureCollection,
   type Grid,
   type PreparedCountry,
@@ -49,6 +48,7 @@ import {
 import { HEAT_GRADIENT_CSS, StrikeDensityLayer } from '@/lib/grid-game/heatmap';
 import { priceCells, PRICING_CONFIG, type CellPrice } from '@/lib/grid-game/pricing';
 import { detectZones, ZONE_CONFIG, type PlayableZone } from '@/lib/grid-game/zones';
+import { pickBotBet, nextBotDelay, BOT_CONFIG } from '@/lib/grid-game/bot';
 import GridGameDemo from '@/components/grid-game/GridGameDemo';
 
 const DEMO_SEEN_KEY = 'grid-game-demo-seen';
@@ -59,8 +59,13 @@ const BET_WINDOW_MS = PRICING_CONFIG.windowMs; // strikes count for this long af
 const BET_REVEAL_MS = 1400; // keep a resolved bet on the grid this long after it ends
 const MIN_BET = 1;
 const BET_CHIPS = [1, 5, 10, 25];
+// How long a just-landed strike flashes on the map before it's gone (and only
+// lives on in the density heatmap). Sized to cover feed latency + ~1-2s visible.
+const STRIKE_FLASH_MS = 2500;
 const SCAN_MS = 3_000; // re-scan the world for playable zones every 3s
 const SEARCH_MINUTES = Math.ceil(ZONE_CONFIG.obsMs / 60_000) + 1; // global feed window (~8 min)
+const GAME_DURATION_MS = 60_000; // a round lasts 60s, then it's over
+const MAX_ZONES_SHOWN = 3; // only surface the 3 hottest zones (most strikes / last 60s)
 
 type Mode = 'selecting' | 'playing' | 'over';
 
@@ -252,6 +257,9 @@ function ZoneMap({
   activeAreaCount,
   zoneIndex,
   secondsToScan,
+  secondsLeft,
+  botCredits,
+  botBets,
   loading,
   onPlay,
   now,
@@ -285,6 +293,9 @@ function ZoneMap({
   activeAreaCount: number;
   zoneIndex: number;
   secondsToScan: number;
+  secondsLeft: number;
+  botCredits: number;
+  botBets: Bet[];
   loading: boolean;
   onPlay: () => void;
   now: number;
@@ -426,7 +437,8 @@ function ZoneMap({
       {/* Rain: soft blue precipitation blobs at Open-Meteo sample points (mm/h). */}
       {gameStarted && showRain && weather && (() => {
         const wet = weather.points.filter((p) => (p.precip ?? 0) > 0.05);
-        const spacing = Math.max(size.width / 4, size.height / 4);
+        const wxN = Math.max(2, Math.round(Math.sqrt(weather.points.length)));
+        const spacing = Math.max(size.width, size.height) / wxN;
         return (
           <>
             <svg className="pointer-events-none absolute inset-0 z-[6] h-full w-full" viewBox={`0 0 ${size.width} ${size.height}`} preserveAspectRatio="none" aria-hidden>
@@ -462,7 +474,8 @@ function ZoneMap({
 
       {/* Storm risk: CAPE field (J/kg) → green→amber→orange→red instability blobs. */}
       {gameStarted && showRisk && weather && weather.points.some((p) => p.cape != null) && (() => {
-        const spacing = Math.max(size.width / 4, size.height / 4);
+        const wxN = Math.max(2, Math.round(Math.sqrt(weather.points.length)));
+        const spacing = Math.max(size.width, size.height) / wxN;
         const capeMax = weather.summary.capeMax ?? 0;
         const band = capeBand(capeMax);
         const BANDS = [
@@ -502,25 +515,58 @@ function ZoneMap({
 
       {/* Wind arrows: one per Open-Meteo sample point; arrow points where the wind
           blows TO (meteorological dir + 180°), length/opacity scale with speed. */}
-      {gameStarted && showWind && weather && weather.points.length > 0 && (
-        <svg className="pointer-events-none absolute inset-0 z-[7] h-full w-full" viewBox={`0 0 ${size.width} ${size.height}`} preserveAspectRatio="none" aria-hidden>
-          {weather.points.map((pt, i) => {
-            if (pt.windDir == null || pt.windSpeed == null) return null;
-            const p = projectEqui(bounds, size.width, size.height, pt.lat, pt.lon);
-            if (p.x < 0 || p.x > size.width || p.y < 0 || p.y > size.height) return null;
-            const spd = pt.windSpeed; // km/h
-            const len = 10 + Math.min(1, spd / 60) * 26; // 10–36 px
-            const blowTo = (pt.windDir + 180) % 360; // dir wind blows toward
-            const op = 0.35 + Math.min(1, spd / 50) * 0.5;
-            return (
-              <g key={i} transform={`translate(${p.x} ${p.y}) rotate(${blowTo})`} style={{ opacity: op }}>
-                <line x1="0" y1={len / 2} x2="0" y2={-len / 2} stroke="rgba(186,230,253,0.95)" strokeWidth="2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-                <path d={`M 0 ${-len / 2 - 1} l -3.6 6 l 3.6 -2.2 l 3.6 2.2 z`} fill="rgba(186,230,253,0.95)" />
-              </g>
-            );
-          })}
-        </svg>
-      )}
+      {gameStarted && showWind && weather && weather.points.length > 0 && (() => {
+        // One arrow per grid CELL: bilinearly interpolate wind (as u/v vectors)
+        // from the n×n Open-Meteo sample field to each cell centre.
+        const n = Math.max(2, Math.round(Math.sqrt(weather.points.length)));
+        const spanLat = bounds.maxLat - bounds.minLat;
+        const spanLon = bounds.maxLon - bounds.minLon;
+        const sampleAt = (sr: number, sc: number) => weather.points[Math.min(n - 1, Math.max(0, sr)) * n + Math.min(n - 1, Math.max(0, sc))];
+        const windAt = (lat: number, lon: number) => {
+          const fr = ((lat - bounds.minLat) / spanLat) * n - 0.5;
+          const fc = ((lon - bounds.minLon) / spanLon) * n - 0.5;
+          const r0 = Math.floor(fr);
+          const c0 = Math.floor(fc);
+          const tr = fr - r0;
+          const tc = fc - c0;
+          let u = 0;
+          let v = 0;
+          let wsum = 0;
+          for (const [dr, dc, wt] of [[0, 0, (1 - tr) * (1 - tc)], [0, 1, (1 - tr) * tc], [1, 0, tr * (1 - tc)], [1, 1, tr * tc]] as const) {
+            const s = sampleAt(r0 + dr, c0 + dc);
+            if (!s || s.windDir == null || s.windSpeed == null) continue;
+            const rad = (s.windDir * Math.PI) / 180;
+            u += wt * s.windSpeed * Math.sin(rad);
+            v += wt * s.windSpeed * Math.cos(rad);
+            wsum += wt;
+          }
+          if (wsum <= 0) return null;
+          u /= wsum;
+          v /= wsum;
+          return { spd: Math.hypot(u, v), dir: (Math.atan2(u, v) * 180) / Math.PI };
+        };
+        return (
+          <svg className="pointer-events-none absolute inset-0 z-[7] h-full w-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox={`0 0 ${size.width} ${size.height}`} preserveAspectRatio="none" aria-hidden>
+            {cells.map((cell) => {
+              const lat = bounds.maxLat - ((cell.row + 0.5) / grid.rows) * spanLat;
+              const lon = bounds.minLon + ((cell.col + 0.5) / grid.cols) * spanLon;
+              const w = windAt(lat, lon);
+              if (!w) return null;
+              const cx = (cell.col + 0.5) * cellW;
+              const cy = (cell.row + 0.5) * cellH;
+              const len = Math.min(Math.min(cellW, cellH) * 0.82, 12 + Math.min(1, w.spd / 60) * 28);
+              const blowTo = (w.dir + 180) % 360;
+              const op = 0.7 + Math.min(1, w.spd / 50) * 0.3;
+              return (
+                <g key={cell.index} transform={`translate(${cx} ${cy}) rotate(${blowTo})`} style={{ opacity: op }}>
+                  <line x1="0" y1={len / 2} x2="0" y2={-len / 2} stroke="rgba(224,242,254,1)" strokeWidth="2.5" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                  <path d={`M 0 ${-len / 2 - 1.5} l -4.5 7 l 4.5 -2.6 l 4.5 2.6 z`} fill="rgba(224,242,254,1)" />
+                </g>
+              );
+            })}
+          </svg>
+        );
+      })()}
 
       {gameStarted && showDensity && (
         <div className="pointer-events-none absolute left-4 top-4 z-20 w-[168px] rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2.5 shadow-2xl backdrop-blur-md">
@@ -576,14 +622,23 @@ function ZoneMap({
         <div className="pointer-events-none absolute left-1/2 top-4 z-20 -translate-x-1/2">
           <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-slate-950/70 px-6 py-2 text-center shadow-2xl backdrop-blur-md">
             <div>
-              <div className="text-[9px] font-bold uppercase tracking-wider text-white/45">Credits</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-bolt/70">You</div>
               <div key={Math.round(credits)} className="credit-pop font-display text-3xl font-black leading-none text-bolt tabular-nums">{fmt(credits)}</div>
             </div>
             <div className="h-8 w-px bg-white/15" />
             <div>
-              <div className="text-[9px] font-bold uppercase tracking-wider text-white/45">Peak</div>
-              <div className="font-display text-xl font-black leading-none text-white/70 tabular-nums">{fmt(peak)}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-white/45">🤖 Bot</div>
+              <div className={`font-display text-2xl font-black leading-none tabular-nums transition-colors ${botCredits >= credits ? 'text-rose-300' : 'text-white/70'}`}>{fmt(botCredits)}</div>
             </div>
+            {mode === 'playing' && (
+              <>
+                <div className="h-8 w-px bg-white/15" />
+                <div>
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-white/45">Time</div>
+                  <div className={`font-display text-xl font-black leading-none tabular-nums transition-colors ${secondsLeft <= 10 ? 'text-rose-400' : 'text-white/70'}`}>{secondsLeft}s</div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -611,21 +666,26 @@ function ZoneMap({
         </div>
       )}
 
-      {/* Strikes */}
-      {gameStarted && strikes.slice(0, 90).map((strike, index) => {
+      {/* Strikes: only the JUST-LANDED ones flash brightly for ~STRIKE_FLASH_MS,
+          then they disappear — the accumulated history lives in the heatmap. No
+          persistent dots, so a fresh strike is easy to read. */}
+      {gameStarted && strikes.map((strike, index) => {
+        const t = Date.parse(strike.received_at);
+        const age = now - t;
+        if (!Number.isFinite(t) || age < 0 || age > STRIKE_FLASH_MS) return null;
         const p = projectEqui(bounds, size.width, size.height, strike.lat, strike.lon);
         if (p.x < 0 || p.x > size.width || p.y < 0 || p.y > size.height) return null;
-        const visual = strikeVisual(strike, now);
+        const life = Math.max(0, 1 - age / STRIKE_FLASH_MS); // 1 → 0 fade-out
         return (
           <span
-            key={`${strike.received_at}-${index}`}
+            key={`${strike.received_at}-${strike.lat}-${strike.lon}-${index}`}
             className="grid-strike pointer-events-none absolute"
-            style={{ left: `${p.x}px`, top: `${p.y}px`, opacity: visual.opacity, transform: `translate(-50%, -50%) scale(${visual.scale})`, zIndex: visual.fresh ? 16 : 13 }}
+            style={{ left: `${p.x}px`, top: `${p.y}px`, opacity: 0.55 + life * 0.45, transform: `translate(-50%, -50%) scale(${0.85 + life * 0.7})`, zIndex: 16 }}
           >
-            {visual.fresh && <span className="grid-strike-bolt" />}
-            {visual.fresh && <span className="grid-strike-ring grid-strike-ring-a" />}
-            {visual.fresh && <span className="grid-strike-ring grid-strike-ring-b" />}
-            <span className={`grid-strike-core ${visual.fresh ? 'grid-strike-core-fresh' : ''}`} />
+            <span className="grid-strike-bolt" />
+            <span className="grid-strike-ring grid-strike-ring-a" />
+            <span className="grid-strike-ring grid-strike-ring-b" />
+            <span className="grid-strike-core grid-strike-core-fresh" />
           </span>
         );
       })}
@@ -728,6 +788,19 @@ function ZoneMap({
               );
             })}
           </g>
+          {/* Bot's per-cell countdown — top edge (player's is on the bottom, so both
+              fit on the same cell when player and bot bet it together). */}
+          {botBets.map((b) => {
+            if (now > b.expiresAt) return null;
+            const col = b.cell % grid.cols;
+            const row = Math.floor(b.cell / grid.cols);
+            const x = col * cellW;
+            const y = row * cellH;
+            const progress = Math.max(0, Math.min(1, (b.expiresAt - now) / BET_WINDOW_MS));
+            return (
+              <rect key={`botbar-${b.id}`} x={x + cellW * 0.12} y={y + cellH * 0.06} width={cellW * 0.76 * progress} height={Math.max(1.5, cellH * 0.04)} rx="1" fill="rgba(244,63,94,0.9)" className="pointer-events-none" />
+            );
+          })}
           {dominantPath && (
             <path d={dominantPath} fill="none" stroke="rgba(125,211,252,0.92)" strokeWidth="0.28" vectorEffect="non-scaling-stroke" fillRule="evenodd" className="drop-shadow-[0_0_14px_rgba(56,189,248,0.65)]" />
           )}
@@ -763,6 +836,29 @@ function ZoneMap({
         </div>
       )}
 
+      {/* Bot's live bets — small robot chips so you can see the opponent playing */}
+      {mode === 'playing' && botBets.map((b) => {
+        if (now > b.expiresAt + BET_REVEAL_MS) return null;
+        const col = b.cell % grid.cols;
+        const row = Math.floor(b.cell / grid.cols);
+        const cx = (col + 0.5) * cellW;
+        const cy = (row + 0.5) * cellH;
+        const resolved = now > b.expiresAt;
+        const hit = b.strikes > 0;
+        return (
+          <div
+            key={`bot-${b.id}`}
+            className="pointer-events-none absolute z-[14] -translate-x-1/2 -translate-y-1/2"
+            style={{ left: `${cx}px`, top: `${cy + cellH * 0.32}px` }}
+          >
+            <div className={`flex items-center gap-0.5 rounded-md border px-1 py-px text-[9px] font-black leading-none tabular-nums shadow-lg backdrop-blur-sm ${resolved ? (hit ? 'border-emerald-300/60 bg-emerald-500/25 text-emerald-100' : 'border-rose-300/60 bg-rose-500/25 text-rose-100') : 'border-rose-400/80 bg-rose-500/30 text-rose-50'}`}>
+              <span>🤖</span>
+              <span>{resolved ? (hit ? `+${fmt(b.earned)}` : `−${b.credits}`) : b.credits}</span>
+            </div>
+          </div>
+        );
+      })}
+
       {/* Selecting overlays */}
       {mode === 'selecting' && activeAreaCount === 0 && (
         <div className="pointer-events-none absolute inset-0 z-[30] grid place-items-center bg-black/25 backdrop-blur-[1px]">
@@ -787,10 +883,29 @@ function ZoneMap({
       {mode === 'over' && (
         <div className="absolute inset-0 z-40 grid place-items-center bg-black/55 backdrop-blur-sm">
           <div className="rounded-[2rem] border border-rose-300/25 bg-slate-950/85 px-8 py-7 text-center shadow-2xl">
-            <div className="text-[11px] font-black uppercase tracking-[0.32em] text-white/55">Out of credits</div>
-            <div className="font-display mt-2 text-5xl font-black text-white">Game over</div>
-            <div className="mt-3 text-sm font-semibold text-white/70">
-              Peak balance <span className="font-display text-2xl font-black text-bolt">{fmt(peak)}</span>
+            <div className="text-[11px] font-black uppercase tracking-[0.32em] text-white/55">{credits >= MIN_BET ? "Time's up" : 'Out of credits'}</div>
+            {(() => {
+              const won = credits > botCredits;
+              const tie = credits === botCredits;
+              return (
+                <div className={`font-display mt-2 text-5xl font-black ${won ? 'text-emerald-300' : tie ? 'text-white' : 'text-rose-300'}`}>
+                  {tie ? 'Dead heat' : won ? 'You win!' : 'Bot wins'}
+                </div>
+              );
+            })()}
+            <div className="mt-4 flex items-center justify-center gap-4 text-center">
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-bolt/70">You</div>
+                <div className="font-display text-3xl font-black text-bolt tabular-nums">{fmt(credits)}</div>
+              </div>
+              <div className="text-white/30">vs</div>
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-white/45">🤖 Bot</div>
+                <div className="font-display text-3xl font-black text-white/70 tabular-nums">{fmt(botCredits)}</div>
+              </div>
+            </div>
+            <div className="mt-3 text-xs font-semibold text-white/45">
+              Peak balance <span className="font-display text-base font-black text-bolt">{fmt(peak)}</span>
             </div>
             <div className="mt-5 flex justify-center gap-2">
               <button type="button" onClick={onPlayAgain} className="btn-glow rounded-xl px-5 py-2.5 text-sm font-black">Play again</button>
@@ -828,13 +943,25 @@ export default function GridGameClient() {
   const [pendingCell, setPendingCell] = useState<number | null>(null);
   const [pendingAmount, setPendingAmount] = useState(MIN_BET);
   const [gameOver, setGameOver] = useState(false);
+  const [roundEndsAt, setRoundEndsAt] = useState<number | null>(null);
   const [hitPulse, setHitPulse] = useState<Set<number>>(new Set());
   const betIdRef = useRef(0);
 
+  // ── bot opponent ──────────────────────────────────────────────────────────
+  const [botCredits, setBotCredits] = useState(START_CREDITS);
+  const [botBets, setBotBets] = useState<Bet[]>([]);
+  const botBetIdRef = useRef(0);
+  const botNextAtRef = useRef(0); // wall-clock ms of the bot's next bet attempt
+
   const strikesRef = useRef<CountryStrike[]>([]);
   const betsRef = useRef<Bet[]>([]);
+  const botBetsRef = useRef<Bet[]>([]);
+  const botCreditsRef = useRef(START_CREDITS);
+  const livePricesRef = useRef<CellPrice[]>([]);
   strikesRef.current = strikes;
   betsRef.current = bets;
+  botBetsRef.current = botBets;
+  botCreditsRef.current = botCredits;
 
   const mode: Mode = gameOver ? 'over' : activeZone ? 'playing' : 'selecting';
   const gameStarted = mode === 'playing' || mode === 'over';
@@ -848,6 +975,7 @@ export default function GridGameClient() {
     if (!zoneBounds) return [];
     return priceCells(strikes, zoneBounds, grid, nowMs);
   }, [strikes, zoneBounds, grid, nowMs]);
+  livePricesRef.current = livePrices;
 
   const handleDominantCountry = useCallback((iso: string) => setDominantIso(iso), []);
 
@@ -861,7 +989,10 @@ export default function GridGameClient() {
           if (!alive) return;
           const list = res.strikes as CountryStrike[];
           setStrikes(list);
-          const zones = detectZones(list, Date.now(), ZONE_CONFIG);
+          // Only the 3 hottest zones — most strikes in the last 60s (roundStrikes).
+          const zones = detectZones(list, Date.now(), ZONE_CONFIG)
+            .sort((a, b) => b.roundStrikes - a.roundStrikes)
+            .slice(0, MAX_ZONES_SHOWN);
           setActiveAreas(zones);
           setZoneIndex((i) => (zones.length ? i % zones.length : 0));
           setNextScanAt(Date.now() + SCAN_MS);
@@ -922,7 +1053,7 @@ export default function GridGameClient() {
     }
     const [minLat, maxLat, minLon, maxLon] = zoneKey.split('|').map(Number);
     let alive = true;
-    const load = () => getZoneWeather({ minLat, maxLat, minLon, maxLon }, 4).then((w) => alive && setWeather(w)).catch(() => undefined);
+    const load = () => getZoneWeather({ minLat, maxLat, minLon, maxLon }, 5).then((w) => alive && setWeather(w)).catch(() => undefined);
     load();
     const timer = window.setInterval(load, 120_000);
     return () => {
@@ -1023,14 +1154,97 @@ export default function GridGameClient() {
     if (alive.length !== bets.length) setBets(alive);
   }, [nowMs, bets]);
 
+  // ── bot: open a bet every ~1.5–2.6s from the live prices (lib/grid-game/bot) ─
+  useEffect(() => {
+    if (mode !== 'playing') return;
+    if (nowMs < botNextAtRef.current) return;
+    const balance = botCreditsRef.current;
+    const live = botBetsRef.current.filter((b) => nowMs <= b.expiresAt);
+    const retry = () => {
+      botNextAtRef.current = nowMs + 800;
+    };
+    if (balance < MIN_BET || live.length >= BOT_CONFIG.maxConcurrent || !livePricesRef.current.length) {
+      retry();
+      return;
+    }
+    const occupied = new Set(live.map((b) => b.cell));
+    const dec = pickBotBet(livePricesRef.current, balance, live.length, BOT_CONFIG, undefined, occupied);
+    if (!dec) {
+      retry();
+      return;
+    }
+    const mult = livePricesRef.current[dec.cell]?.multiplier ?? PRICING_CONFIG.multMin;
+    const t = Date.now();
+    botBetIdRef.current += 1;
+    const bet: Bet = {
+      id: botBetIdRef.current,
+      cell: dec.cell,
+      credits: dec.credits,
+      mult,
+      startedAt: t,
+      expiresAt: t + BET_WINDOW_MS,
+      strikes: 0,
+      earned: 0,
+      countedKeys: new Set(),
+    };
+    setBotBets((cur) => [...cur, bet]);
+    setBotCredits((c) => c - dec.credits);
+    botNextAtRef.current = nowMs + nextBotDelay(BOT_CONFIG);
+  }, [nowMs, mode]);
+
+  // ── bot: credit each new strike landing in one of its live bets' cells ──────
+  useEffect(() => {
+    if (mode !== 'playing' || !zoneBounds || !botBetsRef.current.length) return;
+    const now = nowMs;
+    let delta = 0;
+    let changed = false;
+    const next = botBetsRef.current.map((bet) => {
+      const windowEnd = Math.min(now, bet.expiresAt);
+      if (now < bet.startedAt) return bet;
+      let strikeCount = bet.strikes;
+      let earned = bet.earned;
+      for (const s of strikesRef.current) {
+        const t = Date.parse(s.received_at);
+        if (!Number.isFinite(t) || t < bet.startedAt || t > windowEnd) continue;
+        const key = strikeKey(s);
+        if (bet.countedKeys.has(key)) continue;
+        if (cellForStrikeEqui(s.lat, s.lon, zoneBounds, grid) !== bet.cell) continue;
+        bet.countedKeys.add(key);
+        strikeCount += 1;
+        const pay = bet.mult * bet.credits;
+        earned += pay;
+        delta += pay;
+        changed = true;
+      }
+      return strikeCount !== bet.strikes ? { ...bet, strikes: strikeCount, earned } : bet;
+    });
+    if (changed) {
+      setBotBets(next);
+      setBotCredits((c) => c + delta);
+    }
+  }, [nowMs, mode, zoneBounds, grid]);
+
+  useEffect(() => {
+    if (!botBets.length) return;
+    const now = nowMs;
+    const alive = botBets.filter((b) => now <= b.expiresAt + BET_REVEAL_MS);
+    if (alive.length !== botBets.length) setBotBets(alive);
+  }, [nowMs, botBets]);
+
   useEffect(() => {
     setPeak((p) => Math.max(p, credits));
   }, [credits]);
   useEffect(() => {
     if (gameOver || mode !== 'playing') return;
+    // Hard 60s limit: the round ends when the clock runs out …
+    if (roundEndsAt != null && nowMs >= roundEndsAt) {
+      setGameOver(true);
+      return;
+    }
+    // … or earlier if the player runs out of credits with no live bet left.
     const hasLive = bets.some((b) => nowMs <= b.expiresAt);
     if (credits < MIN_BET && !hasLive) setGameOver(true);
-  }, [nowMs, credits, bets, mode, gameOver]);
+  }, [nowMs, credits, bets, mode, gameOver, roundEndsAt]);
 
   // ── bet actions ──────────────────────────────────────────────────────────────
   const onCellClick = useCallback(
@@ -1077,7 +1291,14 @@ export default function GridGameClient() {
     setBets([]);
     setPendingCell(null);
     setGameOver(false);
+    setRoundEndsAt(Date.now() + GAME_DURATION_MS); // start the 60s clock
     setHitPulse(new Set());
+    // reset the bot opponent and stagger its first bet a beat after the start
+    setBotCredits(START_CREDITS);
+    setBotBets([]);
+    botCreditsRef.current = START_CREDITS;
+    botBetsRef.current = [];
+    botNextAtRef.current = Date.now() + nextBotDelay(BOT_CONFIG);
   }, []);
 
   const onPlay = useCallback(() => {
@@ -1108,6 +1329,9 @@ export default function GridGameClient() {
 
   const secondsToScan = mounted ? Math.max(0, Math.min(SCAN_MS / 1000, Math.ceil((nextScanAt - nowMs) / 1000))) : SCAN_MS / 1000;
   const activeBetCount = bets.filter((b) => nowMs <= b.expiresAt).length;
+  const secondsLeft = roundEndsAt != null
+    ? Math.max(0, Math.ceil((roundEndsAt - nowMs) / 1000))
+    : GAME_DURATION_MS / 1000;
 
   return (
     <main className="min-h-svh overflow-hidden bg-storm px-4 pb-8 pt-24 text-white sm:px-6">
@@ -1167,6 +1391,9 @@ export default function GridGameClient() {
             activeAreaCount={activeAreas.length}
             zoneIndex={activeAreas.length ? zoneIndex % activeAreas.length : 0}
             secondsToScan={secondsToScan}
+            secondsLeft={secondsLeft}
+            botCredits={botCredits}
+            botBets={botBets}
             loading={loading}
             onPlay={onPlay}
             now={nowMs}
@@ -1202,7 +1429,7 @@ export default function GridGameClient() {
               <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-100/60">Live storm zones</div>
               <div className="mt-1 flex items-end gap-2">
                 <span className="font-display text-4xl font-black text-bolt">{activeAreas.length}</span>
-                <span className="mb-1 text-sm font-semibold text-white/50">playable now, worldwide</span>
+                <span className="mb-1 text-sm font-semibold text-white/50">hottest zones on Earth right now</span>
               </div>
               {selectedZone && (
                 <div className="mt-3 rounded-xl bg-black/20 p-3">
@@ -1218,10 +1445,11 @@ export default function GridGameClient() {
             <div className="glass rounded-3xl border border-white/10 bg-white/[0.04] p-4 text-sm leading-relaxed text-white/60">
               <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-100/60">Continuous betting</div>
               <p className="mt-2">
-                Start with <span className="font-bold text-white">{START_CREDITS} credits</span>. Click any grid cell, stake
-                some credits, and every strike that lands there pays its <span className="text-bolt">multiplier</span> × your
-                stake. Cold cells pay the most — bet where the storm is <span className="text-cyan-200">heading</span>. Hit 0
-                and it&apos;s game over.
+                Start with <span className="font-bold text-white">{START_CREDITS} credits</span> and{' '}
+                <span className="font-bold text-white">60 seconds</span>. Click any grid cell, stake some credits, and every
+                strike that lands there pays its <span className="text-bolt">multiplier</span> × your stake. Cold cells pay the
+                most — bet where the storm is <span className="text-cyan-200">heading</span>. A <span className="text-fuchsia-200">🤖 bot</span> plays
+                the same storm — finish the 60s with more credits than it to win. Hit 0 and it&apos;s game over.
               </p>
             </div>
           </aside>
