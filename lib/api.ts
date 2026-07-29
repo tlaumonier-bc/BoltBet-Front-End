@@ -398,6 +398,79 @@ export async function getStormTrack(
   }
 }
 
+// ── Grid-game map layers: radar reflectivity frame index (via backend) ────────
+export interface RadarIndexFrame {
+  time: number; // epoch seconds
+  path: string; // e.g. /v2/radar/<id>
+  kind: 'past' | 'nowcast';
+}
+export interface RadarIndex {
+  available: boolean;
+  host: string;
+  size: number;
+  color: number;
+  options: string;
+  frames: RadarIndexFrame[];
+}
+
+/** Latest radar reflectivity frame index (RainViewer via our cached backend
+ *  proxy, GET /api/weather/radar/). The browser then loads the tile IMAGES
+ *  directly from `host`. Returns null on backend/provider failure so the layer
+ *  can show a "data unavailable" state and the game keeps running. */
+export async function getRadarFrames(): Promise<RadarIndex | null> {
+  try {
+    const res = await fetch(`${STRIKES_API}/api/weather/radar/`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = (await res.json()) as RadarIndex;
+    if (!data.available || !data.frames?.length) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+// ── Grid-game map layers: total lightning (IC+CG, MTG-LI) via backend ─────────
+export interface TotalLightningPoint {
+  lat: number;
+  lon: number;
+  flashes: number;
+  trend: number; // +1 intensifying, 0 steady, -1 decaying
+}
+export interface TotalLightning {
+  available: boolean;
+  source: string; // "mtg-li" | "mtg-li-mock"
+  sampledAt: string | null;
+  points: TotalLightningPoint[];
+  summary: { flashMax: number; flashTotal: number; trend: 'intensifying' | 'decaying' | 'steady' };
+}
+
+/** Total-lightning (intracloud + cloud-to-ground) flash field over a zone bbox,
+ *  from our backend (GET /api/lightning/total/). Target source is EUMETSAT
+ *  MTG-LI; until that ingest exists the backend serves a synthetic mock. Returns
+ *  null on failure so the layer shows "data unavailable" and the game keeps
+ *  running. */
+export async function getTotalLightning(
+  bounds: { minLat: number; maxLat: number; minLon: number; maxLon: number },
+  n = 6,
+): Promise<TotalLightning | null> {
+  const q = new URLSearchParams({
+    minLat: String(bounds.minLat),
+    maxLat: String(bounds.maxLat),
+    minLon: String(bounds.minLon),
+    maxLon: String(bounds.maxLon),
+    n: String(n),
+  });
+  try {
+    const res = await fetch(`${STRIKES_API}/api/lightning/total/?${q}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = (await res.json()) as TotalLightning;
+    if (!data.available) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 const OPEN_METEO = 'https://api.open-meteo.com/v1/forecast';
 
 function capeForHour(loc: { current?: { time?: string }; hourly?: { time?: string[]; cape?: (number | null)[] } }): number | null {

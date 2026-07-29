@@ -20,13 +20,17 @@ import {
   getCitiesInBounds,
   getProfile,
   getRecentStrikes,
+  getRadarFrames,
   getStormTrack,
   getStrikesInBounds,
+  getTotalLightning,
   getZoneWeather,
   registerUsername,
   type CityLabel,
   type CountryStrike,
+  type RadarIndex,
   type StormTrack,
+  type TotalLightning,
   type ZoneWeather,
 } from '@/lib/api';
 import { flagEmoji } from '@/lib/live/owm';
@@ -41,9 +45,11 @@ import {
   pathForPolygons,
   prepareCountries,
   projectEqui,
+  radarTiles,
   type CountryFeatureCollection,
   type Grid,
   type PreparedCountry,
+  type RadarFrame,
 } from '@/lib/grid-game/geo';
 import { HEAT_GRADIENT_CSS, StrikeDensityLayer } from '@/lib/grid-game/heatmap';
 import { priceCells, PRICING_CONFIG, type CellPrice } from '@/lib/grid-game/pricing';
@@ -68,6 +74,20 @@ const GAME_DURATION_MS = 60_000; // a round lasts 60s, then it's over
 const MAX_ZONES_SHOWN = 3; // only surface the 3 hottest zones (most strikes / last 60s)
 
 type Mode = 'selecting' | 'playing' | 'over';
+
+// Everything the map needs to draw + control the radar layer, in one prop.
+interface RadarLayer {
+  on: boolean;
+  frame: RadarFrame | null; // current animation frame's tile params (null = no data)
+  opacity: number;
+  unavailable: boolean;
+  frameCount: number;
+  frameIdx: number;
+  frameTime: number | null; // epoch seconds of the current frame
+  playing: boolean;
+  onTogglePlay: () => void;
+  onSetOpacity: (v: number) => void;
+}
 
 interface Bet {
   id: number;
@@ -126,6 +146,8 @@ async function ensureGameSession() {
 // upcoming data feeds (storm-cell motion, precipitation, CAPE, wind).
 const SIDE_LAYERS: { key: string; label: string; hint: string; ready: boolean }[] = [
   { key: 'density', label: 'Strike density', hint: 'Live heatmap of recent strikes', ready: true },
+  { key: 'radar', label: 'Radar', hint: 'Reflectivity cores (dBZ)', ready: true },
+  { key: 'total', label: 'Total lightning', hint: 'Intracloud + CG (MTG-LI)', ready: true },
   { key: 'wind', label: 'Wind', hint: 'Wind speed & direction', ready: true },
   { key: 'rain', label: 'Rain', hint: 'Live precipitation', ready: true },
   { key: 'risk', label: 'Storm risk', hint: 'CAPE instability index', ready: true },
@@ -260,6 +282,7 @@ function ZoneMap({
   secondsLeft,
   botCredits,
   botBets,
+  radar,
   loading,
   onPlay,
   now,
@@ -274,6 +297,9 @@ function ZoneMap({
   showRain,
   showRisk,
   showTracks,
+  showTotal,
+  totalLx,
+  totalLxUnavailable,
   weather,
   stormTrack,
   hitPulse,
@@ -296,6 +322,7 @@ function ZoneMap({
   secondsLeft: number;
   botCredits: number;
   botBets: Bet[];
+  radar: RadarLayer;
   loading: boolean;
   onPlay: () => void;
   now: number;
@@ -310,6 +337,9 @@ function ZoneMap({
   showRain: boolean;
   showRisk: boolean;
   showTracks: boolean;
+  showTotal: boolean;
+  totalLx: TotalLightning | null;
+  totalLxUnavailable: boolean;
   weather: ZoneWeather | null;
   stormTrack: StormTrack | null;
   hitPulse: Set<number>;
@@ -334,6 +364,10 @@ function ZoneMap({
   );
   const aspect = size.width / Math.max(1, size.height);
   const tiles = useMemo(() => mapTiles(bounds, aspect), [bounds, aspect]);
+  const radarTileList = useMemo(
+    () => (radar.on && radar.frame ? radarTiles(bounds, aspect, radar.frame) : []),
+    [radar.on, radar.frame, bounds, aspect],
+  );
 
   const dominant = useMemo(
     () => (area ? dominantCountryForArea(preparedCountries, area.bounds, area.grid) : null),
@@ -432,6 +466,69 @@ function ZoneMap({
       </div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(250,204,21,0.06),transparent_42%),linear-gradient(to_bottom,rgba(2,6,23,0.02),rgba(2,6,23,0.36))]" />
 
+      {/* Radar reflectivity raster — above the satellite, below our own layers.
+          Tiles load straight from the radar host; index comes from the backend. */}
+      {gameStarted && radar.on && radarTileList.length > 0 && (
+        <div className="pointer-events-none absolute inset-0" style={{ opacity: radar.opacity }}>
+          {radarTileList.map((tile) => (
+            <img
+              key={tile.key}
+              src={tile.src}
+              alt=""
+              aria-hidden
+              draggable={false}
+              className="absolute select-none"
+              style={{ left: `${tile.left}%`, top: `${tile.top}%`, width: `${tile.width}%`, height: `${tile.height}%` }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Radar control: opacity, animation loop, frame time / unavailable state. */}
+      {gameStarted && radar.on && (
+        <div className="pointer-events-auto absolute left-4 top-[5rem] z-20 w-[188px] rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2.5 shadow-2xl backdrop-blur-md">
+          <div className="flex items-center justify-between">
+            <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/50">Radar · dBZ</div>
+            {!radar.unavailable && radar.frameTime != null && (
+              <span className="text-[10px] font-semibold tabular-nums text-white/45">
+                {new Date(radar.frameTime * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+          </div>
+          {radar.unavailable ? (
+            <div className="mt-1.5 text-[11px] font-semibold text-amber-200/80">Data unavailable</div>
+          ) : (
+            <>
+              <div className="mt-1.5 h-2 w-full rounded-full" style={{ background: 'linear-gradient(to right, rgba(34,197,94,0.9), rgba(250,204,21,0.95), rgba(249,115,22,0.95), rgba(239,68,68,1), rgba(217,70,239,1))' }} />
+              <div className="mt-0.5 flex justify-between text-[9px] font-semibold text-white/40"><span>light</span><span>intense</span></div>
+              <div className="mt-2 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={radar.onTogglePlay}
+                  disabled={radar.frameCount < 2}
+                  className="grid size-7 shrink-0 place-items-center rounded-lg border border-white/15 text-xs font-black text-white/80 transition hover:bg-white/10 disabled:opacity-30"
+                  aria-label={radar.playing ? 'Pause radar loop' : 'Play radar loop'}
+                >
+                  {radar.playing ? '❚❚' : '▶'}
+                </button>
+                <label className="flex flex-1 items-center gap-1.5">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-white/40">Opacity</span>
+                  <input
+                    type="range"
+                    min={0.15}
+                    max={1}
+                    step={0.05}
+                    value={radar.opacity}
+                    onChange={(e) => radar.onSetOpacity(Number(e.target.value))}
+                    className="h-1 flex-1 cursor-pointer accent-cyan-300"
+                  />
+                </label>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {gameStarted && showDensity && <StrikeDensityLayer strikes={strikes} bounds={bounds} width={size.width} height={size.height} />}
 
       {/* Rain: soft blue precipitation blobs at Open-Meteo sample points (mm/h). */}
@@ -484,6 +581,30 @@ function ZoneMap({
           { key: 'high', rgb: '249,115,22' },
           { key: 'ext', rgb: '239,68,68' },
         ];
+        // Bilinearly interpolate the CAPE field to each cell centre so every cell
+        // gets its own score (the blob heatmap alone reads as uniform because CAPE
+        // varies slowly across a zone).
+        const n = Math.max(2, Math.round(Math.sqrt(weather.points.length)));
+        const spanLat = bounds.maxLat - bounds.minLat;
+        const spanLon = bounds.maxLon - bounds.minLon;
+        const sampleAt = (sr: number, sc: number) => weather.points[Math.min(n - 1, Math.max(0, sr)) * n + Math.min(n - 1, Math.max(0, sc))];
+        const capeAt = (lat: number, lon: number) => {
+          const fr = ((lat - bounds.minLat) / spanLat) * n - 0.5;
+          const fc = ((lon - bounds.minLon) / spanLon) * n - 0.5;
+          const r0 = Math.floor(fr);
+          const c0 = Math.floor(fc);
+          const tr = fr - r0;
+          const tc = fc - c0;
+          let acc = 0;
+          let wsum = 0;
+          for (const [dr, dc, wt] of [[0, 0, (1 - tr) * (1 - tc)], [0, 1, (1 - tr) * tc], [1, 0, tr * (1 - tc)], [1, 1, tr * tc]] as const) {
+            const s = sampleAt(r0 + dr, c0 + dc);
+            if (!s || s.cape == null) continue;
+            acc += wt * s.cape;
+            wsum += wt;
+          }
+          return wsum > 0 ? acc / wsum : null;
+        };
         return (
           <>
             <svg className="pointer-events-none absolute inset-0 z-[6] h-full w-full" viewBox={`0 0 ${size.width} ${size.height}`} preserveAspectRatio="none" aria-hidden>
@@ -502,12 +623,91 @@ function ZoneMap({
                 return <circle key={i} cx={p.x} cy={p.y} r={spacing * (0.6 + intensity * 0.5)} fill={`url(#risk-${capeBand(pt.cape).key})`} opacity={0.14 + intensity * 0.36} />;
               })}
             </svg>
+            {/* Per-cell CAPE score, bottom-right of each cell, coloured by band. */}
+            <svg className="pointer-events-none absolute inset-0 z-[9] h-full w-full" viewBox={`0 0 ${size.width} ${size.height}`} preserveAspectRatio="none" aria-hidden>
+              {cells.map((cell) => {
+                const lat = bounds.maxLat - ((cell.row + 0.5) / grid.rows) * spanLat;
+                const lon = bounds.minLon + ((cell.col + 0.5) / grid.cols) * spanLon;
+                const cape = capeAt(lat, lon);
+                if (cape == null) return null;
+                return (
+                  <text
+                    key={cell.index}
+                    x={(cell.col + 1) * cellW - cellW * 0.07}
+                    y={(cell.row + 1) * cellH - cellH * 0.09}
+                    textAnchor="end"
+                    className="font-black"
+                    fill={`rgb(${capeBand(cape).rgb})`}
+                    style={{ fontSize: Math.max(8, cellH * 0.17), paintOrder: 'stroke', stroke: 'rgba(2,6,23,0.85)', strokeWidth: 2.4, strokeLinejoin: 'round' }}
+                  >
+                    {Math.round(cape)}
+                  </text>
+                );
+              })}
+            </svg>
             <div className="pointer-events-none absolute bottom-4 right-4 z-20 flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 shadow-2xl backdrop-blur-md">
               <span className="h-2.5 w-2.5 rounded-full" style={{ background: `rgb(${band.rgb})` }} />
               <div className="leading-tight">
                 <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/50">Storm risk · {band.label}</div>
-                <div className="font-display text-sm font-black text-white">CAPE {Math.round(capeMax)} <span className="text-[10px] font-semibold text-white/45">J/kg</span></div>
+                <div className="font-display text-sm font-black text-white">CAPE {Math.round(capeMax)} <span className="text-[10px] font-semibold text-white/45">J/kg peak · per-cell</span></div>
               </div>
+            </div>
+          </>
+        );
+      })()}
+
+      {/* Total lightning (IC+CG, MTG-LI): magenta/purple flash blobs — distinct
+          from the orange CG strike-density heatmap. A ▲/▼ marks intensifying /
+          decaying cells (the flash-rate trend). Leading indicator for CG strikes. */}
+      {gameStarted && showTotal && (totalLxUnavailable || totalLx) && (() => {
+        const pts = totalLx?.points.filter((p) => p.flashes > 0) ?? [];
+        const fmax = Math.max(1, totalLx?.summary.flashMax ?? 1);
+        const wxN = Math.max(2, Math.round(Math.sqrt(totalLx?.points.length ?? 36)));
+        const spacing = Math.max(size.width, size.height) / wxN;
+        const mock = totalLx?.source?.includes('mock');
+        return (
+          <>
+            {!totalLxUnavailable && (
+              <svg className="pointer-events-none absolute inset-0 z-[6] h-full w-full" viewBox={`0 0 ${size.width} ${size.height}`} preserveAspectRatio="none" aria-hidden>
+                <defs>
+                  <radialGradient id="flashblob">
+                    <stop offset="0%" stopColor="rgba(217,70,239,0.9)" />
+                    <stop offset="100%" stopColor="rgba(217,70,239,0)" />
+                  </radialGradient>
+                </defs>
+                {pts.map((pt, i) => {
+                  const p = projectEqui(bounds, size.width, size.height, pt.lat, pt.lon);
+                  const intensity = Math.max(0, Math.min(1, pt.flashes / fmax));
+                  return <circle key={i} cx={p.x} cy={p.y} r={spacing * (0.5 + intensity * 0.6)} fill="url(#flashblob)" opacity={0.22 + intensity * 0.5} />;
+                })}
+                {pts.map((pt, i) => {
+                  if (pt.trend === 0) return null;
+                  const p = projectEqui(bounds, size.width, size.height, pt.lat, pt.lon);
+                  return (
+                    <text key={`t${i}`} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle" className="font-black" fill={pt.trend > 0 ? 'rgba(240,171,252,1)' : 'rgba(148,163,184,0.9)'} style={{ fontSize: Math.max(9, spacing * 0.32), paintOrder: 'stroke', stroke: 'rgba(2,6,23,0.85)', strokeWidth: 2.4, strokeLinejoin: 'round' }}>
+                      {pt.trend > 0 ? '▲' : '▼'}
+                    </text>
+                  );
+                })}
+              </svg>
+            )}
+            <div className="pointer-events-none absolute bottom-[6.75rem] left-4 z-20 rounded-2xl border border-fuchsia-300/20 bg-slate-950/70 px-3 py-2 shadow-2xl backdrop-blur-md">
+              <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-fuchsia-200/60">Total lightning</div>
+              {totalLxUnavailable ? (
+                <div className="mt-1 text-[11px] font-semibold text-amber-200/80">Data unavailable</div>
+              ) : (
+                <>
+                  <div className="font-display text-sm font-black text-white">
+                    {totalLx?.summary.flashTotal ?? 0} <span className="text-[10px] font-semibold text-white/45">flashes in zone</span>
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-1 text-[10px] font-bold">
+                    <span className={totalLx?.summary.trend === 'intensifying' ? 'text-fuchsia-300' : totalLx?.summary.trend === 'decaying' ? 'text-slate-400' : 'text-white/50'}>
+                      {totalLx?.summary.trend === 'intensifying' ? '▲ intensifying' : totalLx?.summary.trend === 'decaying' ? '▼ decaying' : '― steady'}
+                    </span>
+                  </div>
+                  {mock && <div className="mt-0.5 text-[8px] font-semibold uppercase tracking-wider text-amber-200/60">mock source</div>}
+                </>
+              )}
             </div>
           </>
         );
@@ -929,7 +1129,14 @@ export default function GridGameClient() {
   const [mounted, setMounted] = useState(false);
   const [nextScanAt, setNextScanAt] = useState(() => Date.now() + SCAN_MS);
   const [dominantIso, setDominantIso] = useState<string>('');
-  const [layers, setLayers] = useState<Record<string, boolean>>({ density: true, wind: false, rain: false, risk: false, tracks: false });
+  const [layers, setLayers] = useState<Record<string, boolean>>({ density: true, radar: false, total: false, wind: false, rain: false, risk: false, tracks: false });
+  const [totalLx, setTotalLx] = useState<TotalLightning | null>(null);
+  const [totalLxUnavailable, setTotalLxUnavailable] = useState(false);
+  const [radarIndex, setRadarIndex] = useState<RadarIndex | null>(null);
+  const [radarUnavailable, setRadarUnavailable] = useState(false);
+  const [radarFrameIdx, setRadarFrameIdx] = useState(0);
+  const [radarPlaying, setRadarPlaying] = useState(false);
+  const [radarOpacity, setRadarOpacity] = useState(0.6);
   const [weather, setWeather] = useState<ZoneWeather | null>(null);
   const [stormTrack, setStormTrack] = useState<StormTrack | null>(null);
   const [showDemo, setShowDemo] = useState(false);
@@ -1078,6 +1285,62 @@ export default function GridGameClient() {
       window.clearInterval(timer);
     };
   }, [zoneKey]);
+
+  // Radar reflectivity frame index (RainViewer via backend). Only polled while the
+  // Radar layer is on; refreshes every 60s (frames update ~every 5-10 min). Tile
+  // IMAGES load straight from the radar host (see radarTiles). Degrades to a
+  // "data unavailable" state on provider/backend failure — game keeps working.
+  useEffect(() => {
+    if (!gameStarted || !layers.radar) return;
+    let alive = true;
+    const load = () =>
+      getRadarFrames().then((idx) => {
+        if (!alive) return;
+        setRadarIndex(idx);
+        setRadarUnavailable(!idx);
+        setRadarFrameIdx((i) => (idx && idx.frames.length ? Math.min(i, idx.frames.length - 1) : 0));
+      });
+    load();
+    const timer = window.setInterval(load, 60_000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [gameStarted, layers.radar]);
+
+  // Total lightning (IC+CG, MTG-LI via backend). Polled while the layer is on and
+  // a zone is active; ~30s cadence (leading indicator, updates fast). Degrades to
+  // "data unavailable" on failure.
+  useEffect(() => {
+    if (!zoneKey || !layers.total) {
+      setTotalLx(null);
+      setTotalLxUnavailable(false);
+      return;
+    }
+    const [minLat, maxLat, minLon, maxLon] = zoneKey.split('|').map(Number);
+    let alive = true;
+    const load = () =>
+      getTotalLightning({ minLat, maxLat, minLon, maxLon }, 6).then((d) => {
+        if (!alive) return;
+        setTotalLx(d);
+        setTotalLxUnavailable(!d);
+      });
+    load();
+    const timer = window.setInterval(load, 30_000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [zoneKey, layers.total]);
+
+  // Radar animation: when playing, cycle through the preloaded trailing frames.
+  useEffect(() => {
+    if (!radarPlaying || !layers.radar || !radarIndex || radarIndex.frames.length < 2) return;
+    const timer = window.setInterval(() => {
+      setRadarFrameIdx((i) => (i + 1) % radarIndex.frames.length);
+    }, 550);
+    return () => window.clearInterval(timer);
+  }, [radarPlaying, layers.radar, radarIndex]);
 
   // ── clock ────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -1333,6 +1596,21 @@ export default function GridGameClient() {
     ? Math.max(0, Math.ceil((roundEndsAt - nowMs) / 1000))
     : GAME_DURATION_MS / 1000;
 
+  const radarFrames = radarIndex?.frames ?? [];
+  const curRadarFrame = radarFrames.length ? radarFrames[Math.min(radarFrameIdx, radarFrames.length - 1)] : null;
+  const radar: RadarLayer = {
+    on: !!layers.radar,
+    frame: radarIndex && curRadarFrame ? { host: radarIndex.host, path: curRadarFrame.path, size: radarIndex.size, color: radarIndex.color, options: radarIndex.options } : null,
+    opacity: radarOpacity,
+    unavailable: radarUnavailable,
+    frameCount: radarFrames.length,
+    frameIdx: Math.min(radarFrameIdx, Math.max(0, radarFrames.length - 1)),
+    frameTime: curRadarFrame?.time ?? null,
+    playing: radarPlaying,
+    onTogglePlay: () => setRadarPlaying((p) => !p),
+    onSetOpacity: setRadarOpacity,
+  };
+
   return (
     <main className="min-h-svh overflow-hidden bg-storm px-4 pb-8 pt-24 text-white sm:px-6">
       <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 pb-4">
@@ -1394,6 +1672,7 @@ export default function GridGameClient() {
             secondsLeft={secondsLeft}
             botCredits={botCredits}
             botBets={botBets}
+            radar={radar}
             loading={loading}
             onPlay={onPlay}
             now={nowMs}
@@ -1408,6 +1687,9 @@ export default function GridGameClient() {
             showRain={!!layers.rain}
             showRisk={!!layers.risk}
             showTracks={!!layers.tracks}
+            showTotal={!!layers.total}
+            totalLx={totalLx}
+            totalLxUnavailable={totalLxUnavailable}
             weather={weather}
             stormTrack={stormTrack}
             hitPulse={hitPulse}
