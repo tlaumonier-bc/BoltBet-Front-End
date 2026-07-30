@@ -351,32 +351,41 @@ export interface RadarFrame {
   options: string; // "{smooth}_{snow}", e.g. "0_0"
 }
 
+// RainViewer's radar tiles only exist up to zoom 7; requesting higher returns a
+// "Zoom level not supported" placeholder. Zone views zoom in further, so we render
+// radar at min(viewZoom, 7) and scale those tiles into the current viewport.
+export const MAX_RADAR_ZOOM = 7;
+
 /**
- * Radar reflectivity tiles for a frame, aligned to the SAME slippy-map z/x/y grid
- * as `mapTiles` (so radar overlays the satellite exactly). URL pattern:
- *   {host}{path}/{size}/{z}/{x}/{y}/{color}/{options}.png
- * The tile images are loaded straight from the radar host (that's allowed for
- * plain image tiles); only the frame index comes through our backend.
+ * Radar reflectivity tiles for a frame, positioned to overlay the satellite view.
+ * URL pattern: {host}{path}/{size}/{z}/{x}/{y}/{color}/{options}.png
+ * When the view zoom exceeds the radar's max zoom, we use the radar's max zoom and
+ * scale each tile up into the viewport (a target tile spans `worldTile` px in the
+ * view's world-pixel space). Tile images load straight from the radar host; only
+ * the frame index comes through our backend.
  */
 export function radarTiles(bounds: Bounds, aspect: number, frame: RadarFrame) {
   const view = viewport(bounds, aspect);
-  const tileCount = 2 ** view.zoom;
-  const minX = Math.floor(view.left / TILE_SIZE);
-  const maxX = Math.floor((view.left + view.width) / TILE_SIZE);
-  const minY = Math.floor(view.top / TILE_SIZE);
-  const maxY = Math.floor((view.top + view.height) / TILE_SIZE);
+  const zoom = Math.min(view.zoom, MAX_RADAR_ZOOM);
+  const scale = 2 ** (view.zoom - zoom); // view-zoom px per radar-tile px
+  const worldTile = TILE_SIZE * scale; // a radar tile's size in the view's world px
+  const tileCount = 2 ** zoom;
+  const minX = Math.floor(view.left / worldTile);
+  const maxX = Math.floor((view.left + view.width) / worldTile);
+  const minY = Math.floor(view.top / worldTile);
+  const maxY = Math.floor((view.top + view.height) / worldTile);
   const tiles = [];
   for (let x = minX; x <= maxX; x += 1) {
     for (let y = minY; y <= maxY; y += 1) {
       if (y < 0 || y >= tileCount) continue; // no radar tiles past the poles
       const wrappedX = ((x % tileCount) + tileCount) % tileCount;
       tiles.push({
-        key: `${frame.path}-${view.zoom}-${x}-${y}`,
-        src: `${frame.host}${frame.path}/${frame.size}/${view.zoom}/${wrappedX}/${y}/${frame.color}/${frame.options}.png`,
-        left: ((x * TILE_SIZE - view.left) / view.width) * 100,
-        top: ((y * TILE_SIZE - view.top) / view.height) * 100,
-        width: (TILE_SIZE / view.width) * 100,
-        height: (TILE_SIZE / view.height) * 100,
+        key: `${frame.path}-${zoom}-${x}-${y}`,
+        src: `${frame.host}${frame.path}/${frame.size}/${zoom}/${wrappedX}/${y}/${frame.color}/${frame.options}.png`,
+        left: ((x * worldTile - view.left) / view.width) * 100,
+        top: ((y * worldTile - view.top) / view.height) * 100,
+        width: (worldTile / view.width) * 100,
+        height: (worldTile / view.height) * 100,
       });
     }
   }

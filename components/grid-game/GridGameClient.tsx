@@ -507,9 +507,10 @@ function ZoneMap({
                   onClick={radar.onTogglePlay}
                   disabled={radar.frameCount < 2}
                   className="grid size-7 shrink-0 place-items-center rounded-lg border border-white/15 text-xs font-black text-white/80 transition hover:bg-white/10 disabled:opacity-30"
+                  title={radar.playing ? 'Pause radar loop' : 'Play radar loop'}
                   aria-label={radar.playing ? 'Pause radar loop' : 'Play radar loop'}
                 >
-                  {radar.playing ? '❚❚' : '▶'}
+                  {radar.playing ? '⏸' : '▶'}
                 </button>
                 <label className="flex flex-1 items-center gap-1.5">
                   <span className="text-[9px] font-bold uppercase tracking-wider text-white/40">Opacity</span>
