@@ -76,17 +76,14 @@ const MAX_ZONES_SHOWN = 3; // only surface the 3 hottest zones (most strikes / l
 type Mode = 'selecting' | 'playing' | 'over';
 
 // Everything the map needs to draw + control the radar layer, in one prop.
+// Radar is live-by-default: it always loops through the recent frames while the
+// layer is on (no play/pause, fixed opacity — toggle it off in the panel to stop).
+const RADAR_OPACITY = 0.6;
 interface RadarLayer {
   on: boolean;
   frame: RadarFrame | null; // current animation frame's tile params (null = no data)
-  opacity: number;
   unavailable: boolean;
-  frameCount: number;
-  frameIdx: number;
   frameTime: number | null; // epoch seconds of the current frame
-  playing: boolean;
-  onTogglePlay: () => void;
-  onSetOpacity: (v: number) => void;
 }
 
 interface Bet {
@@ -144,14 +141,14 @@ async function ensureGameSession() {
 
 // Map layers. Only "density" is wired up today; the rest are placeholders for
 // upcoming data feeds (storm-cell motion, precipitation, CAPE, wind).
-const SIDE_LAYERS: { key: string; label: string; hint: string; ready: boolean }[] = [
-  { key: 'density', label: 'Strike density', hint: 'Live heatmap of recent strikes', ready: true },
-  { key: 'radar', label: 'Radar', hint: 'Reflectivity cores (dBZ)', ready: true },
-  { key: 'total', label: 'Total lightning', hint: 'Intracloud + CG (MTG-LI)', ready: true },
-  { key: 'wind', label: 'Wind', hint: 'Wind speed & direction', ready: true },
-  { key: 'rain', label: 'Rain', hint: 'Live precipitation', ready: true },
-  { key: 'risk', label: 'Storm risk', hint: 'CAPE instability index', ready: true },
-  { key: 'tracks', label: 'Storm tracks', hint: 'Cell trajectory & speed', ready: true },
+const SIDE_LAYERS: { key: string; label: string; hint: string; ready: boolean; desc: string }[] = [
+  { key: 'density', label: 'Strike density', hint: 'Live heatmap of recent strikes', ready: true, desc: 'Heatmap of where lightning has struck lately. Hot cells strike often but pay LOW multipliers — hunt the cooler cells the storm is drifting into for bigger payouts.' },
+  { key: 'radar', label: 'Radar', hint: 'Reflectivity cores (dBZ)', ready: true, desc: 'Weather-radar rainfall intensity. The brightest cores are the heaviest storms and the strongest short-term clue to where the next strikes will land.' },
+  { key: 'total', label: 'Total lightning', hint: 'Intracloud + CG (MTG-LI)', ready: true, desc: 'Satellite total lightning (incl. in-cloud flashes that come minutes before ground strikes). ▲ = a cell is intensifying, ▼ = fading. Bet ▲ cells before they heat up.' },
+  { key: 'wind', label: 'Wind', hint: 'Wind speed & direction', ready: true, desc: 'Wind arrows show which way each cell is being pushed. Storms travel downwind — bet the cells the arrows point toward.' },
+  { key: 'rain', label: 'Rain', hint: 'Live precipitation', ready: true, desc: 'Live precipitation. Heavy rain usually sits with the most active storm cores, so it marks where strikes cluster.' },
+  { key: 'risk', label: 'Storm risk', hint: 'CAPE instability index', ready: true, desc: 'CAPE (storm fuel) per cell in J/kg. Higher = more explosive potential. A high-CAPE cell that is NOT striking yet is a prime incoming bet.' },
+  { key: 'tracks', label: 'Storm tracks', hint: 'Cell trajectory & speed', ready: true, desc: 'The storm cell’s heading and speed from its recent drift. The arrow points where it is going next — bet the cells along that path.' },
 ];
 
 // Fake all-time leaderboard (best balance reached in a single game). Placeholder
@@ -185,6 +182,7 @@ function SidePanel({
   onToggleLayer: (key: string) => void;
 }) {
   const recent = useMemo(() => strikes.slice(0, 3), [strikes]);
+  const [openInfo, setOpenInfo] = useState<string | null>(null);
   return (
     <aside className="glass flex min-h-[620px] flex-col gap-3 rounded-[2rem] p-4 shadow-2xl">
       <div>
@@ -212,32 +210,51 @@ function SidePanel({
         <div className="space-y-1.5">
           {SIDE_LAYERS.map((layer) => {
             const active = layer.ready && !!layers[layer.key];
+            const info = openInfo === layer.key;
             return (
-              <button
+              <div
                 key={layer.key}
-                type="button"
-                disabled={!layer.ready}
-                onClick={layer.ready ? () => onToggleLayer(layer.key) : undefined}
-                className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left transition ${
+                className={`relative rounded-xl border transition ${
                   layer.ready
                     ? active
                       ? 'border-cyan-300/40 bg-cyan-300/10'
                       : 'border-white/10 bg-white/[0.045] hover:bg-white/[0.07]'
-                    : 'cursor-not-allowed border-white/8 bg-white/[0.02]'
+                    : 'border-white/8 bg-white/[0.02]'
                 }`}
               >
-                <span className="min-w-0">
-                  <span className={`block text-[13px] font-semibold ${layer.ready ? 'text-white/85' : 'text-white/45'}`}>{layer.label}</span>
-                  <span className="block truncate text-[10px] text-white/35">{layer.hint}</span>
-                </span>
-                {layer.ready ? (
-                  <span aria-hidden className={`relative h-5 w-9 shrink-0 rounded-full transition ${active ? 'bg-cyan-400/80' : 'bg-white/15'}`}>
-                    <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${active ? 'left-[1.15rem]' : 'left-0.5'}`} />
-                  </span>
-                ) : (
-                  <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/35">Soon</span>
+                <div className="flex items-center gap-1.5 px-3 py-2">
+                  <button
+                    type="button"
+                    disabled={!layer.ready}
+                    onClick={layer.ready ? () => onToggleLayer(layer.key) : undefined}
+                    className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left disabled:cursor-not-allowed"
+                  >
+                    <span className="min-w-0">
+                      <span className={`block text-[13px] font-semibold ${layer.ready ? 'text-white/85' : 'text-white/45'}`}>{layer.label}</span>
+                      <span className="block truncate text-[10px] text-white/35">{layer.hint}</span>
+                    </span>
+                    {layer.ready ? (
+                      <span aria-hidden className={`relative h-5 w-9 shrink-0 rounded-full transition ${active ? 'bg-cyan-400/80' : 'bg-white/15'}`}>
+                        <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${active ? 'left-[1.15rem]' : 'left-0.5'}`} />
+                      </span>
+                    ) : (
+                      <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/35">Soon</span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOpenInfo(info ? null : layer.key)}
+                    className={`grid size-5 shrink-0 place-items-center rounded-full border text-[10px] font-black transition ${info ? 'border-cyan-300/60 bg-cyan-300/20 text-cyan-100' : 'border-white/20 text-white/45 hover:text-white/80'}`}
+                    aria-label={`About the ${layer.label} layer`}
+                    title="What is this?"
+                  >
+                    i
+                  </button>
+                </div>
+                {info && (
+                  <div className="border-t border-white/10 px-3 py-2 text-[11px] leading-relaxed text-white/60">{layer.desc}</div>
                 )}
-              </button>
+              </div>
             );
           })}
         </div>
@@ -469,7 +486,7 @@ function ZoneMap({
       {/* Radar reflectivity raster — above the satellite, below our own layers.
           Tiles load straight from the radar host; index comes from the backend. */}
       {gameStarted && radar.on && radarTileList.length > 0 && (
-        <div className="pointer-events-none absolute inset-0" style={{ opacity: radar.opacity }}>
+        <div className="pointer-events-none absolute inset-0" style={{ opacity: RADAR_OPACITY }}>
           {radarTileList.map((tile) => (
             <img
               key={tile.key}
@@ -481,52 +498,6 @@ function ZoneMap({
               style={{ left: `${tile.left}%`, top: `${tile.top}%`, width: `${tile.width}%`, height: `${tile.height}%` }}
             />
           ))}
-        </div>
-      )}
-
-      {/* Radar control: opacity, animation loop, frame time / unavailable state. */}
-      {gameStarted && radar.on && (
-        <div className="pointer-events-auto absolute left-4 top-[5rem] z-20 w-[188px] rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2.5 shadow-2xl backdrop-blur-md">
-          <div className="flex items-center justify-between">
-            <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/50">Radar · dBZ</div>
-            {!radar.unavailable && radar.frameTime != null && (
-              <span className="text-[10px] font-semibold tabular-nums text-white/45">
-                {new Date(radar.frameTime * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            )}
-          </div>
-          {radar.unavailable ? (
-            <div className="mt-1.5 text-[11px] font-semibold text-amber-200/80">Data unavailable</div>
-          ) : (
-            <>
-              <div className="mt-1.5 h-2 w-full rounded-full" style={{ background: 'linear-gradient(to right, rgba(34,197,94,0.9), rgba(250,204,21,0.95), rgba(249,115,22,0.95), rgba(239,68,68,1), rgba(217,70,239,1))' }} />
-              <div className="mt-0.5 flex justify-between text-[9px] font-semibold text-white/40"><span>light</span><span>intense</span></div>
-              <div className="mt-2 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={radar.onTogglePlay}
-                  disabled={radar.frameCount < 2}
-                  className="grid size-7 shrink-0 place-items-center rounded-lg border border-white/15 text-xs font-black text-white/80 transition hover:bg-white/10 disabled:opacity-30"
-                  title={radar.playing ? 'Pause radar loop' : 'Play radar loop'}
-                  aria-label={radar.playing ? 'Pause radar loop' : 'Play radar loop'}
-                >
-                  {radar.playing ? '⏸' : '▶'}
-                </button>
-                <label className="flex flex-1 items-center gap-1.5">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-white/40">Opacity</span>
-                  <input
-                    type="range"
-                    min={0.15}
-                    max={1}
-                    step={0.05}
-                    value={radar.opacity}
-                    onChange={(e) => radar.onSetOpacity(Number(e.target.value))}
-                    className="h-1 flex-1 cursor-pointer accent-cyan-300"
-                  />
-                </label>
-              </div>
-            </>
-          )}
         </div>
       )}
 
@@ -552,20 +523,6 @@ function ZoneMap({
                 return <circle key={i} cx={p.x} cy={p.y} r={spacing * (0.55 + intensity * 0.55)} fill="url(#rainblob)" opacity={0.28 + intensity * 0.5} />;
               })}
             </svg>
-            <div className="pointer-events-none absolute bottom-4 left-4 z-20 rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 shadow-2xl backdrop-blur-md">
-              <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/50">Rain</div>
-              {wet.length ? (
-                <>
-                  <div className="mt-1.5 h-2 w-[120px] rounded-full" style={{ background: 'linear-gradient(to right, rgba(147,197,253,0.9), rgba(37,99,235,0.95), rgba(30,58,138,1))' }} />
-                  <div className="mt-1 flex justify-between text-[9px] font-semibold text-white/45">
-                    <span>light</span>
-                    <span>{(weather.summary.precipMax ?? 0).toFixed(1)} mm/h</span>
-                  </div>
-                </>
-              ) : (
-                <div className="mt-1 text-[11px] font-semibold text-white/60">Dry — no rain here now</div>
-              )}
-            </div>
           </>
         );
       })()}
@@ -574,8 +531,6 @@ function ZoneMap({
       {gameStarted && showRisk && weather && weather.points.some((p) => p.cape != null) && (() => {
         const wxN = Math.max(2, Math.round(Math.sqrt(weather.points.length)));
         const spacing = Math.max(size.width, size.height) / wxN;
-        const capeMax = weather.summary.capeMax ?? 0;
-        const band = capeBand(capeMax);
         const BANDS = [
           { key: 'low', rgb: '34,197,94' },
           { key: 'mod', rgb: '250,204,21' },
@@ -646,71 +601,44 @@ function ZoneMap({
                 );
               })}
             </svg>
-            <div className="pointer-events-none absolute bottom-4 right-4 z-20 flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 shadow-2xl backdrop-blur-md">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ background: `rgb(${band.rgb})` }} />
-              <div className="leading-tight">
-                <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/50">Storm risk · {band.label}</div>
-                <div className="font-display text-sm font-black text-white">CAPE {Math.round(capeMax)} <span className="text-[10px] font-semibold text-white/45">J/kg peak · per-cell</span></div>
-              </div>
-            </div>
           </>
         );
       })()}
 
-      {/* Total lightning (IC+CG, MTG-LI): magenta/purple flash blobs — distinct
-          from the orange CG strike-density heatmap. A ▲/▼ marks intensifying /
-          decaying cells (the flash-rate trend). Leading indicator for CG strikes. */}
-      {gameStarted && showTotal && (totalLxUnavailable || totalLx) && (() => {
-        const pts = totalLx?.points.filter((p) => p.flashes > 0) ?? [];
-        const fmax = Math.max(1, totalLx?.summary.flashMax ?? 1);
-        const wxN = Math.max(2, Math.round(Math.sqrt(totalLx?.points.length ?? 36)));
-        const spacing = Math.max(size.width, size.height) / wxN;
-        const mock = totalLx?.source?.includes('mock');
+      {/* Total lightning (IC+CG, MTG-LI): a small ▲/▼ in each cell's bottom-left —
+          ▲ = flash rate rising (intensifying), ▼ = fading. Kept tiny + corner-pinned
+          so it never blocks the other layers or the bet UI. */}
+      {gameStarted && showTotal && totalLx && !totalLxUnavailable && (() => {
+        const tn = Math.max(2, Math.round(Math.sqrt(totalLx.points.length)));
+        const spanLat = bounds.maxLat - bounds.minLat;
+        const spanLon = bounds.maxLon - bounds.minLon;
+        const trendAt = (lat: number, lon: number) => {
+          const r = Math.min(tn - 1, Math.max(0, Math.round(((lat - bounds.minLat) / spanLat) * tn - 0.5)));
+          const c = Math.min(tn - 1, Math.max(0, Math.round(((lon - bounds.minLon) / spanLon) * tn - 0.5)));
+          return totalLx.points[r * tn + c] ?? null;
+        };
         return (
-          <>
-            {!totalLxUnavailable && (
-              <svg className="pointer-events-none absolute inset-0 z-[6] h-full w-full" viewBox={`0 0 ${size.width} ${size.height}`} preserveAspectRatio="none" aria-hidden>
-                <defs>
-                  <radialGradient id="flashblob">
-                    <stop offset="0%" stopColor="rgba(217,70,239,0.9)" />
-                    <stop offset="100%" stopColor="rgba(217,70,239,0)" />
-                  </radialGradient>
-                </defs>
-                {pts.map((pt, i) => {
-                  const p = projectEqui(bounds, size.width, size.height, pt.lat, pt.lon);
-                  const intensity = Math.max(0, Math.min(1, pt.flashes / fmax));
-                  return <circle key={i} cx={p.x} cy={p.y} r={spacing * (0.5 + intensity * 0.6)} fill="url(#flashblob)" opacity={0.22 + intensity * 0.5} />;
-                })}
-                {pts.map((pt, i) => {
-                  if (pt.trend === 0) return null;
-                  const p = projectEqui(bounds, size.width, size.height, pt.lat, pt.lon);
-                  return (
-                    <text key={`t${i}`} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle" className="font-black" fill={pt.trend > 0 ? 'rgba(240,171,252,1)' : 'rgba(148,163,184,0.9)'} style={{ fontSize: Math.max(9, spacing * 0.32), paintOrder: 'stroke', stroke: 'rgba(2,6,23,0.85)', strokeWidth: 2.4, strokeLinejoin: 'round' }}>
-                      {pt.trend > 0 ? '▲' : '▼'}
-                    </text>
-                  );
-                })}
-              </svg>
-            )}
-            <div className="pointer-events-none absolute bottom-[6.75rem] left-4 z-20 rounded-2xl border border-fuchsia-300/20 bg-slate-950/70 px-3 py-2 shadow-2xl backdrop-blur-md">
-              <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-fuchsia-200/60">Total lightning</div>
-              {totalLxUnavailable ? (
-                <div className="mt-1 text-[11px] font-semibold text-amber-200/80">Data unavailable</div>
-              ) : (
-                <>
-                  <div className="font-display text-sm font-black text-white">
-                    {totalLx?.summary.flashTotal ?? 0} <span className="text-[10px] font-semibold text-white/45">flashes in zone</span>
-                  </div>
-                  <div className="mt-0.5 flex items-center gap-1 text-[10px] font-bold">
-                    <span className={totalLx?.summary.trend === 'intensifying' ? 'text-fuchsia-300' : totalLx?.summary.trend === 'decaying' ? 'text-slate-400' : 'text-white/50'}>
-                      {totalLx?.summary.trend === 'intensifying' ? '▲ intensifying' : totalLx?.summary.trend === 'decaying' ? '▼ decaying' : '― steady'}
-                    </span>
-                  </div>
-                  {mock && <div className="mt-0.5 text-[8px] font-semibold uppercase tracking-wider text-amber-200/60">mock source</div>}
-                </>
-              )}
-            </div>
-          </>
+          <svg className="pointer-events-none absolute inset-0 z-[9] h-full w-full" viewBox={`0 0 ${size.width} ${size.height}`} preserveAspectRatio="none" aria-hidden>
+            {cells.map((cell) => {
+              const lat = bounds.maxLat - ((cell.row + 0.5) / grid.rows) * spanLat;
+              const lon = bounds.minLon + ((cell.col + 0.5) / grid.cols) * spanLon;
+              const s = trendAt(lat, lon);
+              if (!s || s.flashes <= 0 || s.trend === 0) return null;
+              return (
+                <text
+                  key={cell.index}
+                  x={cell.col * cellW + cellW * 0.1}
+                  y={(cell.row + 1) * cellH - cellH * 0.1}
+                  textAnchor="start"
+                  className="font-black"
+                  fill={s.trend > 0 ? 'rgba(240,171,252,1)' : 'rgba(148,163,184,0.95)'}
+                  style={{ fontSize: Math.max(8, cellH * 0.18), paintOrder: 'stroke', stroke: 'rgba(2,6,23,0.85)', strokeWidth: 2.4, strokeLinejoin: 'round' }}
+                >
+                  {s.trend > 0 ? '▲' : '▼'}
+                </text>
+              );
+            })}
+          </svg>
         );
       })()}
 
@@ -769,28 +697,6 @@ function ZoneMap({
         );
       })()}
 
-      {gameStarted && showDensity && (
-        <div className="pointer-events-none absolute left-4 top-4 z-20 w-[168px] rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2.5 shadow-2xl backdrop-blur-md">
-          <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/50">Strike density</div>
-          <div className="mt-2 h-2 w-full rounded-full" style={{ background: HEAT_GRADIENT_CSS }} />
-          <div className="mt-1 flex justify-between text-[9px] font-semibold text-white/45">
-            <span>Low</span>
-            <span>High</span>
-          </div>
-        </div>
-      )}
-
-      {/* Wind summary badge */}
-      {gameStarted && showWind && weather?.summary.windDir != null && (
-        <div className="pointer-events-none absolute right-4 top-4 z-20 flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 shadow-2xl backdrop-blur-md">
-          <span className="text-sky-200" style={{ display: 'inline-block', transform: `rotate(${((weather.summary.windDir ?? 0) + 180) % 360}deg)` }}>↑</span>
-          <div className="leading-tight">
-            <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/50">Wind</div>
-            <div className="font-display text-sm font-black text-white">{weather.summary.windAvg ?? '—'} km/h</div>
-          </div>
-        </div>
-      )}
-
       {/* Storm track: faint trail (past→now) + bold arrow (now→projected), from
           our own strike-centroid drift. Sits above the grid so it's clearly read. */}
       {gameStarted && showTracks && stormTrack && stormTrack.speedKmh >= 1 && (() => {
@@ -808,15 +714,81 @@ function ZoneMap({
               </g>
               <circle cx={nowC.x} cy={nowC.y} r="4" fill="rgba(226,232,240,0.95)" stroke="rgba(56,189,248,0.9)" strokeWidth="2" />
             </svg>
-            <div className="pointer-events-none absolute bottom-4 left-1/2 z-20 -translate-x-1/2 flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-2 shadow-2xl backdrop-blur-md">
-              <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/50">Storm cell</span>
-              <span className="font-display text-sm font-black text-cyan-200">moving {stormTrack.compass ?? '—'}</span>
-              <span className="text-white/40">·</span>
-              <span className="font-display text-sm font-black text-white">{Math.round(stormTrack.speedKmh)} km/h</span>
-            </div>
           </>
         );
       })()}
+
+      {/* Unified legend — one box for every enabled layer (top-left). */}
+      {gameStarted && (showDensity || radar.on || showTotal || showWind || showRain || showRisk || showTracks) && (
+        <div className="pointer-events-none absolute left-4 top-4 z-20 w-[188px] space-y-2 rounded-2xl border border-white/10 bg-slate-950/75 px-3 py-2.5 shadow-2xl backdrop-blur-md">
+          <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40">Active layers</div>
+
+          {showDensity && (
+            <div>
+              <div className="text-[10px] font-bold text-white/75">Strike density</div>
+              <div className="mt-1 h-1.5 w-full rounded-full" style={{ background: HEAT_GRADIENT_CSS }} />
+            </div>
+          )}
+
+          {radar.on && (
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-white/75">Radar · dBZ</span>
+                {!radar.unavailable && radar.frameTime != null && (
+                  <span className="text-[9px] tabular-nums text-white/40">{new Date(radar.frameTime * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                )}
+              </div>
+              {radar.unavailable ? (
+                <div className="text-[10px] font-semibold text-amber-200/80">Data unavailable</div>
+              ) : (
+                <div className="mt-1 h-1.5 w-full rounded-full" style={{ background: 'linear-gradient(to right, rgba(34,197,94,0.9), rgba(250,204,21,0.95), rgba(249,115,22,0.95), rgba(239,68,68,1), rgba(217,70,239,1))' }} />
+              )}
+            </div>
+          )}
+
+          {showTotal && (totalLx || totalLxUnavailable) && (
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-fuchsia-200/85">Total lightning</span>
+                {!totalLxUnavailable && <span className="text-[9px] text-white/40"><span className="text-fuchsia-300">▲</span>rising <span className="text-slate-400">▼</span>fading</span>}
+              </div>
+              {totalLxUnavailable ? (
+                <div className="text-[10px] font-semibold text-amber-200/80">Data unavailable</div>
+              ) : (
+                <div className="text-[9px] text-white/50">{totalLx?.summary.flashTotal ?? 0} flashes · {totalLx?.summary.trend}{totalLx?.source?.includes('mock') ? ' · est.' : ''}</div>
+              )}
+            </div>
+          )}
+
+          {showWind && weather?.summary.windDir != null && (
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1 text-[10px] font-bold text-white/75"><span className="text-sky-200" style={{ display: 'inline-block', transform: `rotate(${((weather.summary.windDir ?? 0) + 180) % 360}deg)` }}>↑</span>Wind</span>
+              <span className="text-[9px] text-white/50">{weather.summary.windAvg ?? '—'} km/h</span>
+            </div>
+          )}
+
+          {showRain && weather && (
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-white/75">Rain</span>
+              <span className="text-[9px] text-white/50">{(weather.summary.precipMax ?? 0).toFixed(1)} mm/h</span>
+            </div>
+          )}
+
+          {showRisk && weather?.summary.capeMax != null && (
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-white/75">Storm risk</span>
+              <span className="text-[9px] font-semibold" style={{ color: `rgb(${capeBand(weather.summary.capeMax).rgb})` }}>CAPE {Math.round(weather.summary.capeMax)}</span>
+            </div>
+          )}
+
+          {showTracks && stormTrack && stormTrack.speedKmh >= 1 && (
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-white/75">Storm cell</span>
+              <span className="text-[9px] font-semibold text-cyan-200">{stormTrack.compass ?? '—'} · {Math.round(stormTrack.speedKmh)} km/h</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Credit balance HUD */}
       {gameStarted && (
@@ -1136,8 +1108,6 @@ export default function GridGameClient() {
   const [radarIndex, setRadarIndex] = useState<RadarIndex | null>(null);
   const [radarUnavailable, setRadarUnavailable] = useState(false);
   const [radarFrameIdx, setRadarFrameIdx] = useState(0);
-  const [radarPlaying, setRadarPlaying] = useState(false);
-  const [radarOpacity, setRadarOpacity] = useState(0.6);
   const [weather, setWeather] = useState<ZoneWeather | null>(null);
   const [stormTrack, setStormTrack] = useState<StormTrack | null>(null);
   const [showDemo, setShowDemo] = useState(false);
@@ -1334,14 +1304,14 @@ export default function GridGameClient() {
     };
   }, [zoneKey, layers.total]);
 
-  // Radar animation: when playing, cycle through the preloaded trailing frames.
+  // Radar animation: always loop the recent frames while the layer is on.
   useEffect(() => {
-    if (!radarPlaying || !layers.radar || !radarIndex || radarIndex.frames.length < 2) return;
+    if (!layers.radar || !radarIndex || radarIndex.frames.length < 2) return;
     const timer = window.setInterval(() => {
       setRadarFrameIdx((i) => (i + 1) % radarIndex.frames.length);
     }, 550);
     return () => window.clearInterval(timer);
-  }, [radarPlaying, layers.radar, radarIndex]);
+  }, [layers.radar, radarIndex]);
 
   // ── clock ────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -1602,14 +1572,8 @@ export default function GridGameClient() {
   const radar: RadarLayer = {
     on: !!layers.radar,
     frame: radarIndex && curRadarFrame ? { host: radarIndex.host, path: curRadarFrame.path, size: radarIndex.size, color: radarIndex.color, options: radarIndex.options } : null,
-    opacity: radarOpacity,
     unavailable: radarUnavailable,
-    frameCount: radarFrames.length,
-    frameIdx: Math.min(radarFrameIdx, Math.max(0, radarFrames.length - 1)),
     frameTime: curRadarFrame?.time ?? null,
-    playing: radarPlaying,
-    onTogglePlay: () => setRadarPlaying((p) => !p),
-    onSetOpacity: setRadarOpacity,
   };
 
   return (
