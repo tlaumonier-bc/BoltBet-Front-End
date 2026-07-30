@@ -855,7 +855,11 @@ function ZoneMap({
             className="grid-strike pointer-events-none absolute"
             style={{ left: `${p.x}px`, top: `${p.y}px`, opacity: 0.55 + life * 0.45, transform: `translate(-50%, -50%) scale(${0.85 + life * 0.7})`, zIndex: 16 }}
           >
-            <span className="grid-strike-bolt" />
+            <svg className="grid-strike-svg" viewBox="0 0 40 54" aria-hidden>
+              <polyline className="grid-strike-channel-glow" points="26,1 15,20 25,22 12,35 21,37 18,53" />
+              <polyline className="grid-strike-channel" points="26,1 15,20 25,22 12,35 21,37 18,53" />
+            </svg>
+            <span className="grid-strike-flash" />
             <span className="grid-strike-ring grid-strike-ring-a" />
             <span className="grid-strike-ring grid-strike-ring-b" />
             <span className="grid-strike-core grid-strike-core-fresh" />

@@ -167,20 +167,46 @@ body {
   border-color: rgba(253, 224, 71, 0.65);
   animation: grid-strike-ring 1.45s 0.12s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.grid-strike-bolt {
+/* A real jagged lightning channel that strikes DOWN into the cell. Its bottom
+   tip sits on the strike point; it flickers in fast (like real lightning) then
+   is gone within ~1s, leaving the impact flash + rings. */
+.grid-strike-svg {
   position: absolute;
   left: 50%;
-  top: -26px;
-  width: 3px;
-  height: 38px;
-  border-radius: 9999px;
-  background: linear-gradient(to bottom, rgba(234, 244, 255, 0), #eaf4ff 22%, #38bdf8 58%, rgba(56, 189, 248, 0));
-  box-shadow:
-    0 0 12px rgba(234, 244, 255, 0.9),
-    0 0 24px rgba(56, 189, 248, 0.65);
-  clip-path: polygon(45% 0, 72% 28%, 55% 28%, 88% 100%, 28% 46%, 47% 46%);
+  bottom: 50%;
+  width: 40px;
+  height: 54px;
+  overflow: visible;
   transform: translateX(-50%);
-  animation: grid-strike-bolt 0.36s ease-out both;
+  animation: grid-strike-bolt 0.9s ease-out both;
+}
+.grid-strike-channel-glow {
+  fill: none;
+  stroke: rgba(56, 189, 248, 0.85);
+  stroke-width: 7;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: blur(2.5px);
+}
+.grid-strike-channel {
+  fill: none;
+  stroke: #f6fbff;
+  stroke-width: 2.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(234, 244, 255, 0.95)) drop-shadow(0 0 10px rgba(253, 224, 71, 0.7));
+}
+/* Bright impact burst at the strike point. */
+.grid-strike-flash {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.98) 0%, rgba(253, 224, 71, 0.6) 34%, rgba(56, 189, 248, 0.35) 58%, rgba(56, 189, 248, 0) 74%);
+  transform: translate(-50%, -50%);
+  animation: grid-strike-flash 0.6s ease-out both;
 }
 @keyframes grid-strike-core {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
@@ -191,10 +217,20 @@ body {
   from { opacity: 0.95; transform: translate(-50%, -50%) scale(0.35); }
   to { opacity: 0; transform: translate(-50%, -50%) scale(2.8); }
 }
+/* Lightning flicker: snaps on, stutters twice, then fades — reads as a real bolt. */
 @keyframes grid-strike-bolt {
-  0%, 100% { opacity: 0; }
-  10% { opacity: 1; transform: translateX(-50%) scaleY(1.05); }
-  45% { opacity: 0.95; transform: translateX(-50%) scaleY(0.85); }
+  0% { opacity: 0; transform: translateX(-50%) scaleY(0.8); }
+  6% { opacity: 1; transform: translateX(-50%) scaleY(1.04); }
+  13% { opacity: 0.2; }
+  20% { opacity: 1; transform: translateX(-50%) scaleY(0.97); }
+  34% { opacity: 0.85; }
+  55% { opacity: 0.4; }
+  100% { opacity: 0; transform: translateX(-50%) scaleY(0.9); }
+}
+@keyframes grid-strike-flash {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+  16% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2); }
 }
 
 .grid-opponent-heat {
