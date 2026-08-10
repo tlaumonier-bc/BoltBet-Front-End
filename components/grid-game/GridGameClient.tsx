@@ -166,17 +166,11 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 // ── Left panel ────────────────────────────────────────────────────────────────
 function SidePanel({
   countryIso,
-  credits,
-  peak,
-  activeBets,
   strikes,
   layers,
   onToggleLayer,
 }: {
   countryIso: string;
-  credits: number;
-  peak: number;
-  activeBets: number;
   strikes: CountryStrike[];
   layers: Record<string, boolean>;
   onToggleLayer: (key: string) => void;
@@ -184,6 +178,7 @@ function SidePanel({
   const recent = useMemo(() => strikes.slice(0, 3), [strikes]);
   const [openInfo, setOpenInfo] = useState<string | null>(null);
   const [layersOpen, setLayersOpen] = useState(false); // mobile: collapsed by default
+  const [lbOpen, setLbOpen] = useState(false); // mobile: leaderboard collapsed by default
   const activeLayerCount = SIDE_LAYERS.filter((l) => l.ready && !!layers[l.key]).length;
   return (
     <aside className="glass flex flex-col gap-3 rounded-[2rem] p-3 shadow-2xl sm:p-4 lg:min-h-[620px]">
@@ -194,18 +189,6 @@ function SidePanel({
         </h2>
       </div>
 
-      {/* Compact credits card — the balance stays the biggest number on the page */}
-      <div className="flex items-end justify-between rounded-2xl border border-cyan-200/15 bg-cyan-200/[0.06] px-3 py-2">
-        <div>
-          <div className="text-[9px] font-bold uppercase tracking-wider text-white/40">Credits</div>
-          <div className="font-display text-2xl font-black leading-none text-bolt tabular-nums sm:text-4xl">{fmt(credits)}</div>
-        </div>
-        <div className="text-right text-[10px] font-semibold leading-tight text-white/45">
-          <div>Peak {fmt(peak)}</div>
-          <div>{activeBets} live bet{activeBets === 1 ? '' : 's'}</div>
-        </div>
-      </div>
-
       {/* Layers — collapsed by default on mobile (tap "Show layers"), always open on desktop */}
       <div>
         <button
@@ -214,9 +197,9 @@ function SidePanel({
           className="mb-1.5 flex w-full items-center justify-between lg:pointer-events-none"
           aria-expanded={layersOpen}
         >
-          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">Layers</span>
-          <span className="flex items-center gap-1 text-[10px] font-bold text-cyan-100/70 lg:hidden">
-            {layersOpen ? 'Hide' : `Show${activeLayerCount ? ` (${activeLayerCount} on)` : ''}`}
+          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">Map layers</span>
+          <span className="btn-glow flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-black lg:hidden">
+            {layersOpen ? 'Hide layers' : `Show layers${activeLayerCount ? ` · ${activeLayerCount} on` : ''}`}
             <span className={`transition-transform ${layersOpen ? 'rotate-180' : ''}`}>▾</span>
           </span>
         </button>
@@ -273,27 +256,39 @@ function SidePanel({
         </div>
       </div>
 
-      {/* All-time leaderboard (best single-game balance) */}
+      {/* All-time leaderboard — collapsed by default on mobile (subtler "Show" than
+          the layers button on purpose), always open on desktop. */}
       <div className="mt-auto rounded-2xl border border-white/10 bg-black/25 p-3">
-        <div className="mb-2 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setLbOpen((v) => !v)}
+          className="flex w-full items-center justify-between lg:pointer-events-none"
+          aria-expanded={lbOpen}
+        >
           <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">All-time best runs</span>
-          <span className="text-[10px] text-white/30">peak credits</span>
-        </div>
-        <div className="space-y-1">
-          {FAKE_LEADERBOARD.map((row, i) => (
-            <div key={row.name} className="flex items-center gap-2 rounded-lg bg-white/[0.035] px-2 py-1.5 text-[12px]">
-              <span className="w-5 shrink-0 text-center">{MEDALS[i] ?? <span className="text-white/35">{i + 1}</span>}</span>
-              <span className="flex-1 truncate font-semibold text-white/75">{row.name}</span>
-              <span className="font-display font-black tabular-nums text-bolt">{row.score.toLocaleString()}</span>
-            </div>
-          ))}
-        </div>
-        {recent.length > 0 && (
-          <div className="mt-2 flex items-center justify-between border-t border-white/8 pt-2 text-[10px] text-white/35">
-            <span>Last strike</span>
-            <span className="tabular-nums">{recent[0].lat.toFixed(1)}, {recent[0].lon.toFixed(1)}</span>
+          <span className="hidden text-[10px] text-white/30 lg:block">peak credits</span>
+          <span className="flex items-center gap-1 text-[10px] font-semibold text-white/40 lg:hidden">
+            {lbOpen ? 'Hide' : 'Show'}
+            <span className={`transition-transform ${lbOpen ? 'rotate-180' : ''}`}>▾</span>
+          </span>
+        </button>
+        <div className={`${lbOpen ? 'block' : 'hidden'} lg:block`}>
+          <div className="mt-2 space-y-1">
+            {FAKE_LEADERBOARD.map((row, i) => (
+              <div key={row.name} className="flex items-center gap-2 rounded-lg bg-white/[0.035] px-2 py-1.5 text-[12px]">
+                <span className="w-5 shrink-0 text-center">{MEDALS[i] ?? <span className="text-white/35">{i + 1}</span>}</span>
+                <span className="flex-1 truncate font-semibold text-white/75">{row.name}</span>
+                <span className="font-display font-black tabular-nums text-bolt">{row.score.toLocaleString()}</span>
+              </div>
+            ))}
           </div>
-        )}
+          {recent.length > 0 && (
+            <div className="mt-2 flex items-center justify-between border-t border-white/8 pt-2 text-[10px] text-white/35">
+              <span>Last strike</span>
+              <span className="tabular-nums">{recent[0].lat.toFixed(1)}, {recent[0].lon.toFixed(1)}</span>
+            </div>
+          )}
+        </div>
       </div>
     </aside>
   );
@@ -1579,7 +1574,6 @@ export default function GridGameClient() {
   };
 
   const secondsToScan = mounted ? Math.max(0, Math.min(SCAN_MS / 1000, Math.ceil((nextScanAt - nowMs) / 1000))) : SCAN_MS / 1000;
-  const activeBetCount = bets.filter((b) => nowMs <= b.expiresAt).length;
   const secondsLeft = roundEndsAt != null
     ? Math.max(0, Math.ceil((roundEndsAt - nowMs) / 1000))
     : GAME_DURATION_MS / 1000;
@@ -1631,9 +1625,6 @@ export default function GridGameClient() {
           <div className="animate-[fade-up_0.45s_cubic-bezier(0.22,1,0.36,1)_both]">
             <SidePanel
               countryIso={dominantIso}
-              credits={credits}
-              peak={peak}
-              activeBets={activeBetCount}
               strikes={strikes}
               layers={layers}
               onToggleLayer={toggleLayer}
