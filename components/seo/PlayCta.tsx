@@ -1,8 +1,7 @@
 'use client'
-// components/seo/PlayCta.tsx — CTA dans la copie SEO. Il n'y a plus de route
-// /play : le jeu vit en mode Game sur le globe, donc ce bouton ferme le panneau
-// de texte et bascule la console en mode Game (sur le pays de la page, qui reste
-// sélectionné).
+// components/seo/PlayCta.tsx — CTA dans la copie SEO. Le jeu est désormais le
+// Grid Game (/grid-game) ; ce bouton ferme le panneau de texte et y navigue.
+import { useRouter } from 'next/navigation'
 import { useLiveStore } from '@/store/liveStore'
 
 export default function PlayCta({
@@ -12,15 +11,15 @@ export default function PlayCta({
   className?: string
   children: React.ReactNode
 }) {
-  const setMode = useLiveStore((s) => s.setMode)
+  const router = useRouter()
   const setSeoContentOpen = useLiveStore((s) => s.setSeoContentOpen)
 
   return (
     <button
       type="button"
       onClick={() => {
-        setMode('game')
         setSeoContentOpen(false)
+        router.push('/grid-game')
       }}
       className={className}
     >

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import posthog from 'posthog-js';
-import { useLiveStore } from '@/store/liveStore';
 import { useT } from '@/lib/i18n/ui';
 
 type CountryItem = { slug: string; country: string; primaryKeyword: string };
@@ -15,10 +14,6 @@ export default function MobileMenuButton({ countries }: { countries: CountryItem
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
-  const setMode = useLiveStore((s) => s.setMode);
-  const setSeoContentOpen = useLiveStore((s) => s.setSeoContentOpen);
-  const setSelectedCountry = useLiveStore((s) => s.setSelectedCountry);
-  const setMobileSheet = useLiveStore((s) => s.setMobileSheet);
   const { t } = useT();
 
   useEffect(() => {
@@ -46,12 +41,8 @@ export default function MobileMenuButton({ countries }: { countries: CountryItem
 
   const onPlay = () => {
     close();
-    setSelectedCountry(null);
-    setMode('game');
-    setSeoContentOpen(false);
-    setMobileSheet('game');
-    if (pathname !== '/') router.push('/');
-    posthog.capture('game_entered', { from_path: pathname });
+    posthog.capture('grid_game_entered', { from_path: pathname });
+    router.push('/grid-game');
   };
 
   return (
@@ -84,14 +75,6 @@ export default function MobileMenuButton({ countries }: { countries: CountryItem
           >
             {t('nav.leaderboard')}
           </Link>
-          <Link
-            href="/grid-game"
-            onClick={close}
-            className="block rounded-xl px-3 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-200/10"
-          >
-            {t('nav.gridGame')}
-          </Link>
-
           <button
             type="button"
             onClick={() => setCountriesOpen((value) => !value)}

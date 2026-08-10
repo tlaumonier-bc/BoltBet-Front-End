@@ -265,6 +265,294 @@ export async function getCitiesInBounds(
   return data.cities ?? [];
 }
 
+// ── Grid-game map layers: per-zone weather (Open-Meteo via backend, cached) ───
+export interface ZoneWeatherPoint {
+  lat: number;
+  lon: number;
+  precip: number | null;
+  rain: number | null;
+  windSpeed: number | null;
+  windDir: number | null;
+  gust: number | null;
+  cape: number | null;
+}
+export interface ZoneWeather {
+  sampledAt: string | null;
+  model: string;
+  points: ZoneWeatherPoint[];
+  summary: {
+    capeMax: number | null;
+    capeAvg: number | null;
+    precipMax: number | null;
+    windAvg: number | null;
+    windDir: number | null;
+  };
+}
+
+/** Rain / wind / CAPE sampled over a zone bbox (powers the Rain, Wind and
+ *  Storm-risk layers). Primary path is the cached backend proxy
+ *  (GET /api/weather/zone/); if that's unavailable it falls back to calling
+ *  Open-Meteo directly from the browser (no key, CORS-open) so the layer still
+ *  works before the backend is deployed. Same sampling as lightning/weather.py. */
+export async function getZoneWeather(
+  bounds: { minLat: number; maxLat: number; minLon: number; maxLon: number },
+  n = 4,
+): Promise<ZoneWeather> {
+  const q = new URLSearchParams({
+    minLat: String(bounds.minLat),
+    maxLat: String(bounds.maxLat),
+    minLon: String(bounds.minLon),
+    maxLon: String(bounds.maxLon),
+    n: String(n),
+  });
+  try {
+    const res = await fetch(`${STRIKES_API}/api/weather/zone/?${q}`, { cache: 'no-store' });
+    if (res.ok) return (await res.json()) as ZoneWeather;
+  } catch {
+    /* backend not reachable — fall through to the direct provider */
+  }
+  return openMeteoZoneDirect(bounds, n);
+}
+
+// ── Grid-game map layers: storm-cell trajectory (from our strike store) ───────
+export interface StormTrack {
+  heading: number | null;
+  compass: string | null;
+  speedKmh: number;
+  from: { lat: number; lon: number };
+  to: { lat: number; lon: number };
+  projected: { lat: number; lon: number };
+  olderSamples: number;
+  recentSamples: number;
+}
+
+const COMPASS8 = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+
+function computeTrackClient(
+  points: { lat: number; lon: number; t: number }[],
+  nowMs: number,
+  windowMs: number,
+  projectMs = 300_000,
+  minPerHalf = 3,
+): StormTrack | null {
+  const mid = nowMs - windowMs / 2;
+  const older: { lat: number; lon: number }[] = [];
+  const recent: { lat: number; lon: number }[] = [];
+  for (const p of points) {
+    if (p.t < nowMs - windowMs || p.t > nowMs) continue;
+    (p.t >= mid ? recent : older).push({ lat: p.lat, lon: p.lon });
+  }
+  if (older.length < minPerHalf || recent.length < minPerHalf) return null;
+  const cen = (rows: { lat: number; lon: number }[]) => ({
+    lat: rows.reduce((a, r) => a + r.lat, 0) / rows.length,
+    lon: rows.reduce((a, r) => a + r.lon, 0) / rows.length,
+  });
+  const o = cen(older);
+  const r = cen(recent);
+  const dtS = windowMs / 2 / 1000;
+  const cos = Math.max(0.01, Math.cos((r.lat * Math.PI) / 180));
+  const dNorth = (r.lat - o.lat) * 111.32;
+  const dEast = (r.lon - o.lon) * 111.32 * cos;
+  const dist = Math.hypot(dNorth, dEast);
+  const speedKmh = dtS > 0 ? (dist / dtS) * 3600 : 0;
+  const heading = dist > 1e-6 ? ((Math.atan2(dEast, dNorth) * 180) / Math.PI + 360) % 360 : null;
+  const scale = projectMs / (windowMs / 2);
+  return {
+    heading: heading != null ? Math.round(heading) : null,
+    compass: heading != null ? COMPASS8[Math.round(heading / 45) % 8] : null,
+    speedKmh: Math.round(speedKmh * 10) / 10,
+    from: { lat: o.lat, lon: o.lon },
+    to: { lat: r.lat, lon: r.lon },
+    projected: { lat: r.lat + (r.lat - o.lat) * scale, lon: r.lon + (r.lon - o.lon) * scale },
+    olderSamples: older.length,
+    recentSamples: recent.length,
+  };
+}
+
+/** Storm-cell trajectory & speed for a zone (from our strike store). Backend:
+ *  GET /api/weather/storm-track/; falls back to computing from the strike feed
+ *  client-side. Returns null while a storm is too new to have a motion history. */
+export async function getStormTrack(
+  bounds: { minLat: number; maxLat: number; minLon: number; maxLon: number },
+  minutes = 10,
+): Promise<StormTrack | null> {
+  const q = new URLSearchParams({
+    minLat: String(bounds.minLat),
+    maxLat: String(bounds.maxLat),
+    minLon: String(bounds.minLon),
+    maxLon: String(bounds.maxLon),
+    minutes: String(minutes),
+  });
+  try {
+    const res = await fetch(`${STRIKES_API}/api/weather/storm-track/?${q}`, { cache: 'no-store' });
+    if (res.ok) return ((await res.json()) as { track: StormTrack | null }).track ?? null;
+  } catch {
+    /* fall through to client-side computation */
+  }
+  try {
+    const strikes = await getStrikesInBounds(bounds, minutes * 60, 3000);
+    const pts = strikes.map((s) => ({ lat: s.lat, lon: s.lon, t: Date.parse(s.received_at) })).filter((s) => Number.isFinite(s.t));
+    return computeTrackClient(pts, Date.now(), minutes * 60_000);
+  } catch {
+    return null;
+  }
+}
+
+// ── Grid-game map layers: radar reflectivity frame index (via backend) ────────
+export interface RadarIndexFrame {
+  time: number; // epoch seconds
+  path: string; // e.g. /v2/radar/<id>
+  kind: 'past' | 'nowcast';
+}
+export interface RadarIndex {
+  available: boolean;
+  host: string;
+  size: number;
+  color: number;
+  options: string;
+  frames: RadarIndexFrame[];
+}
+
+/** Latest radar reflectivity frame index (RainViewer via our cached backend
+ *  proxy, GET /api/weather/radar/). The browser then loads the tile IMAGES
+ *  directly from `host`. Returns null on backend/provider failure so the layer
+ *  can show a "data unavailable" state and the game keeps running. */
+export async function getRadarFrames(): Promise<RadarIndex | null> {
+  try {
+    const res = await fetch(`${STRIKES_API}/api/weather/radar/`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = (await res.json()) as RadarIndex;
+    if (!data.available || !data.frames?.length) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+// ── Grid-game map layers: total lightning (IC+CG, MTG-LI) via backend ─────────
+export interface TotalLightningPoint {
+  lat: number;
+  lon: number;
+  flashes: number;
+  trend: number; // +1 intensifying, 0 steady, -1 decaying
+}
+export interface TotalLightning {
+  available: boolean;
+  source: string; // "mtg-li" | "mtg-li-mock"
+  sampledAt: string | null;
+  points: TotalLightningPoint[];
+  summary: { flashMax: number; flashTotal: number; trend: 'intensifying' | 'decaying' | 'steady' };
+}
+
+/** Total-lightning (intracloud + cloud-to-ground) flash field over a zone bbox,
+ *  from our backend (GET /api/lightning/total/). Target source is EUMETSAT
+ *  MTG-LI; until that ingest exists the backend serves a synthetic mock. Returns
+ *  null on failure so the layer shows "data unavailable" and the game keeps
+ *  running. */
+export async function getTotalLightning(
+  bounds: { minLat: number; maxLat: number; minLon: number; maxLon: number },
+  n = 6,
+): Promise<TotalLightning | null> {
+  const q = new URLSearchParams({
+    minLat: String(bounds.minLat),
+    maxLat: String(bounds.maxLat),
+    minLon: String(bounds.minLon),
+    maxLon: String(bounds.maxLon),
+    n: String(n),
+  });
+  try {
+    const res = await fetch(`${STRIKES_API}/api/lightning/total/?${q}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = (await res.json()) as TotalLightning;
+    if (!data.available) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+const OPEN_METEO = 'https://api.open-meteo.com/v1/forecast';
+
+function capeForHour(loc: { current?: { time?: string }; hourly?: { time?: string[]; cape?: (number | null)[] } }): number | null {
+  const times = loc.hourly?.time ?? [];
+  const capes = loc.hourly?.cape ?? [];
+  const prefix = (loc.current?.time ?? '').slice(0, 13);
+  for (let i = 0; i < times.length; i += 1) if (times[i].startsWith(prefix) && capes[i] != null) return capes[i] ?? null;
+  return capes.find((v) => v != null) ?? null;
+}
+
+async function openMeteoZoneDirect(
+  bounds: { minLat: number; maxLat: number; minLon: number; maxLon: number },
+  n: number,
+): Promise<ZoneWeather> {
+  const count = Math.max(2, Math.min(6, Math.round(n)));
+  const lats: string[] = [];
+  const lons: string[] = [];
+  for (let r = 0; r < count; r += 1) {
+    const lat = bounds.minLat + ((r + 0.5) / count) * (bounds.maxLat - bounds.minLat);
+    for (let c = 0; c < count; c += 1) {
+      lats.push(lat.toFixed(4));
+      lons.push((bounds.minLon + ((c + 0.5) / count) * (bounds.maxLon - bounds.minLon)).toFixed(4));
+    }
+  }
+  const q = new URLSearchParams({
+    latitude: lats.join(','),
+    longitude: lons.join(','),
+    current: 'precipitation,rain,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
+    hourly: 'cape',
+    models: 'gfs_seamless',
+    forecast_days: '1',
+    timezone: 'UTC',
+  });
+  const res = await fetch(`${OPEN_METEO}?${q}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`open-meteo ${res.status}`);
+  const data = await res.json();
+  const locs = (Array.isArray(data) ? data : [data]) as {
+    latitude: number; longitude: number;
+    current?: { time?: string; precipitation?: number; rain?: number; wind_speed_10m?: number; wind_direction_10m?: number; wind_gusts_10m?: number };
+    hourly?: { time?: string[]; cape?: (number | null)[] };
+  }[];
+  let sampledAt: string | null = null;
+  const points: ZoneWeatherPoint[] = locs.map((loc) => {
+    const cur = loc.current ?? {};
+    sampledAt = sampledAt ?? cur.time ?? null;
+    return {
+      lat: loc.latitude,
+      lon: loc.longitude,
+      precip: cur.precipitation ?? null,
+      rain: cur.rain ?? null,
+      windSpeed: cur.wind_speed_10m ?? null,
+      windDir: cur.wind_direction_10m ?? null,
+      gust: cur.wind_gusts_10m ?? null,
+      cape: capeForHour(loc),
+    };
+  });
+  const capes = points.map((p) => p.cape).filter((v): v is number => v != null);
+  const precips = points.map((p) => p.precip).filter((v): v is number => v != null);
+  const winds = points.map((p) => p.windSpeed).filter((v): v is number => v != null);
+  let sx = 0;
+  let sy = 0;
+  for (const p of points) {
+    if (p.windDir == null) continue;
+    const w = (p.windSpeed ?? 0) + 0.1;
+    sx += w * Math.sin((p.windDir * Math.PI) / 180);
+    sy += w * Math.cos((p.windDir * Math.PI) / 180);
+  }
+  const windDir = sx || sy ? ((Math.atan2(sx, sy) * 180) / Math.PI + 360) % 360 : null;
+  return {
+    sampledAt,
+    model: 'gfs_seamless',
+    points,
+    summary: {
+      capeMax: capes.length ? Math.max(...capes) : null,
+      capeAvg: capes.length ? Math.round(capes.reduce((a, b) => a + b, 0) / capes.length) : null,
+      precipMax: precips.length ? Math.max(...precips) : null,
+      windAvg: winds.length ? Math.round((winds.reduce((a, b) => a + b, 0) / winds.length) * 10) / 10 : null,
+      windDir: windDir != null ? Math.round(windDir) : null,
+    },
+  };
+}
+
 export async function getWeatherNow(lat: number, lon: number): Promise<WeatherNow> {
   const q = new URLSearchParams({ lat: String(lat), lon: String(lon) });
   const res = await fetch(`${API}/api/weather/now/?${q}`, { cache: 'no-store' });
