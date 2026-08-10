@@ -183,11 +183,13 @@ function SidePanel({
 }) {
   const recent = useMemo(() => strikes.slice(0, 3), [strikes]);
   const [openInfo, setOpenInfo] = useState<string | null>(null);
+  const [layersOpen, setLayersOpen] = useState(false); // mobile: collapsed by default
+  const activeLayerCount = SIDE_LAYERS.filter((l) => l.ready && !!layers[l.key]).length;
   return (
-    <aside className="glass flex min-h-[620px] flex-col gap-3 rounded-[2rem] p-4 shadow-2xl">
+    <aside className="glass flex flex-col gap-3 rounded-[2rem] p-3 shadow-2xl sm:p-4 lg:min-h-[620px]">
       <div>
         <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-100/50">Live storm</div>
-        <h2 className="font-display mt-1 text-xl font-black text-white">
+        <h2 className="font-display mt-1 text-lg font-black text-white sm:text-xl">
           {flagEmoji(countryIso)} {countryIso ? countryName(countryIso) : 'Open water'}
         </h2>
       </div>
@@ -196,7 +198,7 @@ function SidePanel({
       <div className="flex items-end justify-between rounded-2xl border border-cyan-200/15 bg-cyan-200/[0.06] px-3 py-2">
         <div>
           <div className="text-[9px] font-bold uppercase tracking-wider text-white/40">Credits</div>
-          <div className="font-display text-4xl font-black leading-none text-bolt tabular-nums">{fmt(credits)}</div>
+          <div className="font-display text-2xl font-black leading-none text-bolt tabular-nums sm:text-4xl">{fmt(credits)}</div>
         </div>
         <div className="text-right text-[10px] font-semibold leading-tight text-white/45">
           <div>Peak {fmt(peak)}</div>
@@ -204,10 +206,21 @@ function SidePanel({
         </div>
       </div>
 
-      {/* Layers */}
+      {/* Layers — collapsed by default on mobile (tap "Show layers"), always open on desktop */}
       <div>
-        <div className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">Layers</div>
-        <div className="space-y-1.5">
+        <button
+          type="button"
+          onClick={() => setLayersOpen((v) => !v)}
+          className="mb-1.5 flex w-full items-center justify-between lg:pointer-events-none"
+          aria-expanded={layersOpen}
+        >
+          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">Layers</span>
+          <span className="flex items-center gap-1 text-[10px] font-bold text-cyan-100/70 lg:hidden">
+            {layersOpen ? 'Hide' : `Show${activeLayerCount ? ` (${activeLayerCount} on)` : ''}`}
+            <span className={`transition-transform ${layersOpen ? 'rotate-180' : ''}`}>▾</span>
+          </span>
+        </button>
+        <div className={`space-y-1.5 ${layersOpen ? 'block' : 'hidden'} lg:block`}>
           {SIDE_LAYERS.map((layer) => {
             const active = layer.ready && !!layers[layer.key];
             const info = openInfo === layer.key;
@@ -793,22 +806,22 @@ function ZoneMap({
       {/* Credit balance HUD */}
       {gameStarted && (
         <div className="pointer-events-none absolute left-1/2 top-4 z-20 -translate-x-1/2">
-          <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-slate-950/70 px-6 py-2 text-center shadow-2xl backdrop-blur-md">
+          <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-1.5 text-center shadow-2xl backdrop-blur-md sm:gap-4 sm:px-6 sm:py-2">
             <div>
-              <div className="text-[9px] font-bold uppercase tracking-wider text-bolt/70">You</div>
-              <div key={Math.round(credits)} className="credit-pop font-display text-3xl font-black leading-none text-bolt tabular-nums">{fmt(credits)}</div>
+              <div className="text-[8px] font-bold uppercase tracking-wider text-bolt/70 sm:text-[9px]">You</div>
+              <div key={Math.round(credits)} className="credit-pop font-display text-xl font-black leading-none text-bolt tabular-nums sm:text-3xl">{fmt(credits)}</div>
             </div>
-            <div className="h-8 w-px bg-white/15" />
+            <div className="h-6 w-px bg-white/15 sm:h-8" />
             <div>
-              <div className="text-[9px] font-bold uppercase tracking-wider text-white/45">🤖 Bot</div>
-              <div className={`font-display text-2xl font-black leading-none tabular-nums transition-colors ${botCredits >= credits ? 'text-rose-300' : 'text-white/70'}`}>{fmt(botCredits)}</div>
+              <div className="text-[8px] font-bold uppercase tracking-wider text-white/45 sm:text-[9px]">🤖 Bot</div>
+              <div className={`font-display text-lg font-black leading-none tabular-nums transition-colors sm:text-2xl ${botCredits >= credits ? 'text-rose-300' : 'text-white/70'}`}>{fmt(botCredits)}</div>
             </div>
             {mode === 'playing' && (
               <>
-                <div className="h-8 w-px bg-white/15" />
+                <div className="h-6 w-px bg-white/15 sm:h-8" />
                 <div>
-                  <div className="text-[9px] font-bold uppercase tracking-wider text-white/45">Time</div>
-                  <div className={`font-display text-xl font-black leading-none tabular-nums transition-colors ${secondsLeft <= 10 ? 'text-rose-400' : 'text-white/70'}`}>{secondsLeft}s</div>
+                  <div className="text-[8px] font-bold uppercase tracking-wider text-white/45 sm:text-[9px]">Time</div>
+                  <div className={`font-display text-base font-black leading-none tabular-nums transition-colors sm:text-xl ${secondsLeft <= 10 ? 'text-rose-400' : 'text-white/70'}`}>{secondsLeft}s</div>
                 </div>
               </>
             )}
@@ -936,13 +949,13 @@ function ZoneMap({
                       dominantBaseline="middle"
                       fill="rgba(226,232,240,0.5)"
                       className="pointer-events-none font-bold"
-                      style={{ fontSize: Math.max(8, cellH * (bet ? 0.17 : 0.2)) }}
+                      style={{ fontSize: Math.max(6, Math.min(cellH * (bet ? 0.16 : 0.19), cellW * 0.24)) }}
                     >
                       {mult.toFixed(mult >= 10 ? 0 : 1)}×
                     </text>
                   )}
                   {bet && (
-                    <text x={x + cellW * 0.5} y={y + cellH * 0.52} textAnchor="middle" dominantBaseline="middle" className="pointer-events-none fill-white font-black" style={{ fontSize: Math.max(11, cellH * 0.26) }}>
+                    <text x={x + cellW * 0.5} y={y + cellH * 0.52} textAnchor="middle" dominantBaseline="middle" className="pointer-events-none fill-white font-black" style={{ fontSize: Math.max(9, Math.min(cellH * 0.26, cellW * 0.34)) }}>
                       {bet.credits}
                     </text>
                   )}
@@ -953,7 +966,7 @@ function ZoneMap({
                       textAnchor="middle"
                       dominantBaseline="middle"
                       className={`pointer-events-none font-black ${bet.strikes > 0 ? 'fill-emerald-200' : 'fill-rose-200'}`}
-                      style={{ fontSize: Math.max(8, cellH * 0.16) }}
+                      style={{ fontSize: Math.max(6, Math.min(cellH * 0.16, cellW * 0.22)) }}
                     >
                       {bet.strikes > 0 ? `+${fmt(bet.earned)}` : `−${bet.credits}`}
                     </text>
@@ -1048,10 +1061,10 @@ function ZoneMap({
         </div>
       )}
       {mode === 'selecting' && activeAreaCount > 0 && (
-        <div className="pointer-events-none absolute left-1/2 top-4 z-[30] -translate-x-1/2">
-          <div className="glass rounded-full border border-white/12 bg-slate-950/60 px-4 py-1.5 shadow-xl backdrop-blur-md">
-            <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">{activeAreaCount} live zones · rescans in </span>
-            <span className="font-display text-sm font-black tabular-nums text-bolt">{secondsToScan}s</span>
+        <div className="pointer-events-none absolute left-1/2 top-4 z-[30] w-max max-w-[92vw] -translate-x-1/2">
+          <div className="glass flex items-center gap-1 whitespace-nowrap rounded-full border border-white/12 bg-slate-950/60 px-3 py-1.5 shadow-xl backdrop-blur-md sm:px-4">
+            <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-white/45 sm:text-[10px] sm:tracking-[0.22em]">{activeAreaCount} live zones · rescans in</span>
+            <span className="font-display text-xs font-black tabular-nums text-bolt sm:text-sm">{secondsToScan}s</span>
           </div>
         </div>
       )}
