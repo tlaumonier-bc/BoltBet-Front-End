@@ -7,11 +7,9 @@ import { useNearMeAction } from './useNearMeAction'
 import { useT } from '@/lib/i18n/ui'
 
 export default function OrbitSection() {
-  const mode = useLiveStore((s) => s.mode)
   const orbitTarget = useLiveStore((s) => s.orbitTarget)
   const orbitTo = useLiveStore((s) => s.orbitTo)
   const clearOrbit = useLiveStore((s) => s.clearOrbit)
-  const setSelectedCountry = useLiveStore((s) => s.setSelectedCountry)
   const { nearMe, nearbyMessage, nearbyState, nearbyStrikes, resetNearby } = useNearMeAction()
   const { t } = useT()
   const focus = orbitTarget
@@ -20,7 +18,6 @@ export default function OrbitSection() {
 
   const onGlobe = orbitTarget?.id === 'globe'
   const backToGlobe = () => {
-    if (mode === 'game') setSelectedCountry(null)
     resetNearby()
     orbitTo({ id: 'globe', label: t('live.wholeGlobe'), lat: 20, lon: 0, flyHeightM: 20_000_000 })
   }

@@ -7,7 +7,6 @@ const MODES: { id: LiveViewMode; labelKey: string }[] = [
   { id: 'free', labelKey: 'live.free' },
   { id: 'beginner', labelKey: 'live.beginner' },
   { id: 'pro', labelKey: 'live.pro' },
-  { id: 'game', labelKey: 'live.game' },
 ]
 
 const MAP_STYLES: { id: GlobeMapStyle; labelKey: string }[] = [

@@ -10,9 +10,9 @@ import {
   trackLayerToggled,
 } from '@/lib/analytics'
 
-export type LiveViewMode = 'free' | 'beginner' | 'pro' | 'game'
+export type LiveViewMode = 'free' | 'beginner' | 'pro'
 export type GlobeMapStyle = 'night' | 'day'
-export type MobileSheet = 'layers' | 'game' | null
+export type MobileSheet = 'layers' | null
 export type { GlobeQuality }
 
 export interface OrbitTarget {
