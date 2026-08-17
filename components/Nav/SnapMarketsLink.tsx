@@ -1,6 +1,6 @@
 // components/Nav/SnapMarketsLink.tsx — external brand link to SnapMarkets, using
-// their white logo assets (same lockup as on snapmarkets.com). Raw <img> on
-// purpose: these are external brand SVGs, not app-owned/optimizable images.
+// their white logo lockup (self-hosted in public/images/). Raw <img> on purpose:
+// small brand SVGs, no next/image optimisation needed.
 /* eslint-disable @next/next/no-img-element */
 
 export default function SnapMarketsLink() {
@@ -19,13 +19,13 @@ export default function SnapMarketsLink() {
         style={{ lineHeight: 1 }}
       >
         <img
-          src="https://snapmarkets.com/assets/snap-brand/snaplogo-white.svg"
+          src="/images/snaplogo-white.svg"
           alt=""
           className="block h-[1em] w-auto select-none"
           draggable={false}
         />
         <img
-          src="https://snapmarkets.com/assets/snap-brand/snapmarkets-white.svg"
+          src="/images/snapmarkets-white.svg"
           alt=""
           className="block h-[1em] w-auto select-none"
           draggable={false}
