@@ -166,22 +166,18 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 // ── Left panel ────────────────────────────────────────────────────────────────
 function SidePanel({
   countryIso,
-  strikes,
   layers,
   onToggleLayer,
 }: {
   countryIso: string;
-  strikes: CountryStrike[];
   layers: Record<string, boolean>;
   onToggleLayer: (key: string) => void;
 }) {
-  const recent = useMemo(() => strikes.slice(0, 3), [strikes]);
   const [openInfo, setOpenInfo] = useState<string | null>(null);
   const [layersOpen, setLayersOpen] = useState(false); // mobile: collapsed by default
-  const [lbOpen, setLbOpen] = useState(false); // mobile: leaderboard collapsed by default
   const activeLayerCount = SIDE_LAYERS.filter((l) => l.ready && !!layers[l.key]).length;
   return (
-    <aside className="glass flex flex-col gap-3 rounded-[2rem] p-3 shadow-2xl sm:p-4 lg:min-h-[620px]">
+    <aside className="glass flex flex-col gap-3 rounded-[2rem] p-3 shadow-2xl sm:p-4">
       <div>
         <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-100/50">Live storm</div>
         <h2 className="font-display mt-1 text-lg font-black text-white sm:text-xl">
@@ -256,41 +252,85 @@ function SidePanel({
         </div>
       </div>
 
-      {/* All-time leaderboard — collapsed by default on mobile (subtler "Show" than
-          the layers button on purpose), always open on desktop. */}
-      <div className="mt-auto rounded-2xl border border-white/10 bg-black/25 p-3">
-        <button
-          type="button"
-          onClick={() => setLbOpen((v) => !v)}
-          className="flex w-full items-center justify-between lg:pointer-events-none"
-          aria-expanded={lbOpen}
-        >
-          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">All-time best runs</span>
-          <span className="hidden text-[10px] text-white/30 lg:block">peak credits</span>
-          <span className="flex items-center gap-1 text-[10px] font-semibold text-white/40 lg:hidden">
-            {lbOpen ? 'Hide' : 'Show'}
-            <span className={`transition-transform ${lbOpen ? 'rotate-180' : ''}`}>▾</span>
-          </span>
-        </button>
-        <div className={`${lbOpen ? 'block' : 'hidden'} lg:block`}>
-          <div className="mt-2 space-y-1">
-            {FAKE_LEADERBOARD.map((row, i) => (
-              <div key={row.name} className="flex items-center gap-2 rounded-lg bg-white/[0.035] px-2 py-1.5 text-[12px]">
-                <span className="w-5 shrink-0 text-center">{MEDALS[i] ?? <span className="text-white/35">{i + 1}</span>}</span>
-                <span className="flex-1 truncate font-semibold text-white/75">{row.name}</span>
-                <span className="font-display font-black tabular-nums text-bolt">{row.score.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-          {recent.length > 0 && (
-            <div className="mt-2 flex items-center justify-between border-t border-white/8 pt-2 text-[10px] text-white/35">
-              <span>Last strike</span>
-              <span className="tabular-nums">{recent[0].lat.toFixed(1)}, {recent[0].lon.toFixed(1)}</span>
-            </div>
-          )}
-        </div>
-      </div>
     </aside>
+  );
+}
+
+// ── All-time leaderboard — its own card so on mobile it can sit BELOW the grid
+// (and on desktop under the side panel). Collapsed by default on mobile. ────────
+function Leaderboard({ strikes }: { strikes: CountryStrike[] }) {
+  const recent = useMemo(() => strikes.slice(0, 3), [strikes]);
+  const [lbOpen, setLbOpen] = useState(false);
+  return (
+    <div className="glass rounded-2xl border border-white/10 p-3 shadow-2xl lg:col-start-1">
+      <button
+        type="button"
+        onClick={() => setLbOpen((v) => !v)}
+        className="flex w-full items-center justify-between lg:pointer-events-none"
+        aria-expanded={lbOpen}
+      >
+        <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">All-time best runs</span>
+        <span className="hidden text-[10px] text-white/30 lg:block">peak credits</span>
+        <span className="flex items-center gap-1 text-[10px] font-semibold text-white/40 lg:hidden">
+          {lbOpen ? 'Hide' : 'Show'}
+          <span className={`transition-transform ${lbOpen ? 'rotate-180' : ''}`}>▾</span>
+        </span>
+      </button>
+      <div className={`${lbOpen ? 'block' : 'hidden'} lg:block`}>
+        <div className="mt-2 space-y-1">
+          {FAKE_LEADERBOARD.map((row, i) => (
+            <div key={row.name} className="flex items-center gap-2 rounded-lg bg-white/[0.035] px-2 py-1.5 text-[12px]">
+              <span className="w-5 shrink-0 text-center">{MEDALS[i] ?? <span className="text-white/35">{i + 1}</span>}</span>
+              <span className="flex-1 truncate font-semibold text-white/75">{row.name}</span>
+              <span className="font-display font-black tabular-nums text-bolt">{row.score.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+        {recent.length > 0 && (
+          <div className="mt-2 flex items-center justify-between border-t border-white/8 pt-2 text-[10px] text-white/35">
+            <span>Last strike</span>
+            <span className="tabular-nums">{recent[0].lat.toFixed(1)}, {recent[0].lon.toFixed(1)}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Mobile score bar — sits ABOVE the grid (not overlaying it) so it no longer
+// collides with the on-map layers legend. Desktop keeps the on-map HUD. ────────
+function MobileScoreBar({
+  credits,
+  botCredits,
+  secondsLeft,
+  playing,
+}: {
+  credits: number;
+  botCredits: number;
+  secondsLeft: number;
+  playing: boolean;
+}) {
+  return (
+    <div className="glass mb-2 flex items-center justify-center gap-3 rounded-2xl border border-white/10 px-3 py-1.5 text-center shadow-xl sm:hidden">
+      <div>
+        <div className="text-[8px] font-bold uppercase tracking-wider text-bolt/70">You</div>
+        <div className="font-display text-xl font-black leading-none text-bolt tabular-nums">{fmt(credits)}</div>
+      </div>
+      <div className="h-6 w-px bg-white/15" />
+      <div>
+        <div className="text-[8px] font-bold uppercase tracking-wider text-white/45">🤖 Bot</div>
+        <div className={`font-display text-lg font-black leading-none tabular-nums ${botCredits >= credits ? 'text-rose-300' : 'text-white/70'}`}>{fmt(botCredits)}</div>
+      </div>
+      {playing && (
+        <>
+          <div className="h-6 w-px bg-white/15" />
+          <div>
+            <div className="text-[8px] font-bold uppercase tracking-wider text-white/45">Time</div>
+            <div className={`font-display text-base font-black leading-none tabular-nums ${secondsLeft <= 10 ? 'text-rose-400' : 'text-white/70'}`}>{secondsLeft}s</div>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -798,9 +838,10 @@ function ZoneMap({
         </div>
       )}
 
-      {/* Credit balance HUD */}
+      {/* Credit balance HUD — on-map only from sm+; on mobile it lives above the
+          grid (MobileScoreBar) so it doesn't overlap the layers legend. */}
       {gameStarted && (
-        <div className="pointer-events-none absolute left-1/2 top-4 z-20 -translate-x-1/2">
+        <div className="pointer-events-none absolute left-1/2 top-4 z-20 hidden -translate-x-1/2 sm:block">
           <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-1.5 text-center shadow-2xl backdrop-blur-md sm:gap-4 sm:px-6 sm:py-2">
             <div>
               <div className="text-[8px] font-bold uppercase tracking-wider text-bolt/70 sm:text-[9px]">You</div>
@@ -1625,11 +1666,16 @@ export default function GridGameClient() {
           <div className="animate-[fade-up_0.45s_cubic-bezier(0.22,1,0.36,1)_both]">
             <SidePanel
               countryIso={dominantIso}
-              strikes={strikes}
               layers={layers}
               onToggleLayer={toggleLayer}
             />
           </div>
+        )}
+
+        {/* Mobile-only: scores just ABOVE the grid (see MobileScoreBar); on desktop
+            display:none so it doesn't take a grid track. */}
+        {gameStarted && (
+          <MobileScoreBar credits={credits} botCredits={botCredits} secondsLeft={secondsLeft} playing={mode === 'playing'} />
         )}
 
         <div className={`relative min-h-[620px] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${gameStarted ? 'lg:translate-x-2' : ''}`}>
@@ -1677,6 +1723,9 @@ export default function GridGameClient() {
           <button type="button" onClick={selectPrevious} disabled={mode !== 'selecting'} className={`absolute left-4 top-1/2 z-20 grid size-12 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/40 text-3xl text-white backdrop-blur transition hover:bg-black/60 disabled:opacity-35 ${gameStarted ? 'pointer-events-none opacity-0' : ''}`} aria-label="Previous zone">‹</button>
           <button type="button" onClick={selectNext} disabled={mode !== 'selecting'} className={`absolute right-4 top-1/2 z-20 grid size-12 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/40 text-3xl text-white backdrop-blur transition hover:bg-black/60 disabled:opacity-35 ${gameStarted ? 'pointer-events-none opacity-0' : ''}`} aria-label="Next zone">›</button>
         </div>
+
+        {/* All-time best runs — below the grid on mobile, in the left column on desktop */}
+        {gameStarted && <Leaderboard strikes={strikes} />}
 
         {!gameStarted && (
           <aside className="pointer-events-auto z-10 w-full max-w-[360px] space-y-4">

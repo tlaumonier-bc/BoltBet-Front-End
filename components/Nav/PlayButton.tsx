@@ -3,12 +3,10 @@
 // Grid Game at /grid-game (the old on-globe up/down mode was removed).
 import { useRouter, usePathname } from 'next/navigation'
 import posthog from 'posthog-js'
-import { useT } from '@/lib/i18n/ui'
 
 export default function PlayButton() {
   const router = useRouter()
   const pathname = usePathname()
-  const { t } = useT()
 
   const onPlay = () => {
     posthog.capture('grid_game_entered', { from_path: pathname })
@@ -21,7 +19,7 @@ export default function PlayButton() {
       onClick={onPlay}
       className="btn-glow ml-1 cursor-pointer whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold sm:ml-2 sm:px-4 sm:text-sm"
     >
-      {t('nav.play')}
+      Play Grid Game
     </button>
   )
 }
