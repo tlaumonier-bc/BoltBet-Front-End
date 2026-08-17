@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import BrandHomeLink from './BrandHomeLink';
 import CountryMenu from './CountryMenu';
-import GridGameButton from './GridGameButton';
+import SnapMarketsLink from './SnapMarketsLink';
 import MobileMenuButton from './MobileMenuButton';
 import PlayButton from './PlayButton';
 import UiLanguageSwitcher from '@/components/i18n/UiLanguageSwitcher';
@@ -31,7 +31,7 @@ export default function NavClient({ countries }: { countries: CountryItem[] }) {
           <Link href="/leaderboard" className="hidden whitespace-nowrap rounded-lg px-3 py-1.5 transition hover:bg-white/10 hover:text-white sm:block">
             {t('nav.leaderboard')}
           </Link>
-          <GridGameButton />
+          <SnapMarketsLink />
           <div className="hidden sm:block">
             <PlayButton />
           </div>
