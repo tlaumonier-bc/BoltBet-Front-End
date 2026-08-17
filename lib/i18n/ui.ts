@@ -75,6 +75,8 @@ export const UI_COPY = {
       comingSoon: 'Coming soon',
       menu: 'Open menu',
       language: 'Language',
+      snapInfo:
+        'Coming soon on SnapMarkets — a new market to trade on how many lightning strikes hit worldwide each day, powered by the same live data behind this map. Partnership launching soon.',
     },
     live: {
       console: 'Live console',
